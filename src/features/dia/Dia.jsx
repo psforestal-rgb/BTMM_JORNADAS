@@ -65,8 +65,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   const conViatico = statusDia.filter((p) => p.tieneViatico);
   const actsDelDia = actividadesEnDia(actividadesPlan, diaVista).sort((a, b) => a.titulo.localeCompare(b.titulo));
   const statsPuesto = opcionesPuestoOperativo.map((puesto) => {
-    const del = statusDia.filter((p) => (p.puestoOperativo || "") === puesto);
-    return { puesto, turno: del.filter((p) => p.enTurno).length, programados: del.filter((p) => p.tieneActividad).length, total: del.length };
+    const enTurno = statusDia.filter((p) => (p.puestoOperativo || "") === puesto && p.enTurno);
+    return {
+      puesto,
+      turno: enTurno.length,
+      conActividad: enTurno.filter((p) => p.tieneActividad).length,
+      sinActividad: enTurno.filter((p) => !p.tieneActividad).length,
+    };
   });
   const catLabel = { L: "Libre", V: "Vacaciones", I: "Incapacidad", O: "Otro", "": "Sin marcar" };
   const catCls = {
@@ -225,26 +230,27 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* Resumen por puesto */}
       <Card title={t("dia.porPuesto")} icon="📍">
-        <div className="grid gap-3 md:grid-cols-3">
-          {statsPuesto.map(({ puesto, turno, programados, total }) => (
-            <div key={puesto} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-3 text-sm font-semibold text-slate-800">{puesto.replace("Puesto ", "")}</div>
-              <div className="grid grid-cols-3 gap-1 text-center">
-                <div>
-                  <div className="text-2xl font-semibold text-emerald-700">{turno}</div>
-                  <div className="text-[10px] text-slate-500">{t("dia.turnoLabel")}</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-blue-700">{programados}</div>
-                  <div className="text-[10px] text-slate-500">{t("dia.planLabel")}</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-slate-500">{total}</div>
-                  <div className="text-[10px] text-slate-500">{t("dia.activosLabel")}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full border-collapse text-sm">
+            <thead className="bg-slate-100 text-[11px] uppercase tracking-wider text-slate-500">
+              <tr>
+                <th scope="col" className="p-3 text-left">{t("dia.th.puesto")}</th>
+                <th scope="col" className="p-3 text-center">{t("dia.th.enTurno")}</th>
+                <th scope="col" className="p-3 text-center">{t("dia.th.conActividad")}</th>
+                <th scope="col" className="p-3 text-center">{t("dia.th.sinActividad")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {statsPuesto.map(({ puesto, turno, conActividad, sinActividad }) => (
+                <tr key={puesto} className="hover:bg-slate-50">
+                  <th scope="row" className="p-3 text-left font-semibold text-slate-800">{puesto.replace("Puesto ", "")}</th>
+                  <td className="p-3 text-center text-lg font-semibold text-emerald-700">{turno}</td>
+                  <td className="p-3 text-center text-lg font-semibold text-blue-700">{conActividad}</td>
+                  <td className={`p-3 text-center text-lg font-semibold ${sinActividad > 0 ? "text-amber-600" : "text-slate-400"}`}>{sinActividad}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Card>
 
