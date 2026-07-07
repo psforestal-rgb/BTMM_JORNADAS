@@ -3,7 +3,7 @@ import { t, lookup, format, __DICT__ } from "../es-CR.js";
 
 describe("i18n.lookup", () => {
   it("encuentra una clave anidada", () => {
-    expect(lookup("view.dashboard")).toBe("Dashboard");
+    expect(lookup("view.dia")).toBe("Día");
     expect(lookup("app.short")).toBe("PNLQ");
   });
   it("devuelve la clave si no existe (visible en QA)", () => {
@@ -13,7 +13,7 @@ describe("i18n.lookup", () => {
   it("clave que apunta a objeto devuelve el objeto (útil para grupos)", () => {
     const v = lookup("view");
     expect(typeof v).toBe("object");
-    expect(v.dashboard).toBe("Dashboard");
+    expect(v.dia).toBe("Día");
   });
   it("clave que apunta a array devuelve el array (para listas)", () => {
     const v = lookup("datos.porQue");
@@ -39,7 +39,7 @@ describe("i18n.format", () => {
 
 describe("i18n.t", () => {
   it("combina lookup + format", () => {
-    expect(t("dashboard.bloqueHoy", { dia: 19 })).toBe("Hoy · día 19");
+    expect(t("dia.actividadesTitulo", { n: 2 })).toContain("2");
     expect(t("alertas.requiereAtencion", { n: 3 })).toBe("Requiere atención · 3");
   });
   it("respeta la condición rectora: la 'Regla dura' es exactamente la del prompt", () => {
@@ -51,7 +51,6 @@ describe("i18n.t", () => {
 describe("i18n diccionario — completitud mínima", () => {
   it("cubre todas las vistas de la app", () => {
     const vistasEsperadas = [
-      "dashboard",
       "dia",
       "funcionarios",
       "roles",

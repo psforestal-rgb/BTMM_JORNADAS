@@ -132,7 +132,7 @@ export default function Funcionarios({ personas, setPersonas }) {
               <button
                 key={id}
                 onClick={() => setFiltro(id)}
-                className={`rounded-full border px-3 py-2 text-xs font-bold ${
+                className={`min-h-touch rounded-full border px-3 py-2 text-xs font-bold ${
                   filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
                 }`}
               >

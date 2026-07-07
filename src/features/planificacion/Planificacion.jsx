@@ -155,7 +155,7 @@ export default function Planificacion({
       action={
         <button
           onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
-          className="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+          className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
         >
           {t("planificacion.agregar")}
         </button>

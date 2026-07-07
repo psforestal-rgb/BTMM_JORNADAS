@@ -36,7 +36,7 @@ function MarcasDia({ trabajada, reposicion, t }) {
   );
 }
 
-export default function DashboardDia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj, setView }) {
+export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj, setView }) {
   const t = useT();
   const { trabajadas, reposiciones: reposicionesDia } = indexarReposiciones(reposiciones, hj);
   const marcaDe = (nombre) => ({
@@ -253,7 +253,7 @@ export default function DashboardDia({ diaVista, setDiaVista, personas, activida
         title={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
         action={
-          <button onClick={() => setModalActividad(nuevaAct())} className="rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+          <button onClick={() => setModalActividad(nuevaAct())} className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
             {t("dia.nueva")}
           </button>
         }

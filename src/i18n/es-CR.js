@@ -37,8 +37,7 @@ const dict = {
     grupoControl: "Control",
   },
   view: {
-    dashboard: "Dashboard",
-    dia: "Detalle del día",
+    dia: "Día",
     funcionarios: "Funcionarios",
     roles: "Roles",
     planificacion: "Planificación general",
@@ -90,42 +89,6 @@ const dict = {
     cambiarOscuro: "Cambiar a oscuro",
     cambiarHC: "Cambiar a alto contraste",
     cambiarClaro: "Cambiar a claro",
-  },
-  dashboard: {
-    bloqueHoy: "Hoy · día {dia}",
-    bloqueMes: "Este mes · {mes} {anio}",
-    verDia: "Ver detalle del día →",
-    verReposicion: "Ver reposición →",
-    badgeHoy: "Hoy",
-    badgeMes: "Mes",
-    coberturaTitulo: "Cobertura por puesto operativo — {mes} {anio}",
-    leyendaTurno: "Turno = rol activo",
-    leyendaPlan: "Plan = actividad",
-    leyendaVisit: "Visit. = atención visitantes",
-    sinVisit: "{n} días sin Visit.",
-    visitCubierta: "Visit. cubierta",
-    sinPlan: "{n} días sin Plan",
-    planCompleto: "Plan completo",
-    requiereVisitDiario: "Requiere Visit. diario",
-    coberturaNota:
-      "Cada casilla abre el detalle de funcionarios programados, en turno y asignación de atención rutinaria de visitantes. Orosi y Quetzales alertan en rojo cuando Visit. = 0.",
-    alertasActivasTitulo: "Alertas activas",
-    verTodas: "Ver todas",
-    estadoPersonalTitulo: "Estado del personal",
-    abrirFuncionarios: "Abrir funcionarios",
-    marcoNormativo: "Marco normativo / control interno",
-    cell: {
-      turno: "Turno",
-      plan: "Plan",
-      visit: "Visit.",
-      titulo: "Ver detalle",
-      alerta: "ALERTA: sin atención rutinaria de visitantes asignada",
-    },
-    mini: {
-      hint: "Toque un día para ver su resumen · deslice ←/→ para cambiar de puesto",
-      verDetalle: "Ver detalle del día",
-      diaAria: "Resumen del día {dia}",
-    },
   },
   cobertura: {
     titulo: "Cobertura programada",
@@ -698,7 +661,7 @@ const dict = {
       "Regla dura: la herramienta registra y alerta; cambiar una regla no genera pagos, suspensiones ni derechos automáticos. Cualquier ajuste debe estar respaldado por la coordinación administrativa.",
     coberturaTitulo: "Cobertura · puestos con atención rutinaria diaria",
     coberturaSub:
-      "Si un día un puesto seleccionado no tiene a nadie asignado a \"Atención rutinaria de visitantes\", se marca como cobertura crítica (rojo) en el Dashboard.",
+      "Si un día un puesto seleccionado no tiene a nadie asignado a \"Atención rutinaria de visitantes\", se marca como cobertura crítica (rojo) en la vista Día.",
     viaticosTitulo: "Viáticos · corte administrativo",
     diaCorte: "Día de corte (1–28)",
     mesObjetivo: "Mes objetivo",
@@ -834,7 +797,7 @@ export function lookup(path) {
 }
 
 /**
- * API principal: `t("dashboard.bloqueHoy", { dia: 19 })`.
+ * API principal: `t("dia.actividadesTitulo", { n: 2 })`.
  * Es función directa (no hook) para que pueda usarse en módulos no React.
  */
 export function t(path, vars) {

@@ -38,7 +38,7 @@ importa features.
 | Snapshot atómico en persistencia (no stores por entidad) | El volumen de datos es pequeño (~decenas de KB); la atomicidad evita estados parciales. Migrable a stores por entidad sin romper la API pública de `storage.js`. |
 | Dual-write LS + IndexedDB | LS da lectura síncrona (primer render sin parpadeo); Dexie da durabilidad y capacidad. Si uno falla, el otro respalda. |
 | `t()` con clave visible al faltar | Una clave sin traducir aparece como `view.xxx` en pantalla: el bug se ve, no se esconde. |
-| Lazy load por vista, Dashboard eager | Dashboard es la pantalla inicial; diferirla solo añade un spinner. |
+| Lazy load por vista, Roles eager | Roles está disponible inmediatamente; las vistas operativas se cargan bajo demanda. |
 | Dexie con `import()` dinámico | ~32 KB gzip fuera del bundle inicial; la persistencia durable no necesita estar lista antes del primer render. |
 | Reglas de negocio en `config/reglas.js` + UI | Cambios de directriz administrativa (corte de viáticos, puestos con Visit.) no requieren tocar código. |
 
@@ -84,7 +84,7 @@ alineado con el breakpoint `lg` de Tailwind).
 | Funcionarios | Tabla (overflow-x) | Tarjetas |
 | Roles | Tabla mensual (overflow-x) | Tarjetas por semana |
 | Planificación | Cuadrícula 7 col (toggle a Agenda) | Agenda vertical por día + alta rápida `+` (toggle a cuadrícula con scroll-x) |
-| Dashboard (cobertura) | Grilla 7 col, etiquetas completas | Mini-calendario semafórico (día+color) + panel del día tocado + swipe ←/→ entre puestos (<1024 px); mismo modal de detalle |
+| Día | Indicadores y cobertura por puesto | Centro operativo con indicadores horizontales, acciones directas y swipe entre fechas |
 | Detalle del día | Botones | Botones + swipe (`lib/useSwipe.js`) |
 | Modales de formulario | Secciones tituladas a 2 col | Mismas secciones a 1 col; campos y botones `min-h-touch` |
 | Navegación | Sidebar | BottomNav + menú "Más" |

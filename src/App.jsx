@@ -12,7 +12,7 @@ import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 // para reducir el tiempo de carga inicial en dispositivos modestos.
 import Roles from "./features/roles/Roles.jsx";
 
-const DashboardDia = lazy(() => import("./features/dia/DashboardDia.jsx"));
+const Dia = lazy(() => import("./features/dia/Dia.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
@@ -96,7 +96,7 @@ function AppShell() {
           <div className="space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
               {view === "dia" && (
-                <DashboardDia
+                <Dia
                   diaVista={diaVista}
                   setDiaVista={setDiaVista}
                   personas={personas}
