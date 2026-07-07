@@ -61,6 +61,11 @@ const dict = {
     hoy: "Hoy",
     acciones: "Acciones del módulo",
     tema: "Tema y contraste",
+    previewMobile: "Abrir simulador temporal de vista móvil",
+    previewMobileCorto: "Vista móvil",
+    previewTitle: "Vista móvil temporal",
+    previewDesc: "Simulación de un teléfono genérico de {ancho} × {alto} px. Puede usar la aplicación dentro del marco.",
+    previewFrameTitle: "Aplicación en tamaño de teléfono móvil",
   },
   bottomNav: {
     inicio: "Inicio",

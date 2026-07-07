@@ -5,6 +5,12 @@ import ThemeToggle from "../ui/ThemeToggle.jsx";
 import SyncStatus from "../ui/SyncStatus.jsx";
 import { useT } from "../i18n/useT.js";
 import Modal from "../ui/Modal.jsx";
+import {
+  MOBILE_PREVIEW_HEIGHT,
+  MOBILE_PREVIEW_WIDTH,
+  isMobilePreviewLocation,
+  mobilePreviewUrl,
+} from "../lib/mobilePreview.js";
 
 /** Vistas que muestran navegación de mes/año en la barra superior. */
 const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
@@ -12,6 +18,8 @@ const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();
   const [accionesOpen, setAccionesOpen] = useState(false);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const dentroDePreview = isMobilePreviewLocation();
   const titulo = t(`view.${view}`);
   const anioActual = new Date().getFullYear();
   const opcionesAnio = Array.from({ length: 11 }, (_, i) => anioActual - 5 + i);
@@ -35,7 +43,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setYear(hoy.getFullYear());
   };
   return (
-    <header className={`pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen ? "z-50" : "z-30"}`}>
+    <header className={`pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen || mobilePreviewOpen ? "z-50" : "z-30"}`}>
       <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -117,6 +125,18 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               )}
             </>
           )}
+          {!dentroDePreview && (
+            <button
+              type="button"
+              onClick={() => setMobilePreviewOpen(true)}
+              className="hidden min-h-touch items-center gap-2 rounded-xl border border-brand bg-brand-soft px-3 text-sm font-semibold text-brand hover:bg-emerald-100 lg:inline-flex"
+              aria-label={t("topbar.previewMobile")}
+            >
+              <Icon name="phone" size={18} />
+              {t("topbar.previewMobileCorto")}
+              <span className="rounded-md bg-surface px-1.5 py-0.5 text-xs text-ink-muted">Temporal</span>
+            </button>
+          )}
           <span className="hidden md:inline-flex"><ThemeToggle /></span>
           <button type="button" onClick={() => setAccionesOpen(true)} aria-label={t("topbar.acciones")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl border border-line bg-surface text-ink md:hidden">
             <Icon name="menu" size={20} />
@@ -138,6 +158,22 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
             </button>
           )}
+        </div>
+      </Modal>
+      <Modal
+        open={mobilePreviewOpen}
+        onClose={() => setMobilePreviewOpen(false)}
+        title={t("topbar.previewTitle")}
+        description={t("topbar.previewDesc", { ancho: MOBILE_PREVIEW_WIDTH, alto: MOBILE_PREVIEW_HEIGHT })}
+        size="md"
+        contentClassName="bg-slate-200 p-3"
+      >
+        <div className="mx-auto w-[402px] max-w-full overflow-hidden rounded-[2rem] border-[6px] border-slate-900 bg-white shadow-2xl">
+          <iframe
+            title={t("topbar.previewFrameTitle")}
+            src={mobilePreviewUrl()}
+            className="block h-[min(844px,calc(100dvh-12rem))] min-h-[480px] w-full bg-white"
+          />
         </div>
       </Modal>
     </header>
