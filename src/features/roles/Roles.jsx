@@ -11,6 +11,7 @@ import PuestoRolCard from "./PuestoRolCard.jsx";
 import PuestoRolCardSemana from "./PuestoRolCardSemana.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
 import Modal from "../../ui/Modal.jsx";
+import RolesDiaMobile from "./RolesDiaMobile.jsx";
 
 export default function Roles({
   year,
@@ -44,7 +45,11 @@ export default function Roles({
   };
   const isMobile = useIsMobile();
   const [vista, setVista] = useState(null);
+  const [puestoActivo, setPuestoActivo] = useState(puestos[0]?.nombre || "");
+  const [modoMovil, setModoMovil] = useState("funcionario");
   const vistaEfectiva = vista ?? (isMobile ? "semana" : "tabla");
+  const grupoActivo = gruposRoles.find((grupo) => grupo.nombre === puestoActivo) || gruposRoles[0];
+  const gruposVisibles = isMobile ? [grupoActivo].filter(Boolean) : gruposRoles;
 
   // La impresión siempre usa la tabla mensual (formato administrativo
   // tradicional), independientemente de la vista que el usuario tenga
@@ -107,6 +112,27 @@ export default function Roles({
           </div>
         }
       >
+        {isMobile && grupoActivo && (
+          <div className="pnlq-no-print mb-3 space-y-3">
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" aria-label={t("rolesDia.puesto")}>
+              {gruposRoles.map((grupo) => (
+                <button
+                  key={grupo.nombre}
+                  type="button"
+                  onClick={() => setPuestoActivo(grupo.nombre)}
+                  aria-pressed={grupo.nombre === grupoActivo.nombre}
+                  className={`min-h-touch shrink-0 snap-start rounded-xl px-4 text-sm font-semibold ${grupo.nombre === grupoActivo.nombre ? "bg-brand text-brand-fg" : "border border-line bg-surface text-ink"}`}
+                >
+                  {grupo.nombre.replace("Puesto ", "")}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-line">
+              <button type="button" onClick={() => setModoMovil("funcionario")} aria-pressed={modoMovil === "funcionario"} className={`min-h-touch text-sm font-semibold ${modoMovil === "funcionario" ? "bg-brand text-brand-fg" : "bg-surface text-ink"}`}>{t("rolesDia.modoFuncionario")}</button>
+              <button type="button" onClick={() => setModoMovil("dia")} aria-pressed={modoMovil === "dia"} className={`min-h-touch border-l border-line text-sm font-semibold ${modoMovil === "dia" ? "bg-brand text-brand-fg" : "bg-surface text-ink"}`}>{t("rolesDia.modoDia")}</button>
+            </div>
+          </div>
+        )}
         <div className="pnlq-no-print mb-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap shadow-sm">
           <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
           <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
@@ -114,8 +140,19 @@ export default function Roles({
           <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
           <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
         </div>
+        {isMobile && modoMovil === "dia" && grupoActivo ? (
+          <RolesDiaMobile
+            grupos={gruposRoles}
+            grupoActivo={grupoActivo}
+            year={year}
+            month={month}
+            personas={personas}
+            roleData={roleData}
+            setRoleData={setRoleData}
+          />
+        ) : (
         <div className="space-y-6">
-          {gruposRoles.map((g, gi) => (
+          {gruposVisibles.map((g, gi) => (
             <div key={`puesto-${g.nombre}`} className={`pnlq-print-page ${gi > 0 ? "pnlq-print-break-before" : ""}`}>
               <RolesPrintHeader mes={meses[month]} anio={year} puesto={g.nombre} />
               {vistaEfectiva === "semana" ? (
@@ -152,6 +189,7 @@ export default function Roles({
             </div>
           ))}
         </div>
+        )}
       </Card>
       <Modal
         open={confirmarLimpieza}
