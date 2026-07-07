@@ -88,6 +88,7 @@ alineado con el breakpoint `lg` de Tailwind).
 | Detalle del día | Botones | Botones + swipe (`lib/useSwipe.js`) |
 | Modales de formulario | Secciones tituladas a 2 col | Mismas secciones a 1 col; campos y botones `min-h-touch` |
 | Navegación | Sidebar | BottomNav + menú "Más" |
+| Teléfono horizontal | No aplica | Riel lateral, cabecera compacta, modales centrados y safe areas por orientación |
 
 Reglas para nuevas vistas:
 1. Tamaño táctil mínimo `min-h-touch` (48 px) en todo elemento

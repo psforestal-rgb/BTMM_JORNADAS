@@ -35,15 +35,15 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
 
   return (
     <>
-      <nav className="pnlq-no-print fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t("bottomNav.navAria")}>
-        <div className="grid grid-cols-5">
+      <nav className="pnlq-bottom-nav pnlq-no-print fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t("bottomNav.navAria")}>
+        <div className="pnlq-bottom-nav-grid grid grid-cols-5">
           {main.map(([id, label, icon]) => (
             <button
               key={id}
               type="button"
               onClick={() => go(id)}
               aria-current={view === id ? "page" : undefined}
-              className={`relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${view === id ? "text-brand" : "text-ink-muted"}`}
+              className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${view === id ? "text-brand" : "text-ink-muted"}`}
             >
               <Icon name={icon} size={22} />
               {label}
@@ -54,7 +54,7 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             aria-current={moreActive ? "page" : undefined}
-            className={`relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${moreOpen || moreActive ? "text-brand" : "text-ink-muted"}`}
+            className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${moreOpen || moreActive ? "text-brand" : "text-ink-muted"}`}
           >
             <Icon name="menu" size={22} />
             {t("bottomNav.mas")}

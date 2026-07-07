@@ -240,7 +240,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             onReabrir={reabrir}
             onEliminar={setBorrar}
           />
-          <div className="hidden overflow-auto rounded-xl border border-slate-300 md:block">
+          <div className="pnlq-reposicion-table hidden overflow-auto rounded-xl border border-slate-300 md:block">
             <table className="min-w-[940px] w-full border-collapse text-sm">
               <thead className="bg-slate-100 text-left text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>

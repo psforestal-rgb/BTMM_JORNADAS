@@ -423,6 +423,12 @@ ninguna funcionalidad de escritorio:
   Jornada y modalidad, Contratación y fechas, Atributos); campos y
   botones cumplen el mínimo táctil de 48 px. La Topbar agrupa
   ‹ mes año › en un único control segmentado.
+- **Teléfono horizontal** — con hasta 1023 px de ancho y 600 px de
+  alto, la navegación inferior pasa a un riel lateral de 72 px; la
+  cabecera, tarjetas, modales y avisos PWA se compactan y respetan
+  safe areas. Reposición conserva sus tarjetas móviles incluso al
+  superar 768 px. El simulador temporal permite alternar entre
+  390 × 844 y 844 × 390.
 
 Toda nueva vista respeta la condición rectora: ningún indicador,
 alerta o registro de las anteriores se pierde — solo cambia de

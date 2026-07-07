@@ -74,13 +74,13 @@ function AppShell() {
   const keyboardOpen = useVirtualKeyboard();
 
   return (
-    <div className="pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950">
+    <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950 ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
       <div className="flex min-h-screen">
         <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
         {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho
             (tabla con overflow-x propio, modal mal medido, etc.) NO
             produzca scroll horizontal de la página entera en móvil. */}
-        <main className="min-w-0 flex-1 overflow-x-clip">
+        <main className="pnlq-app-main min-w-0 flex-1 overflow-x-clip">
           <Topbar
             view={view}
             setView={navigate}
@@ -93,7 +93,7 @@ function AppShell() {
           />
           {/* pb generoso en móvil para librar la BottomNav fija (≈64px) más
               el safe-area del home indicator; en lg la nav desaparece. */}
-          <div className="space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
+          <div className="pnlq-app-content space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
               {view === "dia" && (
                 <Dia

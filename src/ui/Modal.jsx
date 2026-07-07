@@ -41,7 +41,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm md:items-center md:p-4"
+      className="pnlq-modal-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm md:items-center md:p-4"
       onClick={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose?.()
       }}
@@ -53,13 +53,13 @@ export default function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
-        className={`flex max-h-[94vh] max-h-[94dvh] w-full ${maxW} flex-col overflow-hidden rounded-t-3xl bg-surface text-ink shadow-2xl outline-none md:rounded-3xl`}
+        className={`pnlq-modal-panel flex max-h-[94vh] max-h-[94dvh] w-full ${maxW} flex-col overflow-hidden rounded-t-3xl bg-surface text-ink shadow-2xl outline-none md:rounded-3xl`}
         style={{ maxHeight: 'calc(var(--visual-viewport-height, 100dvh) - 1rem)' }}
       >
         {/* Asidero de hoja (bottom-sheet) — afordancia táctil en móvil. */}
         <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-line md:hidden" />
         {(title || description) && (
-          <header className="flex items-start justify-between gap-3 border-b border-line p-5">
+          <header className="pnlq-modal-header flex items-start justify-between gap-3 border-b border-line p-5">
             <div className="min-w-0">
               {title && (
                 <h2 id={titleId} className="text-lg font-semibold text-ink">
@@ -82,9 +82,9 @@ export default function Modal({
             </button>
           </header>
         )}
-        <div className={`flex-1 overflow-y-auto p-5 ${contentClassName}`}>{children}</div>
+        <div className={`pnlq-modal-body flex-1 overflow-y-auto p-5 ${contentClassName}`}>{children}</div>
         {actions && (
-          <footer className="flex flex-wrap justify-between gap-2 border-t border-line bg-surface-alt p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <footer className="pnlq-modal-footer flex flex-wrap justify-between gap-2 border-t border-line bg-surface-alt p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {actions}
           </footer>
         )}
