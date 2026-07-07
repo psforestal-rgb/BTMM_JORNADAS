@@ -9,6 +9,8 @@ import { useEffect, useId, useRef } from 'react'
  */
 const escStack = []
 let escListenerInstalled = false
+let bodyLockCount = 0
+let bodyOverflowBeforeLock = ''
 
 function handleDocumentEscape(e) {
   if (e.key !== 'Escape') return
@@ -95,6 +97,14 @@ export function useModalA11y({ open = true, onClose, initialFocusRef } = {}) {
     const root = ref.current
     if (!root) return undefined
 
+    if (typeof document !== 'undefined') {
+      if (bodyLockCount === 0) {
+        bodyOverflowBeforeLock = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+      }
+      bodyLockCount += 1
+    }
+
     const focusInitial = () => {
       const target = initialFocusRef?.current ?? focusableInside(root)[0] ?? root
       try {
@@ -138,6 +148,10 @@ export function useModalA11y({ open = true, onClose, initialFocusRef } = {}) {
       window.clearTimeout(t)
       root.removeEventListener('keydown', onTab)
       popEsc?.()
+      if (typeof document !== 'undefined') {
+        bodyLockCount = Math.max(0, bodyLockCount - 1)
+        if (bodyLockCount === 0) document.body.style.overflow = bodyOverflowBeforeLock
+      }
       const prev = previousActive.current
       if (prev && typeof prev.focus === 'function') {
         try { prev.focus({ preventScroll: true }) } catch { /* ignore */ }

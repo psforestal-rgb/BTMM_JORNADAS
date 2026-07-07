@@ -8,6 +8,7 @@ import { VIATICOS_OBJETIVO_OPCIONES, validarReglas, REGLAS_DEFAULT } from "../..
 import { FERIADOS_CR } from "../../data/feriadosCR.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
+import Modal from "../../ui/Modal.jsx";
 
 /**
  * Editor administrativo de reglas duras configurables. Cada cambio se
@@ -18,6 +19,7 @@ export default function Configuracion() {
   const { reglas, setReglas, resetReglas } = useApp();
   const [draft, setDraft] = useState(reglas);
   const [confirmar, setConfirmar] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const sucia = JSON.stringify(draft) !== JSON.stringify(reglas);
   const advertencias = useMemo(() => validarReglas(draft), [draft]);
@@ -39,11 +41,11 @@ export default function Configuracion() {
   const setCampo = (clave, valor) => setDraft((prev) => ({ ...prev, [clave]: valor }));
   const aplicar = () => { setReglas(draft); setConfirmar(false); };
   const descartar = () => setDraft(reglas);
-  const onResetTotal = () => {
-    if (confirm(t("configuracion.restaurarConfirm"))) {
-      resetReglas();
-      setDraft(REGLAS_DEFAULT);
-    }
+  const onResetTotal = () => setConfirmReset(true);
+  const confirmarResetTotal = () => {
+    resetReglas();
+    setDraft(REGLAS_DEFAULT);
+    setConfirmReset(false);
   };
 
   return (
@@ -265,6 +267,25 @@ export default function Configuracion() {
           </div>
         </footer>
       </Card>
+      <Modal
+        open={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        title={t("configuracion.restaurarPredet")}
+        description={t("configuracion.restaurarConfirm")}
+        size="sm"
+        actions={(
+          <div className="ml-auto flex gap-2">
+            <button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
+              {t("acciones.cancelar")}
+            </button>
+            <button type="button" onClick={confirmarResetTotal} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-white">
+              {t("configuracion.restaurarPredet")}
+            </button>
+          </div>
+        )}
+      >
+        <p className="text-sm text-ink-muted">{t("configuracion.reglaDuraIntro")}</p>
+      </Modal>
     </section>
   );
 }

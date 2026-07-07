@@ -10,6 +10,7 @@ import { useT } from "../../i18n/useT.js";
 import PuestoRolCard from "./PuestoRolCard.jsx";
 import PuestoRolCardSemana from "./PuestoRolCardSemana.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
+import Modal from "../../ui/Modal.jsx";
 
 export default function Roles({
   year,
@@ -24,6 +25,7 @@ export default function Roles({
   hj,
 }) {
   const t = useT();
+  const [confirmarLimpieza, setConfirmarLimpieza] = useState(false);
   const days = Array.from({ length: dim(year, month) }, (_, i) => i + 1);
   const gruposRoles = puestos.map((p) => ({
     ...p,
@@ -38,6 +40,7 @@ export default function Roles({
         Object.entries(prev).filter(([k]) => !k.startsWith(pref) && !k.startsWith(`CFG-${year}-${month + 1}-`))
       )
     );
+    setConfirmarLimpieza(false);
   };
   const isMobile = useIsMobile();
   const [vista, setVista] = useState(null);
@@ -95,7 +98,7 @@ export default function Roles({
               <span className="sm:hidden">{t("print.imprimirCorto")}</span>
             </button>
             <button
-              onClick={limpiarMes}
+              onClick={() => setConfirmarLimpieza(true)}
               className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
             >
               {t("roles.restaurar")}
@@ -150,6 +153,25 @@ export default function Roles({
           ))}
         </div>
       </Card>
+      <Modal
+        open={confirmarLimpieza}
+        onClose={() => setConfirmarLimpieza(false)}
+        title={t("roles.restaurarTitulo")}
+        description={t("roles.restaurarConfirm", { mes: meses[month], anio: year })}
+        size="sm"
+        actions={(
+          <div className="ml-auto flex gap-2">
+            <button type="button" onClick={() => setConfirmarLimpieza(false)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
+              {t("acciones.cancelar")}
+            </button>
+            <button type="button" onClick={limpiarMes} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-white">
+              {t("roles.restaurar")}
+            </button>
+          </div>
+        )}
+      >
+        <p className="text-sm text-ink-muted">{t("roles.restaurarNota")}</p>
+      </Modal>
     </section>
   );
 }
