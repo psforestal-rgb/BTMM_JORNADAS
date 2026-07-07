@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { fecha } from "../../domain/fechas.js";
+import { fecha, toLocalISODate } from "../../domain/fechas.js";
 import { horasDeMagnitud, horasTrabajadas, horasRepuestas, saldoHoras, cuotasDe } from "../../domain/reposicion.js";
 import { useEscapeClose } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate();
 }
 
 /**

@@ -4,7 +4,7 @@ import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
 import EmptyState from "../../ui/EmptyState.jsx";
-import { fecha } from "../../domain/fechas.js";
+import { fecha, toLocalISODate } from "../../domain/fechas.js";
 import {
   resumenReposiciones,
   ordenarPorFecha,
@@ -24,7 +24,7 @@ import HistorialFuncionario from "./HistorialFuncionario.jsx";
 
 // Fecha de hoy (ISO) para prellenar registros.
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate();
 }
 
 const ESTADO_CLS = {

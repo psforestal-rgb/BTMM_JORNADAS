@@ -6,6 +6,16 @@ export function pad2(n) {
   return String(n).padStart(2, "0");
 }
 
+/** Fecha civil local (no UTC), segura para formularios y filtros diarios. */
+export function toLocalISODate(date = new Date()) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** Marca local legible y apta para nombres de archivo. */
+export function toLocalFileTimestamp(date = new Date()) {
+  return `${toLocalISODate(date)}_${pad2(date.getHours())}-${pad2(date.getMinutes())}-${pad2(date.getSeconds())}`;
+}
+
 export function isoFecha(year, month, dia) {
   return `${year}-${pad2(month + 1)}-${pad2(dia)}`;
 }
