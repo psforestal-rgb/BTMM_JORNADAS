@@ -200,6 +200,147 @@ body {
 }
 
 /* =====================================================================
+   Teléfono en orientación horizontal
+   La altura reducida es la señal decisiva: una tableta horizontal no debe
+   heredar esta navegación compacta. La barra inferior pasa a ser un riel
+   lateral para recuperar espacio vertical y todos los diálogos se centran.
+   ===================================================================== */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
+  html,
+  body,
+  #root,
+  .pnlq-app {
+    min-height: 100dvh;
+  }
+
+  .pnlq-app-main {
+    margin-left: calc(72px + env(safe-area-inset-left));
+  }
+
+  .pnlq-keyboard-open .pnlq-app-main {
+    margin-left: 0;
+  }
+
+  .pnlq-bottom-nav {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    width: calc(72px + env(safe-area-inset-left));
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) env(safe-area-inset-left);
+    border-top: 0;
+    border-right: 1px solid rgb(var(--c-line));
+  }
+
+  .pnlq-bottom-nav-grid {
+    display: grid;
+    height: 100%;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, minmax(0, 1fr));
+  }
+
+  .pnlq-bottom-nav-item {
+    min-height: 44px;
+    gap: 0.125rem;
+    padding: 0.25rem 0.125rem;
+    font-size: 0.65rem;
+    line-height: 1;
+  }
+
+  .pnlq-bottom-nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pnlq-bottom-nav-item > span[aria-label] {
+    top: 0.125rem;
+    right: 0.125rem;
+  }
+
+  .pnlq-topbar {
+    padding: 0.375rem 0.75rem;
+  }
+
+  .pnlq-topbar-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .pnlq-topbar-inner > div:first-child {
+    min-width: 8rem;
+    max-width: 15rem;
+  }
+
+  .pnlq-topbar-inner > div:last-child {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+
+  .pnlq-app-content {
+    padding: 0.75rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .pnlq-app-content > section > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem;
+  }
+
+  .pnlq-card {
+    padding: 0.875rem;
+  }
+
+  .pnlq-card-header {
+    margin-bottom: 0.625rem;
+  }
+
+  .pnlq-reposicion-mobile-list {
+    display: block !important;
+  }
+
+  .pnlq-reposicion-table {
+    display: none !important;
+  }
+
+  .pnlq-modal-backdrop,
+  .fixed.inset-0:has(> [role="dialog"]) {
+    align-items: center;
+    padding: 0.5rem;
+  }
+
+  [role="dialog"] {
+    max-height: calc(100dvh - 1rem) !important;
+    border-radius: 1rem !important;
+  }
+
+  .pnlq-modal-header,
+  [role="dialog"] > [class*="border-b"] {
+    padding: 0.625rem 0.875rem !important;
+  }
+
+  .pnlq-modal-body,
+  [role="dialog"] > [class*="overflow-y-auto"] {
+    max-height: calc(100dvh - 7rem) !important;
+    padding: 0.75rem !important;
+  }
+
+  .pnlq-modal-footer,
+  [role="dialog"] > [class*="border-t"] {
+    padding: 0.5rem 0.75rem max(0.5rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .pnlq-pwa-banner {
+    right: 0.75rem;
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    left: calc(72px + env(safe-area-inset-left) + 0.75rem);
+    width: auto;
+    max-width: 32rem;
+    transform: none;
+    padding: 0.75rem;
+  }
+}
+
+/* =====================================================================
    Impresión / Guardar como PDF
    Pensado para imprimir el rol mensual con firma administrativa. El
    navegador ofrece "Guardar como PDF" desde el diálogo de impresión.

@@ -19,6 +19,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
   const t = useT();
   const [accionesOpen, setAccionesOpen] = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [previewHorizontal, setPreviewHorizontal] = useState(false);
   const dentroDePreview = isMobilePreviewLocation();
   const titulo = t(`view.${view}`);
   const anioActual = new Date().getFullYear();
@@ -43,8 +44,8 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setYear(hoy.getFullYear());
   };
   return (
-    <header className={`pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen || mobilePreviewOpen ? "z-50" : "z-30"}`}>
-      <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
+    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen || mobilePreviewOpen ? "z-50" : "z-30"}`}>
+      <div className="pnlq-topbar-inner flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-xs font-semibold uppercase tracking-widest text-slate-500">
@@ -164,15 +165,25 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
         open={mobilePreviewOpen}
         onClose={() => setMobilePreviewOpen(false)}
         title={t("topbar.previewTitle")}
-        description={t("topbar.previewDesc", { ancho: MOBILE_PREVIEW_WIDTH, alto: MOBILE_PREVIEW_HEIGHT })}
-        size="md"
+        description={t("topbar.previewDesc", {
+          ancho: previewHorizontal ? MOBILE_PREVIEW_HEIGHT : MOBILE_PREVIEW_WIDTH,
+          alto: previewHorizontal ? MOBILE_PREVIEW_WIDTH : MOBILE_PREVIEW_HEIGHT,
+        })}
+        size="2xl"
         contentClassName="bg-slate-200 p-3"
       >
-        <div className="mx-auto w-[402px] max-w-full overflow-hidden rounded-[2rem] border-[6px] border-slate-900 bg-white shadow-2xl">
+        <div className="mb-3 flex justify-center" role="group" aria-label={t("topbar.previewOrientation")}>
+          <button type="button" onClick={() => setPreviewHorizontal(false)} aria-pressed={!previewHorizontal} className={`min-h-touch rounded-l-xl border px-4 text-sm font-semibold ${!previewHorizontal ? "border-brand bg-brand text-brand-fg" : "border-line bg-surface text-ink"}`}>{t("topbar.previewVertical")}</button>
+          <button type="button" onClick={() => setPreviewHorizontal(true)} aria-pressed={previewHorizontal} className={`min-h-touch rounded-r-xl border border-l-0 px-4 text-sm font-semibold ${previewHorizontal ? "border-brand bg-brand text-brand-fg" : "border-line bg-surface text-ink"}`}>{t("topbar.previewHorizontal")}</button>
+        </div>
+        <div
+          className="mx-auto max-w-full overflow-hidden rounded-[2rem] border-[6px] border-slate-900 bg-white shadow-2xl transition-[width]"
+          style={{ width: `${(previewHorizontal ? MOBILE_PREVIEW_HEIGHT : MOBILE_PREVIEW_WIDTH) + 12}px` }}
+        >
           <iframe
             title={t("topbar.previewFrameTitle")}
             src={mobilePreviewUrl()}
-            className="block h-[min(844px,calc(100dvh-12rem))] min-h-[480px] w-full bg-white"
+            className={`block w-full bg-white ${previewHorizontal ? "h-[min(390px,calc(100dvh-12rem))] min-h-[280px]" : "h-[min(844px,calc(100dvh-12rem))] min-h-[480px]"}`}
           />
         </div>
       </Modal>

@@ -66,6 +66,9 @@ const dict = {
     previewTitle: "Vista móvil temporal",
     previewDesc: "Simulación de un teléfono genérico de {ancho} × {alto} px. Puede usar la aplicación dentro del marco.",
     previewFrameTitle: "Aplicación en tamaño de teléfono móvil",
+    previewOrientation: "Orientación del teléfono simulado",
+    previewVertical: "Vertical",
+    previewHorizontal: "Horizontal",
   },
   bottomNav: {
     inicio: "Inicio",

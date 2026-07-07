@@ -2,7 +2,7 @@ import ReposicionCard from "./ReposicionCard.jsx";
 
 export default function ReposicionListMobile({ registros, hj, onReponer, onEditar, onReabrir, onEliminar }) {
   return (
-    <div className="space-y-3 md:hidden">
+    <div className="pnlq-reposicion-mobile-list space-y-3 md:hidden">
       {registros.map((registro) => (
         <ReposicionCard
           key={registro.id}
