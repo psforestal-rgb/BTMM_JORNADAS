@@ -6,14 +6,13 @@ export default function BottomNav({ view, setView, nAlertas }) {
   const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
   const main = [
-    ["dashboard", t("bottomNav.inicio"), "home"],
-    ["funcionarios", t("bottomNav.personal"), "users"],
+    ["roles", t("bottomNav.roles"), "chart"],
     ["planificacion", t("bottomNav.plan"), "calendarDays"],
+    ["funcionarios", t("bottomNav.personal"), "users"],
     ["alertas", t("bottomNav.alertas"), "bell"],
   ];
   const more = [
     ["dia", t("bottomNav.dia"), "calendar"],
-    ["roles", t("bottomNav.roles"), "chart"],
     ["planFuncionario", t("bottomNav.planFunc"), "clipboard"],
     ["adelantos", t("bottomNav.viaticos"), "banknote"],
     ["reposicion", t("bottomNav.reposicion"), "refresh"],

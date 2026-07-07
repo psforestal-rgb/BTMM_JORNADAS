@@ -5,7 +5,7 @@ import SyncStatus from "../ui/SyncStatus.jsx";
 import { useT } from "../i18n/useT.js";
 
 /** Vistas que muestran navegación de mes/año en la barra superior. */
-const VISTAS_CON_PERIODO = ["dashboard", "roles", "planificacion", "planFuncionario"];
+const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
 
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();

@@ -17,7 +17,7 @@ const AppContext = createContext(null);
 
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
-  view: "dashboard",
+  view: "roles",
   personas: baseFuncionarios,
   month: 4,
   year: 2026,
@@ -28,6 +28,12 @@ const seedState = {
   diaVista: "2026-05-19",
   reglas: { ...REGLAS_DEFAULT },
 };
+
+// El dashboard quedó fuera de la navegación. Normalizamos snapshots o
+// llamadas antiguas para que siempre aterricen en la nueva vista principal.
+function vistaActiva(view) {
+  return view === "dashboard" ? "roles" : view;
+}
 
 // Inicializador perezoso: intenta cargar desde storage, cae al seed.
 function initialState() {
@@ -40,6 +46,7 @@ function initialState() {
   return {
     ...seedState,
     ...stored,
+    view: vistaActiva(stored.view ?? seedState.view),
     reglas: mergeReglas(stored.reglas),
   };
 }
@@ -51,7 +58,7 @@ function resolveUpdater(value, current) {
 function reducer(state, action) {
   switch (action.type) {
     case "SET_VIEW":
-      return { ...state, view: action.payload };
+      return { ...state, view: vistaActiva(action.payload) };
     case "SET_MONTH":
       return { ...state, month: resolveUpdater(action.payload, state.month) };
     case "SET_YEAR":
@@ -79,6 +86,7 @@ function reducer(state, action) {
       return {
         ...seedState,
         ...action.payload,
+        view: vistaActiva(action.payload?.view ?? seedState.view),
         reglas: mergeReglas(action.payload?.reglas),
       };
     default:

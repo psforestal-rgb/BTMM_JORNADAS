@@ -8,11 +8,10 @@ import BottomNav from "./layout/BottomNav.jsx";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
-import Dashboard from "./features/dashboard/Dashboard.jsx";
+import Roles from "./features/roles/Roles.jsx";
 
 const DashboardDia = lazy(() => import("./features/dia/DashboardDia.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
-const Roles = lazy(() => import("./features/roles/Roles.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
 const AdelantoViaticos = lazy(() => import("./features/viaticos/AdelantoViaticos.jsx"));
@@ -92,19 +91,6 @@ function AppShell() {
               el safe-area del home indicator; en lg la nav desaparece. */}
           <div className="space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
-              {view === "dashboard" && (
-                <Dashboard
-                  personas={personas}
-                  alerts={alerts}
-                  setView={setView}
-                  actividadesPlan={actividadesPlan}
-                  setActividadesPlan={setActividadesPlan}
-                  roleData={roleData}
-                  reposiciones={reposiciones}
-                  month={month}
-                  year={year}
-                />
-              )}
               {view === "dia" && (
                 <DashboardDia
                   diaVista={diaVista}
