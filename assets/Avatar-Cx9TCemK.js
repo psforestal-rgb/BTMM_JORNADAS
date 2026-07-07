@@ -1,0 +1,1 @@
+import{A as s,y as e,d as r}from"./index-CC-ZKDlE.js";function i({name:t}){return s.jsx("div",{className:`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${r(t)}`,children:e(t)})}export{i as A};
