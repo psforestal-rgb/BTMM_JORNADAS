@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { codigoCls } from "../../ui/styles.js";
@@ -41,6 +41,13 @@ function semanasDelMes(year, month) {
   return semanas;
 }
 
+function indiceSemanaActual(semanas, year, month) {
+  const hoy = new Date();
+  if (hoy.getFullYear() !== year || hoy.getMonth() !== month) return 0;
+  const indice = semanas.findIndex((semana) => semana.includes(hoy.getDate()));
+  return indice >= 0 ? indice : 0;
+}
+
 /**
  * Vista alterna de Roles por semana, optimizada para uso móvil/campo.
  * Conserva: códigos T/L/V/I/O, anillo INICIO (verde), conflicto (rojo),
@@ -72,8 +79,10 @@ export default function PuestoRolCardSemana({
   );
   const semanas = useMemo(() => semanasDelMes(year, month), [year, month]);
   const totalSemanas = semanas.length;
-  const [semIdx, setSemIdx] = useState(0);
+  const [semIdx, setSemIdx] = useState(() => indiceSemanaActual(semanas, year, month));
   const semana = semanas[Math.min(semIdx, totalSemanas - 1)] || [];
+  const hoy = new Date();
+  const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
   const feriados = useFeriadosDelAno(year);
   const inicio = primerDiaLaboral(year, month, feriados);
 
@@ -82,6 +91,10 @@ export default function PuestoRolCardSemana({
   const [conflictoActivo, setConflictoActivo] = useState(null);
   const [actividadesDiaModal, setActividadesDiaModal] = useState(null);
   const todosLosDias = useMemo(() => Array.from({ length: dim(year, month) }, (_, i) => i + 1), [year, month]);
+
+  useEffect(() => {
+    setSemIdx(indiceSemanaActual(semanas, year, month));
+  }, [semanas, year, month]);
 
   const toggleEdit = (nombre) => setEditRows((prev) => ({ ...prev, [nombre]: !prev[nombre] }));
 
@@ -268,10 +281,13 @@ export default function PuestoRolCardSemana({
                     <button
                       type="button"
                       key={`${nombre}-${d}`}
+                      aria-current={d === diaActual ? "date" : undefined}
                       disabled={!clickable}
                       onClick={onClick}
                       title={conflicto ? t("roles.titleConflicto") : editing ? t("roles.titleEditar") : t("roles.titleSinEdicion")}
                       className={`relative flex min-h-[60px] flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl border-2 px-1 py-1.5 text-[11px] font-semibold ${cls} ${
+                        d === diaActual ? "ring-2 ring-inset ring-emerald-500" : ""
+                      } ${
                         esInicio ? "ring-2 ring-inset ring-emerald-700" : ""
                       } ${conflicto ? "ring-2 ring-inset ring-red-600" : ""} ${
                         clickable ? "cursor-pointer hover:brightness-95" : "cursor-default opacity-90"
@@ -316,7 +332,13 @@ export default function PuestoRolCardSemana({
             {semana.map((d, i) => {
               const dow = new Date(year, month, d).getDay();
               return (
-                <div key={`turno-${d}`} className="flex flex-col items-center rounded-lg bg-slate-50 py-1.5">
+                <div
+                  key={`turno-${d}`}
+                  aria-current={d === diaActual ? "date" : undefined}
+                  className={`flex flex-col items-center rounded-lg py-1.5 ${
+                    d === diaActual ? "bg-emerald-100 ring-2 ring-emerald-400" : "bg-slate-50"
+                  }`}
+                >
                   <span className="text-[9px] uppercase text-slate-500">{dias[dow]}</span>
                   <span className="text-[11px] text-slate-500">{d}</span>
                   <span className="text-base font-bold text-slate-900">{cantidadTurnoSemana[i]}</span>

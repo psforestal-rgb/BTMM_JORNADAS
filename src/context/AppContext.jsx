@@ -15,17 +15,22 @@ import { REGLAS_DEFAULT, mergeReglas } from "../config/reglas.js";
 
 const AppContext = createContext(null);
 
+const fechaInicial = new Date();
+const fechaInicialIso = `${fechaInicial.getFullYear()}-${String(fechaInicial.getMonth() + 1).padStart(2, "0")}-${String(
+  fechaInicial.getDate(),
+).padStart(2, "0")}`;
+
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
   view: "roles",
   personas: baseFuncionarios,
-  month: 4,
-  year: 2026,
+  month: fechaInicial.getMonth(),
+  year: fechaInicial.getFullYear(),
   compact: false,
   roleData: {},
   actividadesPlan: baseActividadesPlan,
   reposiciones: baseReposiciones,
-  diaVista: "2026-05-19",
+  diaVista: fechaInicialIso,
   reglas: { ...REGLAS_DEFAULT },
 };
 
