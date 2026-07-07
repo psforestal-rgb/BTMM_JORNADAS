@@ -18,6 +18,16 @@ import { plural } from "../../i18n/es-CR.js";
 import { magnitudLabel } from "../reposicion/etiquetas.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 
+function SubgrupoPuesto({ label, n }) {
+  return (
+    <div className="mb-1.5 flex items-center gap-2">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
+      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{n}</span>
+      <span className="h-px flex-1 bg-slate-100" />
+    </div>
+  );
+}
+
 function MarcasDia({ trabajada, reposicion, t }) {
   if (!trabajada && !reposicion) return null;
   return (
@@ -87,6 +97,20 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     acc[k].push(p);
     return acc;
   }, {});
+
+  // Subagrupa una lista de funcionarios por puesto operativo, respetando el
+  // orden de `opcionesPuestoOperativo` (Orosi, Quetzales, Esperanza). Los que
+  // no tengan un puesto conocido caen en un grupo final. Omite grupos vacíos.
+  const agruparPorPuesto = (lista) => {
+    const grupos = opcionesPuestoOperativo.map((puesto) => ({
+      key: puesto,
+      label: puesto.replace("Puesto ", ""),
+      items: lista.filter((p) => (p.puestoOperativo || "") === puesto),
+    }));
+    const resto = lista.filter((p) => !opcionesPuestoOperativo.includes(p.puestoOperativo || ""));
+    if (resto.length) grupos.push({ key: "__sin__", label: t("funcionarios.sinPuesto"), items: resto });
+    return grupos.filter((g) => g.items.length > 0);
+  };
 
   const moveDay = (delta) => {
     const d = new Date(diaVista + "T12:00:00");
@@ -197,7 +221,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </div>
 
       {/* Resumen por puesto */}
-      <Card title={t("dia.porPuesto")} icon="📍">
+      <Card title={t("dia.porPuesto")} icon="📍" collapsible>
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full border-collapse text-sm">
             <thead className="bg-slate-100 text-[11px] uppercase tracking-wider text-slate-500">
@@ -226,6 +250,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       <Card
         title={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
+        collapsible
         action={
           <button onClick={() => setModalActividad(nuevaAct())} className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
             {t("dia.nueva")}
@@ -291,29 +316,35 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </Card>
 
       {/* En turno con actividad */}
-      <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅">
+      <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible>
         {enTurnoConAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoConActVacio")}</p>
         ) : (
-          <div className="divide-y divide-slate-100">
-            {enTurnoConAct.map((p) => (
-              <div key={p.id} className="flex items-start gap-3 py-3">
-                <Avatar name={p.nombre} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
-                    <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
-                    {p.tieneViatico && <Badge className="border-orange-200 bg-orange-100 text-orange-900">{t("dia.viaticoBadge")}</Badge>}
-                    <MarcasDia {...marcaDe(p.nombre)} t={t} />
-                  </div>
-                  <div className="mt-0.5 text-xs text-slate-500">{p.puestoOperativo}</div>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {p.acts.map((a) => (
-                      <span key={a.id} className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] text-emerald-800">
-                        {a.titulo}
-                      </span>
-                    ))}
-                  </div>
+          <div className="space-y-4">
+            {agruparPorPuesto(enTurnoConAct).map((g) => (
+              <div key={g.key}>
+                <SubgrupoPuesto label={g.label} n={g.items.length} />
+                <div className="divide-y divide-slate-100">
+                  {g.items.map((p) => (
+                    <div key={p.id} className="flex items-start gap-3 py-3">
+                      <Avatar name={p.nombre} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
+                          <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
+                          {p.tieneViatico && <Badge className="border-orange-200 bg-orange-100 text-orange-900">{t("dia.viaticoBadge")}</Badge>}
+                          <MarcasDia {...marcaDe(p.nombre)} t={t} />
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {p.acts.map((a) => (
+                            <span key={a.id} className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] text-emerald-800">
+                              {a.titulo}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -323,32 +354,37 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* En turno sin actividad — botón Asignar como acción primaria; en
           móvil ocupa una línea propia para no chocar con el badge del rol. */}
-      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"}>
+      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible>
         {enTurnoSinAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
-          <div className="divide-y divide-slate-100">
-            {enTurnoSinAct.map((p) => (
-              <div key={p.id} className="py-3">
-                <div className="flex items-start gap-3">
-                  <Avatar name={p.nombre} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
-                      <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
-                      <MarcasDia {...marcaDe(p.nombre)} t={t} />
+          <div className="space-y-4">
+            {agruparPorPuesto(enTurnoSinAct).map((g) => (
+              <div key={g.key}>
+                <SubgrupoPuesto label={g.label} n={g.items.length} />
+                <div className="divide-y divide-slate-100">
+                  {g.items.map((p) => (
+                    <div key={p.id} className="py-3">
+                      <div className="flex items-start gap-3">
+                        <Avatar name={p.nombre} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
+                            <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
+                            <MarcasDia {...marcaDe(p.nombre)} t={t} />
+                          </div>
+                          <div className="mt-0.5 text-xs text-slate-500">{p.puesto}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setModalActividad(nuevaAct([p.nombre], p.puestoOperativo || ""))}
+                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 sm:w-auto"
+                      >
+                        {t("dia.asignar")}
+                      </button>
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-500">
-                      {p.puestoOperativo} · {p.puesto}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-                <button
-                  onClick={() => setModalActividad(nuevaAct([p.nombre], p.puestoOperativo || ""))}
-                  className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 sm:w-auto"
-                >
-                  {t("dia.asignar")}
-                </button>
               </div>
             ))}
           </div>
@@ -356,7 +392,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </Card>
 
       {/* Fuera de turno */}
-      <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴">
+      <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴" collapsible>
         {fueraDeTurno.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.fueraDeTurnoVacio")}</p>
         ) : (
@@ -393,23 +429,30 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* Con viático */}
       {conViatico.length > 0 && (
-        <Card title={t("dia.conViaticoTitulo", { n: conViatico.length })} icon="💵">
-          <div className="divide-y divide-slate-100">
-            {conViatico.map((p) => (
-              <div key={p.id} className="flex items-start gap-3 py-2.5">
-                <Avatar name={p.nombre} />
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-slate-950">{p.nombre}</div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {p.acts
-                      .filter((a) => a.viatico)
-                      .map((a) => (
-                        <span key={a.id} className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-800">
-                          {a.titulo}
-                          {a.lugar ? ` · ${a.lugar}` : ""}
-                        </span>
-                      ))}
-                  </div>
+        <Card title={t("dia.conViaticoTitulo", { n: conViatico.length })} icon="💵" collapsible>
+          <div className="space-y-4">
+            {agruparPorPuesto(conViatico).map((g) => (
+              <div key={g.key}>
+                <SubgrupoPuesto label={g.label} n={g.items.length} />
+                <div className="divide-y divide-slate-100">
+                  {g.items.map((p) => (
+                    <div key={p.id} className="flex items-start gap-3 py-2.5">
+                      <Avatar name={p.nombre} />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-slate-950">{p.nombre}</div>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {p.acts
+                            .filter((a) => a.viatico)
+                            .map((a) => (
+                              <span key={a.id} className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-800">
+                                {a.titulo}
+                                {a.lugar ? ` · ${a.lugar}` : ""}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
