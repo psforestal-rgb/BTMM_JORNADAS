@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import { meses, diasLargos } from "../../data/calendario.js";
@@ -61,6 +61,9 @@ export default function Planificacion({
   const isMobile = useIsMobile();
   const modo = vistaManual ?? (isMobile ? "agenda" : "cuadricula");
   const feriados = useFeriadosDelAno(year);
+  const hoyRef = useRef(null);
+  const hoy = new Date();
+  const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
   const days = Array.from({ length: dim(year, month) }, (_, i) => i + 1);
   const blanks = Array.from({ length: new Date(year, month, 1).getDay() }, (_, i) => i);
   const isoDia = (d) => `${year}-${pad2(month + 1)}-${pad2(d)}`;
@@ -100,6 +103,9 @@ export default function Planificacion({
     setDiaVista(isoDia(d));
     setView("dia");
   };
+  useEffect(() => {
+    hoyRef.current?.scrollIntoView?.({ block: "center", inline: "center" });
+  }, [diaActual, modo, month, year]);
   const botonModo = (valor, etiqueta) => (
     <button
       onClick={() => setVistaManual(valor)}
@@ -152,13 +158,21 @@ export default function Planificacion({
             return (
               <li
                 key={d}
-                className={`rounded-2xl border border-slate-200 p-2 shadow-sm ${finde ? "bg-slate-50" : "bg-white"}`}
+                ref={d === diaActual ? hoyRef : undefined}
+                aria-current={d === diaActual ? "date" : undefined}
+                className={`rounded-2xl border p-2 shadow-sm ${
+                  d === diaActual
+                    ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
+                    : `border-slate-200 ${finde ? "bg-slate-50" : "bg-white"}`
+                }`}
               >
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => verDia(d)}
                     title={t("planificacion.titleDetalleDia")}
-                    className="flex min-h-touch min-w-touch shrink-0 flex-col items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm hover:bg-emerald-800"
+                    className={`flex min-h-touch min-w-touch shrink-0 flex-col items-center justify-center rounded-xl text-white shadow-sm hover:bg-emerald-800 ${
+                      d === diaActual ? "bg-emerald-700 ring-2 ring-emerald-300" : "bg-slate-900"
+                    }`}
                   >
                     <span className="text-base font-semibold leading-none">{d}</span>
                     <span className="mt-0.5 text-[9px] uppercase leading-none opacity-80">{diasLargos[dow].slice(0, 3)}</span>
@@ -222,13 +236,21 @@ export default function Planificacion({
                 return (
                   <div
                     key={d}
-                    className={`min-h-[174px] border-b border-r border-slate-300 p-2 ${dow === 0 || dow === 6 ? "bg-slate-100" : "bg-white"}`}
+                    ref={d === diaActual ? hoyRef : undefined}
+                    aria-current={d === diaActual ? "date" : undefined}
+                    className={`min-h-[174px] border-b border-r p-2 ${
+                      d === diaActual
+                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-inset ring-emerald-400"
+                        : `border-slate-300 ${dow === 0 || dow === 6 ? "bg-slate-100" : "bg-white"}`
+                    }`}
                   >
                     <div className="mb-2 flex items-start justify-between gap-1">
                       <button
                         onClick={() => verDia(d)}
                         title={t("planificacion.titleDetalleDia")}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800"
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 ${
+                          d === diaActual ? "bg-emerald-700 ring-2 ring-emerald-300" : "bg-slate-900"
+                        }`}
                       >
                         {d}
                       </button>

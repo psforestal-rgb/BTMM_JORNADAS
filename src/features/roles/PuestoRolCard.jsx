@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Badge from "../../ui/Badge.jsx";
 import { meses, dias } from "../../data/calendario.js";
 import { opcionesModalidad } from "../../data/opciones.js";
@@ -46,6 +46,19 @@ export default function PuestoRolCard({
   const [actividadesDiaModal, setActividadesDiaModal] = useState(null);
   const feriados = useFeriadosDelAno(year);
   const inicio = primerDiaLaboral(year, month, feriados);
+  const scrollRef = useRef(null);
+  const hoy = new Date();
+  const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
+
+  useEffect(() => {
+    const contenedor = scrollRef.current;
+    const objetivo = diaActual ? contenedor?.querySelector(`[data-dia="${diaActual}"]`) : null;
+    if (!contenedor || !objetivo) return;
+    contenedor.scrollLeft = Math.max(
+      0,
+      objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2,
+    );
+  }, [diaActual, month, year]);
   const toggleEdit = (nombre) => setEditRows((prev) => ({ ...prev, [nombre]: !prev[nombre] }));
   const getCfg = (persona) =>
     roleData[rolCfgKey(year, month, grupo.nombre, persona)] || personas.find((f) => f.nombre === persona)?.modalidad || "10x5";
@@ -111,7 +124,7 @@ export default function PuestoRolCard({
           </Badge>
         </div>
       </div>
-      <div className="overflow-auto bg-slate-50">
+      <div ref={scrollRef} className="overflow-auto bg-slate-50">
         <table className="border-separate border-spacing-0 text-xs" style={{ minWidth: compact ? 1140 : 1380 }}>
           <thead>
             <tr>
@@ -124,8 +137,14 @@ export default function PuestoRolCard({
                 return (
                   <th
                     key={d}
+                    data-dia={d}
+                    aria-current={d === diaActual ? "date" : undefined}
                     className={`border-b border-r border-slate-200 p-1.5 text-center font-semibold ${
-                      isWeekend ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-900"
+                      d === diaActual
+                        ? "bg-emerald-700 text-white ring-2 ring-inset ring-emerald-300"
+                        : isWeekend
+                          ? "bg-slate-800 text-white"
+                          : "bg-slate-100 text-slate-900"
                     }`}
                   >
                     <div className="mx-auto flex h-10 w-9 flex-col items-center justify-center rounded-xl bg-white/80 shadow-sm ring-1 ring-black/5">
