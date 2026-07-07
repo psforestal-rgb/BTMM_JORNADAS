@@ -12,13 +12,12 @@ import {
   SCHEMA_VERSION,
 } from "../lib/storage.js";
 import { REGLAS_DEFAULT, mergeReglas } from "../config/reglas.js";
+import { toLocalISODate } from "../domain/fechas.js";
 
 const AppContext = createContext(null);
 
 const fechaInicial = new Date();
-const fechaInicialIso = `${fechaInicial.getFullYear()}-${String(fechaInicial.getMonth() + 1).padStart(2, "0")}-${String(
-  fechaInicial.getDate(),
-).padStart(2, "0")}`;
+const fechaInicialIso = toLocalISODate(fechaInicial);
 
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
@@ -37,7 +36,7 @@ const seedState = {
 // El dashboard quedó fuera de la navegación. Normalizamos snapshots o
 // llamadas antiguas para que siempre aterricen en la nueva vista principal.
 function vistaActiva(view) {
-  return view === "dashboard" ? "roles" : view;
+  return view === "dashboard" ? "dia" : view;
 }
 
 // Inicializador perezoso: intenta cargar desde storage, cae al seed.

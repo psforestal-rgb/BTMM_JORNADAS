@@ -5,6 +5,7 @@ import { useT } from "./i18n/useT.js";
 import Sidebar from "./layout/Sidebar.jsx";
 import Topbar from "./layout/Topbar.jsx";
 import BottomNav from "./layout/BottomNav.jsx";
+import { useAppNavigation } from "./lib/useAppNavigation.js";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
@@ -68,18 +69,19 @@ function AppShell() {
     () => alerts.filter((a) => a.t === "danger" || a.t === "warn").length,
     [alerts],
   );
+  const navigate = useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista });
 
   return (
     <div className="pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950">
       <div className="flex min-h-screen">
-        <Sidebar view={view} setView={setView} nAlertas={nAlertas} />
+        <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
         {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho
             (tabla con overflow-x propio, modal mal medido, etc.) NO
             produzca scroll horizontal de la página entera en móvil. */}
         <main className="min-w-0 flex-1 overflow-x-clip">
           <Topbar
             view={view}
-            setView={setView}
+            setView={navigate}
             month={month}
             setMonth={setMonth}
             year={year}
@@ -126,7 +128,7 @@ function AppShell() {
                   actividadesPlan={actividadesPlan}
                   setActividadesPlan={setActividadesPlan}
                   roleData={roleData}
-                  setView={setView}
+                  setView={navigate}
                   setDiaVista={setDiaVista}
                 />
               )}
@@ -157,7 +159,7 @@ function AppShell() {
           </div>
         </main>
       </div>
-      <BottomNav view={view} setView={setView} nAlertas={nAlertas} />
+      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} />
     </div>
   );
 }

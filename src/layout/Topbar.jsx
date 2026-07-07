@@ -10,6 +10,8 @@ const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();
   const titulo = t(`view.${view}`);
+  const anioActual = new Date().getFullYear();
+  const opcionesAnio = Array.from({ length: 11 }, (_, i) => anioActual - 5 + i);
   const moverMes = (paso) => {
     let nuevoMes = month + paso;
     let nuevoAno = year;
@@ -23,6 +25,11 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     }
     setMonth(nuevoMes);
     setYear(nuevoAno);
+  };
+  const irHoy = () => {
+    const hoy = new Date();
+    setMonth(hoy.getMonth());
+    setYear(hoy.getFullYear());
   };
   return (
     <header className="pnlq-no-print sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3">
@@ -77,7 +84,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
                 >
-                  {[2025, 2026, 2027, 2028, 2029].map((y) => (
+                  {opcionesAnio.map((y) => (
                     <option key={y}>{y}</option>
                   ))}
                 </select>
@@ -89,6 +96,13 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
                   <Icon name="chevronRight" size={16} />
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={irHoy}
+                className="inline-flex min-h-touch items-center rounded-xl border border-line bg-surface px-3 text-sm font-semibold text-brand hover:bg-brand-soft"
+              >
+                {t("topbar.hoy")}
+              </button>
               {view === "roles" && (
                 <button
                   onClick={() => setCompact(!compact)}
