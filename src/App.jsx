@@ -105,6 +105,7 @@ function AppShell() {
                   roleData={roleData}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
+                  setView={navigate}
                 />
               )}
               {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}
@@ -145,7 +146,7 @@ function AppShell() {
                   setRoleData={setRoleData}
                 />
               )}
-              {view === "adelantos" && <AdelantoViaticos actividadesPlan={actividadesPlan} personas={personas} />}
+              {view === "adelantos" && <AdelantoViaticos actividadesPlan={actividadesPlan} personas={personas} setView={navigate} />}
               {view === "reposicion" && (
                 <Reposicion
                   personas={personas}
@@ -153,8 +154,8 @@ function AppShell() {
                   setReposiciones={setReposiciones}
                 />
               )}
-              {view === "disponibilidad" && <Disponibilidad personas={personas} />}
-              {view === "alertas" && <Alertas alerts={alerts} />}
+              {view === "disponibilidad" && <Disponibilidad personas={personas} setPersonas={setPersonas} />}
+              {view === "alertas" && <Alertas alerts={alerts} setView={navigate} />}
               {view === "datos" && <Datos />}
               {view === "configuracion" && <Configuracion />}
             </Suspense>

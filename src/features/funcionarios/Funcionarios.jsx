@@ -7,17 +7,20 @@ import EmptyState from "../../ui/EmptyState.jsx";
 import { estadoCls } from "../../ui/styles.js";
 import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
+import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
+import Modal from "../../ui/Modal.jsx";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
-  const [q, setQ] = useState("");
-  const [filtro, setFiltro] = useState("todos");
+  const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
+  const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
+  const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
   const [modal, setModal] = useState(null);
   const isMobile = useIsMobile();
-  const [vista, setVista] = useState(null);
+  const [vista, setVista] = useSessionState("btmm:funcionarios:vista", null);
   const vistaEfectiva = vista ?? (isMobile ? "tarjetas" : "tabla");
   const [borrar, setBorrar] = useState(null);
   const filtrados = useMemo(
@@ -31,8 +34,14 @@ export default function Funcionarios({ personas, setPersonas }) {
         if (filtro === "ong") return f.ong;
         if (filtro === "sin-res") return f.jornada === "Acumulativa" && !f.resolucion && !f.ong;
         return true;
+      }).sort((a, b) => {
+        if (orden === "puesto") return (a.puestoOperativo || a.puesto || "").localeCompare(b.puestoOperativo || b.puesto || "");
+        if (orden === "estado") return (a.estado || "").localeCompare(b.estado || "") || a.nombre.localeCompare(b.nombre);
+        if (orden === "antiguedad") return (a.ingreso || "9999").localeCompare(b.ingreso || "9999");
+        if (orden === "disponibilidad") return Number(Boolean(b.disponibilidad)) - Number(Boolean(a.disponibilidad)) || (a.vencimiento || "9999").localeCompare(b.vencimiento || "9999");
+        return a.nombre.localeCompare(b.nombre);
       }),
-    [personas, q, filtro]
+    [personas, q, filtro, orden]
   );
   const nuevo = () => ({
     id: `f${Date.now()}`,
@@ -131,6 +140,12 @@ export default function Funcionarios({ personas, setPersonas }) {
               </button>
             ))}
           </div>
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+            Ordenar
+            <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
+              <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
+            </select>
+          </label>
           <div className="text-sm font-bold text-slate-500 xl:ml-auto" aria-live="polite">
             {filtrados.length}/{personas.length}
           </div>
@@ -246,30 +261,13 @@ export default function Funcionarios({ personas, setPersonas }) {
       </Card>
       {modal && <ModalFuncionario valor={modal} cerrar={() => setModal(null)} guardar={guardar} />}
       {borrar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6">
-            <h3 className="text-lg font-semibold text-red-900">{t("funcionarios.eliminarTitulo")}</h3>
-            <p className="mt-2 text-sm">
+        <Modal open onClose={() => setBorrar(null)} title={t("funcionarios.eliminarTitulo")} size="sm" actions={<><button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border px-4 py-2 text-sm font-semibold">{t("acciones.cancelar")}</button><button onClick={() => { setPersonas((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white">{t("acciones.eliminar")}</button></>}>
+            <p className="text-sm">
               {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[0]}
               <strong>{personas.find((x) => x.id === borrar)?.nombre}</strong>
               {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[1]}
             </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setBorrar(null)} className="rounded-xl border px-4 py-2 text-sm font-semibold">
-                {t("acciones.cancelar")}
-              </button>
-              <button
-                onClick={() => {
-                  setPersonas((p) => p.filter((x) => x.id !== borrar));
-                  setBorrar(null);
-                }}
-                className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white"
-              >
-                {t("acciones.eliminar")}
-              </button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </section>
   );

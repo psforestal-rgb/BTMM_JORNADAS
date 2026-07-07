@@ -36,7 +36,7 @@ function MarcasDia({ trabajada, reposicion, t }) {
   );
 }
 
-export default function DashboardDia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj }) {
+export default function DashboardDia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj, setView }) {
   const t = useT();
   const { trabajadas, reposiciones: reposicionesDia } = indexarReposiciones(reposiciones, hj);
   const marcaDe = (nombre) => ({
@@ -191,8 +191,14 @@ export default function DashboardDia({ diaVista, setDiaVista, personas, activida
         </div>
       </div>
 
+      <nav aria-label="Acciones del día" className="flex snap-x gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        {[{ label: "Roles del día", view: "roles" }, { label: "Abrir planificación", view: "planificacion" }, { label: "Consultar alertas", view: "alertas" }, { label: "Ver cobertura", view: "roles" }].map((action) => (
+          <button key={action.label} type="button" onClick={() => setView?.(action.view)} className="min-h-touch shrink-0 snap-start rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-emerald-900 hover:bg-emerald-50">{action.label}</button>
+        ))}
+      </nav>
+
       {/* KPIs del día */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="flex snap-x gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-5">
         {[
           { label: t("kpi.enTurno"), value: enTurnoConAct.length + enTurnoSinAct.length, color: "text-emerald-700", bg: "border-emerald-200 bg-emerald-50" },
           { label: t("kpi.conActividad"), value: enTurnoConAct.length, color: "text-emerald-700", bg: "border-emerald-200 bg-emerald-50" },
@@ -210,7 +216,7 @@ export default function DashboardDia({ diaVista, setDiaVista, personas, activida
             bg: conViatico.length > 0 ? "border-orange-200 bg-orange-50" : "border-slate-200 bg-white",
           },
         ].map(({ label, value, color, bg }) => (
-          <div key={label} className={`rounded-2xl border p-4 ${bg}`}>
+          <div key={label} className={`min-w-[145px] shrink-0 snap-start rounded-2xl border p-4 md:min-w-0 ${bg}`}>
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</div>
             <div className={`mt-1 text-4xl font-semibold ${color}`}>{value}</div>
           </div>
