@@ -10,9 +10,9 @@ import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
-import Roles from "./features/roles/Roles.jsx";
+import Dia from "./features/dia/Dia.jsx";
 
-const Dia = lazy(() => import("./features/dia/Dia.jsx"));
+const Roles = lazy(() => import("./features/roles/Roles.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
@@ -105,7 +105,6 @@ function AppShell() {
                   roleData={roleData}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
-                  setView={navigate}
                 />
               )}
               {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}

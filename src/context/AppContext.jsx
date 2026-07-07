@@ -21,7 +21,7 @@ const fechaInicialIso = toLocalISODate(fechaInicial);
 
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
-  view: "roles",
+  view: "dia",
   personas: baseFuncionarios,
   month: fechaInicial.getMonth(),
   year: fechaInicial.getFullYear(),

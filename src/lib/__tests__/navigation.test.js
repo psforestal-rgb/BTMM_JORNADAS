@@ -12,7 +12,7 @@ describe("navegación por hash", () => {
 
   it("migra dashboard y protege rutas inválidas", () => {
     expect(parseAppHash("#dashboard").view).toBe("dia");
-    expect(parseAppHash("#/no-existe").view).toBe("roles");
+    expect(parseAppHash("#/no-existe").view).toBe("dia");
   });
 
   it("genera enlaces profundos estables", () => {

@@ -9,7 +9,7 @@ const CON_PERIODO = new Set(["roles", "planificacion", "planFuncionario"]);
 
 export function normalizarVista(view) {
   if (view === "dashboard") return "dia";
-  return VISTAS_VALIDAS.has(view) ? view : "roles";
+  return VISTAS_VALIDAS.has(view) ? view : "dia";
 }
 
 function periodoValido(year, monthOneBased) {
@@ -23,7 +23,7 @@ function periodoValido(year, monthOneBased) {
 export function parseAppHash(hash = "") {
   const clean = String(hash).replace(/^#\/?/, "");
   const [rawView, a, b] = clean.split("/");
-  const view = normalizarVista(rawView || "roles");
+  const view = normalizarVista(rawView || "dia");
   const parsed = { view };
   if (view === "dia" && /^\d{4}-\d{2}-\d{2}$/.test(a || "")) parsed.diaVista = a;
   if (CON_PERIODO.has(view)) Object.assign(parsed, periodoValido(a, b) || {});
