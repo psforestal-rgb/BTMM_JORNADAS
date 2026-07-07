@@ -19,7 +19,7 @@ const ESTADO_CLS = {
  * qué ya se repuso. Cada tarjeta es expandible para ver el detalle de los
  * registros con su folio (que enlaza día trabajado ↔ día de reposición).
  */
-export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEFAULT }) {
+export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEFAULT, onEdit }) {
   const t = useT();
   const [abierto, setAbierto] = useState({});
 
@@ -75,7 +75,39 @@ export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEF
             </button>
 
             {open && (
-              <div className="overflow-auto border-t border-slate-100">
+              <div className="border-t border-slate-100">
+                <ol className="space-y-3 p-3 md:hidden">
+                  {fila.registros.map((r) => {
+                    const est = estadoReposicion(r, hj);
+                    const saldo = saldoHoras(r, hj);
+                    const cuotas = cuotasDe(r);
+                    return (
+                      <li key={`mobile-${r.id}`} className="relative border-l-2 border-line pl-4">
+                        <span aria-hidden="true" className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-brand" />
+                        <div className="rounded-xl bg-surface-alt p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink">{fecha(r.fecha)}</p>
+                              <p className="font-mono text-xs text-ink-muted">{r.folio || "—"}</p>
+                            </div>
+                            <Badge className={ESTADO_CLS[est]}>{t(`reposicion.estado.${est}`)}</Badge>
+                          </div>
+                          <p className="mt-2 text-sm font-semibold text-ink">{r.motivo} · {magnitudLabel(r, t)}</p>
+                          <p className="mt-1 text-sm text-ink-muted">{r.tipoDia}</p>
+                          {r.observaciones && <p className="mt-2 whitespace-pre-wrap text-sm text-ink-muted">{r.observaciones}</p>}
+                          {cuotas.map((c) => (
+                            <p key={c.id} className="mt-2 rounded-lg bg-ok-soft p-2 text-sm text-ok-fg">
+                              {t("reposicion.historial.cuota", { fecha: fecha(c.fecha), cantidad: magnitudLabel(c, t) })}
+                            </p>
+                          ))}
+                          {saldo > 0 && <p className="mt-2 text-sm font-semibold text-warning-fg">{t("reposicion.saldoLabel", { saldo: saldoTexto(saldo, hj) })}</p>}
+                          {onEdit && <button type="button" onClick={() => onEdit(r)} className="mt-3 min-h-touch w-full rounded-xl border border-line bg-surface text-sm font-semibold text-info-fg">{t("acciones.editar")}</button>}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+                <div className="hidden overflow-auto md:block">
                 <table className="min-w-[640px] w-full border-collapse text-sm">
                   <thead className="bg-slate-50 text-left text-[11px] uppercase tracking-wider text-slate-500">
                     <tr>
@@ -120,6 +152,7 @@ export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEF
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>
