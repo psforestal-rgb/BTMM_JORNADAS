@@ -13,13 +13,13 @@ cara y para consulta rápida en campo.
 ## Para guardaparques (uso operativo en campo)
 
 ### Lo primero que verás al abrir la app
-- **Dashboard** con dos bloques: **HOY** (qué pasa este día) y
-  **ESTE MES** (cobertura crítica, vencimientos, personal).
-- En la barra inferior tienes acceso directo a: Inicio,
-  Personal, Plan, Alertas, y un menú "Más".
+- **Día** como centro operativo de la fecha actual: cobertura,
+  actividades, personal y accesos directos.
+- En la barra inferior tienes acceso directo a: Día, Roles,
+  Plan, Personal y un menú "Más".
 
 ### Cómo se usa el calendario
-- En el Dashboard, escoge el puesto (Orosi · Quetzales · Esperanza).
+- En Día, revisa cada puesto (Orosi · Quetzales · Esperanza).
 - Cada casilla muestra **Turno** (rol activo), **Plan**
   (actividades programadas) y **Visit.** (atención rutinaria).
 - Toca una casilla para ver detalle de funcionarios programados,
@@ -56,25 +56,24 @@ cara y para consulta rápida en campo.
 ## Para administración
 
 ### Tu menú lateral (escritorio)
-1. **Dashboard** — vista general.
-2. **Funcionarios** — CRUD del personal, filtros y búsqueda.
-3. **Detalle del día** — qué pasa en una fecha específica.
-4. **Roles** — tabla mensual T/L/V/I/O por funcionario.
-5. **Planificación general** — calendario mensual de actividades.
-6. **Planificación/Funcionario** — vista por persona.
-7. **Adelanto de viáticos** — listado del mes siguiente con corte
+1. **Día** — centro operativo de una fecha específica.
+2. **Roles** — planificación diaria y mensual por funcionario o día.
+3. **Planificación general** — agenda y calendario de actividades.
+4. **Funcionarios** — CRUD del personal, filtros y búsqueda.
+5. **Planificación/Funcionario** — vista por persona.
+6. **Adelanto de viáticos** — listado del mes siguiente con corte
    día 15 (configurable).
-8. **Disponibilidad** — control de contratos.
-9. **Alertas** — listado completo + semáforo normativo.
-10. **Datos · respaldo** — export/import JSON, reiniciar.
-11. **Configuración** — reglas duras editables (ver abajo).
+7. **Disponibilidad** — control de contratos.
+8. **Alertas** — listado completo + semáforo normativo.
+9. **Datos · respaldo** — respaldo, restauración y diagnóstico.
+10. **Configuración** — reglas duras editables (ver abajo).
 
 ### Configuración — qué se puede cambiar
 Acceso: sidebar grupo "Control" → **Configuración**.
 
 | Regla | Default | Efecto |
 |---|---|---|
-| Puestos con Visit. diario | Orosi, Quetzales | Dashboard marca rojo si falta |
+| Puestos con Visit. diario | Orosi, Quetzales | Día marca rojo si falta |
 | Día de corte de viáticos | 15 | Plazo administrativo (1–28) |
 | Mes objetivo de viáticos | siguiente | "siguiente" o "actual" |
 | Permitir consulta tras cierre | true | Lista visible aunque venza el plazo |
@@ -90,11 +89,11 @@ fábrica.
 ### Respaldos
 Acceso: sidebar grupo "Control" → **Datos · respaldo**.
 
-- **Exportar JSON** — descarga snapshot con metadatos
+- **Crear/compartir respaldo** — descarga o comparte un snapshot con metadatos
   institucionales (`appName`, `unidad`, `areaConservacion`,
   `exportadoEn`).
-- **Importar JSON** — valida `schemaVersion` antes de aplicar;
-  rechaza versiones incompatibles con mensaje claro.
+- **Restaurar respaldo** — valida esquema y versión, muestra un resumen,
+  crea una copia preventiva y pide confirmación antes de reemplazar datos.
 - **Reiniciar datos semilla** — modal de confirmación con
   recomendación de exportar primero.
 

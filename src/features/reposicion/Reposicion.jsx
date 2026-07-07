@@ -4,7 +4,7 @@ import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
 import EmptyState from "../../ui/EmptyState.jsx";
-import { fecha } from "../../domain/fechas.js";
+import { fecha, toLocalISODate } from "../../domain/fechas.js";
 import {
   resumenReposiciones,
   ordenarPorFecha,
@@ -21,10 +21,12 @@ import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 import ModalReposicion from "./ModalReposicion.jsx";
 import ModalReponer from "./ModalReponer.jsx";
 import HistorialFuncionario from "./HistorialFuncionario.jsx";
+import ReposicionListMobile from "./ReposicionListMobile.jsx";
+import Modal from "../../ui/Modal.jsx";
 
 // Fecha de hoy (ISO) para prellenar registros.
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate();
 }
 
 const ESTADO_CLS = {
@@ -42,16 +44,41 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
   const [borrar, setBorrar] = useState(null);
   const [filtro, setFiltro] = useState("todos");
   const [tab, setTab] = useState("registros");
+  const [busqueda, setBusqueda] = useState("");
+  const [funcionarioFiltro, setFuncionarioFiltro] = useState("");
+  const [tipoFiltro, setTipoFiltro] = useState("");
+  const [periodo, setPeriodo] = useState("");
+  const [soloObservaciones, setSoloObservaciones] = useState(false);
+  const [filtrosOpen, setFiltrosOpen] = useState(false);
 
   const resumen = useMemo(() => resumenReposiciones(reposiciones, hj), [reposiciones, hj]);
   const historial = useMemo(() => historialPorFuncionario(reposiciones, hj), [reposiciones, hj]);
 
   const filtrados = useMemo(() => {
     const base = ordenarPorFecha(reposiciones);
-    if (filtro === "pendientes") return base.filter((r) => saldoHoras(r, hj) > 0);
-    if (filtro === "repuestos") return base.filter((r) => saldoHoras(r, hj) <= 0);
-    return base;
-  }, [reposiciones, filtro, hj]);
+    return base.filter((r) => {
+      if (filtro === "pendientes" && saldoHoras(r, hj) <= 0) return false;
+      if (filtro === "repuestos" && saldoHoras(r, hj) > 0) return false;
+      if (funcionarioFiltro && r.funcionario !== funcionarioFiltro) return false;
+      if (tipoFiltro && r.tipoDia !== tipoFiltro) return false;
+      if (periodo && !String(r.fecha || "").startsWith(periodo)) return false;
+      if (soloObservaciones && !String(r.observaciones || "").trim()) return false;
+      const needle = busqueda.trim().toLocaleLowerCase("es");
+      if (!needle) return true;
+      return [r.folio, r.funcionario, r.motivo, r.motivoDetalle, r.observaciones]
+        .some((value) => String(value || "").toLocaleLowerCase("es").includes(needle));
+    });
+  }, [reposiciones, filtro, funcionarioFiltro, tipoFiltro, periodo, soloObservaciones, busqueda, hj]);
+
+  const limpiarFiltros = () => {
+    setFiltro("todos");
+    setBusqueda("");
+    setFuncionarioFiltro("");
+    setTipoFiltro("");
+    setPeriodo("");
+    setSoloObservaciones(false);
+  };
+  const filtrosActivos = [funcionarioFiltro, tipoFiltro, periodo, soloObservaciones].filter(Boolean).length;
 
   const nuevo = () => ({
     id: `rep${Date.now()}`,
@@ -94,12 +121,12 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
   return (
     <section className="space-y-4">
       {/* Resumen */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex snap-x gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3">
+        <div className="min-w-[150px] snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t("reposicion.resumen.total")}</p>
           <p className="mt-1 text-3xl font-semibold text-slate-900">{resumen.total}</p>
         </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+        <div className="min-w-[190px] snap-start rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
             {t("reposicion.resumen.pendientes")}
           </p>
@@ -109,7 +136,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             {resumen.parciales > 0 ? ` · ${t("reposicion.resumen.parciales", { n: resumen.parciales })}` : ""}
           </p>
         </div>
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+        <div className="min-w-[150px] snap-start rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
             {t("reposicion.resumen.repuestos")}
           </p>
@@ -154,21 +181,41 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
         </div>
 
         {tab === "historial" ? (
-          <HistorialFuncionario historial={historial} hj={hj} />
+          <HistorialFuncionario historial={historial} hj={hj} onEdit={(r) => setModal({ ...r })} />
         ) : (
         <>
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-3 flex gap-2">
+          <label className="relative min-w-0 flex-1">
+            <span className="sr-only">{t("reposicion.buscar")}</span>
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder={t("reposicion.buscar")}
+              className="min-h-touch w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand"
+            />
+          </label>
+          <button type="button" onClick={() => setFiltrosOpen(true)} className="min-h-touch rounded-xl border border-line bg-surface px-3 text-sm font-semibold text-ink">
+            {t("reposicion.filtros")} {filtrosActivos > 0 ? `(${filtrosActivos})` : ""}
+          </button>
+        </div>
+        <div className="mb-4 flex snap-x gap-2 overflow-x-auto pb-1">
           {filtros.map(([id, label, n]) => (
             <button
               key={id}
               onClick={() => setFiltro(id)}
-              className={`rounded-full border px-3 py-2 text-xs font-bold ${
+              className={`min-h-touch shrink-0 snap-start rounded-full border px-3 py-2 text-sm font-bold ${
                 filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
               }`}
             >
               {label} · {n}
             </button>
           ))}
+          {(filtrosActivos > 0 || busqueda) && (
+            <button type="button" onClick={limpiarFiltros} className="min-h-touch shrink-0 rounded-full border border-line px-3 text-sm font-semibold text-critical-fg">
+              {t("reposicion.limpiarFiltros")}
+            </button>
+          )}
         </div>
 
         {reposiciones.length === 0 ? (
@@ -184,7 +231,16 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             description={t("reposicion.sinResultadosDesc")}
           />
         ) : (
-          <div className="overflow-auto rounded-xl border border-slate-300">
+          <>
+          <ReposicionListMobile
+            registros={filtrados}
+            hj={hj}
+            onReponer={setReponer}
+            onEditar={(r) => setModal({ ...r })}
+            onReabrir={reabrir}
+            onEliminar={setBorrar}
+          />
+          <div className="hidden overflow-auto rounded-xl border border-slate-300 md:block">
             <table className="min-w-[940px] w-full border-collapse text-sm">
               <thead className="bg-slate-100 text-left text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
@@ -277,6 +333,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
               </tbody>
             </table>
           </div>
+          </>
         )}
         </>
         )}
@@ -310,28 +367,51 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
         />
       )}
 
-      {borrar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6">
-            <h3 className="text-lg font-semibold text-red-900">{t("reposicion.eliminarTitulo")}</h3>
-            <p className="mt-2 text-sm text-slate-700">{t("reposicion.eliminarConfirma")}</p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setBorrar(null)} className="rounded-xl border px-4 py-2 text-sm font-semibold">
-                {t("acciones.cancelar")}
-              </button>
-              <button
-                onClick={() => {
-                  setReposiciones((p) => p.filter((x) => x.id !== borrar));
-                  setBorrar(null);
-                }}
-                className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white"
-              >
-                {t("acciones.eliminar")}
-              </button>
-            </div>
+      <Modal
+        open={!!borrar}
+        onClose={() => setBorrar(null)}
+        title={t("reposicion.eliminarTitulo")}
+        description={t("reposicion.eliminarConfirma")}
+        size="sm"
+        actions={(
+          <div className="ml-auto flex gap-2">
+            <button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">{t("acciones.cancelar")}</button>
+            <button onClick={() => { setReposiciones((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-white">{t("acciones.eliminar")}</button>
           </div>
+        )}
+      >
+        <p className="text-sm text-ink-muted">{t("reposicion.nota")}</p>
+      </Modal>
+
+      <Modal
+        open={filtrosOpen}
+        onClose={() => setFiltrosOpen(false)}
+        title={t("reposicion.filtrosAvanzados")}
+        size="sm"
+        actions={<button type="button" onClick={() => setFiltrosOpen(false)} className="ml-auto min-h-touch rounded-xl bg-brand px-5 text-sm font-semibold text-brand-fg">{t("acciones.aceptar")}</button>}
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-semibold text-ink">{t("reposicion.th.funcionario")}
+            <select value={funcionarioFiltro} onChange={(e) => setFuncionarioFiltro(e.target.value)} className="mt-1 min-h-touch w-full rounded-xl border border-line bg-surface px-3">
+              <option value="">{t("reposicion.todosFuncionarios")}</option>
+              {personas.map((p) => <option key={p.id} value={p.nombre}>{p.nombre}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-ink">{t("reposicion.th.tipoDia")}
+            <select value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)} className="mt-1 min-h-touch w-full rounded-xl border border-line bg-surface px-3">
+              <option value="">{t("reposicion.todosTipos")}</option>
+              {[...new Set(reposiciones.map((r) => r.tipoDia).filter(Boolean))].map((tipo) => <option key={tipo}>{tipo}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-ink">{t("reposicion.periodo")}
+            <input type="month" value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="mt-1 min-h-touch w-full rounded-xl border border-line bg-surface px-3" />
+          </label>
+          <label className="flex min-h-touch items-center gap-3 rounded-xl border border-line p-3 text-sm font-semibold">
+            <input type="checkbox" checked={soloObservaciones} onChange={(e) => setSoloObservaciones(e.target.checked)} />
+            {t("reposicion.soloObservaciones")}
+          </label>
         </div>
-      )}
+      </Modal>
     </section>
   );
 }

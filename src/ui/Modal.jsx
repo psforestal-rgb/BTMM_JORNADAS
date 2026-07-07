@@ -53,7 +53,8 @@ export default function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
-        className={`flex max-h-[94vh] w-full ${maxW} flex-col overflow-hidden rounded-t-3xl bg-surface text-ink shadow-2xl outline-none md:rounded-3xl`}
+        className={`flex max-h-[94vh] max-h-[94dvh] w-full ${maxW} flex-col overflow-hidden rounded-t-3xl bg-surface text-ink shadow-2xl outline-none md:rounded-3xl`}
+        style={{ maxHeight: 'calc(var(--visual-viewport-height, 100dvh) - 1rem)' }}
       >
         {/* Asidero de hoja (bottom-sheet) — afordancia táctil en móvil. */}
         <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-line md:hidden" />

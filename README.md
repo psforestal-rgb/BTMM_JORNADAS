@@ -87,10 +87,7 @@ src/
 │   ├── AppContext.jsx          # useReducer + Context, setters compatibles
 │   └── ThemeContext.jsx        # light / dark / hc, persistido en localStorage
 └── features/                   # Vistas (una por pantalla del sistema)
-    ├── dashboard/
-    │   ├── Dashboard.jsx
-    │   └── CoberturaDetalleModal.jsx
-    ├── dia/DashboardDia.jsx
+    ├── dia/Dia.jsx
     ├── funcionarios/
     │   ├── Funcionarios.jsx
     │   └── ModalFuncionario.jsx
@@ -118,8 +115,7 @@ src/
 
 | Vista | Ruta interna | Responsabilidad |
 |-------|---|---|
-| Dashboard | `dashboard` | KPIs del mes, cobertura por puesto, alertas activas, marco normativo. |
-| Detalle del día | `dia` | KPIs y actividades de un día específico. |
+| Día | `#/dia/AAAA-MM-DD` | Centro operativo: cobertura, actividades, turnos y acciones de una fecha. |
 | Funcionarios | `funcionarios` | CRUD del personal con filtros y búsqueda. |
 | Roles | `roles` | Tabla mensual T/L/V/I/O por funcionario. |
 | Planificación general | `planificacion` | Calendario mensual de actividades (cuadrícula o agenda). |
@@ -225,19 +221,19 @@ release oficial).
 
 ### Internacionalización completa (es-CR)
 - Diccionario en `src/i18n/es-CR.js` con notación punteada
-  (`dashboard.bloqueHoy`), valores escalares + arreglos (para
+  (`dia.actividadesTitulo`), valores escalares + arreglos (para
   listas) + plantillas `{nombre}` interpoladas.
 - Helper puro `t(path, vars)` usable dentro y fuera de React.
 - Hook `useT()` para componentes con `useCallback` memoizado.
 - Helper `plural(n)` para concordancia simple (s / sin sufijo).
 - **Migración 100 %** de cadenas visibles: layout (Sidebar,
   BottomNav, Topbar, ThemeToggle), banners PWA (Install, Offline,
-  Update), AlertStrip + AlertItem, Modal wrapper, las 11 vistas
-  (Dashboard, Detalle del día, Funcionarios, Roles, Planificación,
+  Update), AlertStrip + AlertItem, Modal wrapper, las 10 vistas
+  (Día, Funcionarios, Roles, Planificación,
   Plan/Funcionario, Viáticos, Disponibilidad, Alertas, Datos,
   Configuración) y los 8 modales (ModalActividad, ModalFuncionario,
   MenuCelda, ConflictoModal, ActividadesDiaModal,
-  CoberturaDetalleModal, ModificarRolModal, AsignarActividadModal).
+  ModificarRolModal y AsignarActividadModal).
 - Si una clave falta, se renderiza la propia clave (`view.xxx`)
   como sentinela visible en QA. Tests automatizados de cobertura
   mínima del diccionario en `src/i18n/__tests__/es-CR.test.js`.
@@ -257,11 +253,8 @@ release oficial).
   cada vista no-default. La carga inicial baja ~22 % (gzip ~71 KB
   vs ~91 KB antes) y cada feature se descarga solo cuando el
   usuario la abre.
-- **Memoización en Dashboard** — un `useMemo` precomputa el cache
-  de cobertura por (puesto × día) en una sola pasada (vs N×M
-  iteraciones ad-hoc por render). Los KPIs `diasSinVisit`,
-  `sinActividadHoy`, `porVencer`, `totalActivos` y los resúmenes
-  por puesto se derivan de ese cache con `useMemo` propios.
+- **Vista Día bajo demanda** — se carga con `React.lazy` y concentra
+  cobertura, actividades, turnos, alertas y accesos operativos.
 - **`React.memo(RoleCell)`** — comparación shallow personalizada
   que ignora la identidad de `onOpen`/`onConflicto`. Resultado:
   ~3 puestos × 16 funcionarios × 31 días = ~1500 celdas que dejan
@@ -309,7 +302,7 @@ vista **Configuración** (sidebar grupo "Control"):
 - **Cobertura · puestos con Visit. diario** — toggle por puesto
   operativo. Por defecto Orosi y Quetzales. Si un día un puesto
   marcado no tiene a nadie asignado a "Atención rutinaria de
-  visitantes", el Dashboard lo marca como **cobertura crítica** (rojo).
+  visitantes", la vista Día lo marca como **cobertura crítica** (rojo).
 - **Viáticos** — día de corte administrativo (1–28), mes objetivo
   (`siguiente` o `actual`), permitir consulta tras cierre (boolean).
 - **Feriados oficiales CR** — toggle que excluye feriados del cálculo
@@ -423,12 +416,8 @@ ninguna funcionalidad de escritorio:
   conflicto de rol), conteo 👥 en turno y alta rápida `+` con la
   fecha del día prellenada. La cuadrícula de 7 columnas sigue
   íntegra y es el default de escritorio.
-- **Dashboard (cobertura)** — bajo 1024 px la grilla de 7 columnas
-  se presenta como mini-calendario semafórico (patrón "mes + agenda"
-  de Google Calendar/Outlook móvil): celdas día+color que sí caben
-  en 360 px, panel con Turno/Plan/Visit. del día tocado debajo,
-  botón al mismo modal de detalle de siempre, y deslizar ←/→ rota
-  entre puestos operativos.
+- **Día** — centro operativo móvil con indicadores horizontales,
+  acciones directas, cobertura por puesto, actividades y swipe entre fechas.
 - **Modales de formulario** — `ModalFuncionario` agrupa sus campos
   en cinco secciones tituladas (Identificación, Puesto y condición,
   Jornada y modalidad, Contratación y fechas, Atributos); campos y

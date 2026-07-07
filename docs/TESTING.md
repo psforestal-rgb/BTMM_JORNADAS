@@ -51,12 +51,12 @@ Cuatro flujos críticos que cubrir cuando se instale Playwright:
 
 ### 1. Flujo de planificación mensual
 ```
-1. Abrir Dashboard.
-2. Verificar AlertStrip y KPIs.
+1. Abrir Día.
+2. Verificar indicadores y cobertura.
 3. Navegar a Roles → editar fila → cambiar día 5 a "Libre".
 4. Verificar renumeración automática de consecutivos.
 5. Navegar a Planificación → crear actividad para el día 10.
-6. Verificar que aparezca en Dashboard como "Plan".
+6. Verificar que aparezca en Día como actividad planificada.
 ```
 
 ### 2. Resolución de conflictos
@@ -105,7 +105,7 @@ Cobertura actual aproximada:
 
 | Indicador | Test |
 |---|---|
-| #5 Calendario cobertura | Dashboard test (pendiente RTL) |
+| #5 Cobertura del día | Verificación RTL/manual en `Dia.jsx` |
 | #8 Anillo rojo + chip ! | `roles.test.js` (lógica) — falta RTL |
 | #9 Anillo verde INICIO | `roles.test.js` — falta RTL |
 | #14 Sin resolución | `alertas.test.js` ✓ |

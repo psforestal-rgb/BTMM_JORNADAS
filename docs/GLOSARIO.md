@@ -16,7 +16,7 @@ de la Muerte** (BTMM), SINAC · Área de Conservación Central.
 Actividad operativa diaria que debe estar asignada a al menos un
 funcionario en los puestos que la requieren. Si un día un puesto
 requiere Visit. y no tiene nadie asignado, el sistema marca
-**cobertura crítica** (rojo) en el Dashboard.
+**cobertura crítica** (rojo) en la vista Día.
 
 Puestos que requieren Visit. diario por configuración default:
 - **Puesto Orosi**

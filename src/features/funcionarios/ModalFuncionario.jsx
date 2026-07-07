@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { opcionesPuesto, opcionesCondicion, opcionesEstado, opcionesModalidad } from "../../data/opciones.js";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
-import { useEscapeClose } from "../../lib/a11y.js";
+import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 
 const cls = "w-full min-h-touch rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100";
@@ -29,22 +29,22 @@ function Seccion({ id, titulo, cols = "md:grid-cols-2", children }) {
 }
 
 export default function ModalFuncionario({ valor, cerrar, guardar }) {
-  useEscapeClose(cerrar);
+  const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const [f, setF] = useState(valor);
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
   const titulo = valor.nombre ? t("modalFuncionario.editar") : t("modalFuncionario.agregar");
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 md:items-center md:p-4" onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}>
-      <div role="dialog" aria-modal="true" aria-label={titulo} className="max-h-[94vh] w-full max-w-3xl overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl">
+      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="max-h-[100dvh] w-full max-w-3xl overflow-hidden rounded-none bg-white shadow-2xl outline-none md:max-h-[94dvh] md:rounded-3xl">
         <div className="flex justify-between border-b p-5">
-          <h3 className="text-lg font-semibold">{titulo}</h3>
+          <h3 id={titleId} className="text-lg font-semibold">{titulo}</h3>
           <button onClick={cerrar} aria-label={t("acciones.cerrar")} className="-mr-1 inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl text-lg font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700">✕</button>
         </div>
         <div className="max-h-[70vh] space-y-5 overflow-y-auto p-5">
           <Seccion id="sec-identificacion" titulo={t("modalFuncionario.sec.identificacion")}>
             <Field label={t("modalFuncionario.nombre")}><input className={cls} value={f.nombre} onChange={(e) => set("nombre", e.target.value)} /></Field>
-            <Field label={t("modalFuncionario.cedula")}><input className={cls} value={f.cedula} onChange={(e) => set("cedula", e.target.value)} /></Field>
+            <Field label={t("modalFuncionario.cedula")}><input type="text" inputMode="numeric" autoComplete="off" className={cls} value={f.cedula} onChange={(e) => set("cedula", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.correo")}><input className={cls} value={f.email} onChange={(e) => set("email", e.target.value)} /></Field>
           </Seccion>
           <Seccion id="sec-puesto" titulo={t("modalFuncionario.sec.puesto")}>

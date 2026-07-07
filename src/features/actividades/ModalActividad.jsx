@@ -2,7 +2,7 @@ import { useState } from "react";
 import Badge from "../../ui/Badge.jsx";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { opcionesLugarActividad, opcionesActividadBase, actividadRutinariaVisitantes } from "../../data/opciones.js";
-import { useEscapeClose } from "../../lib/a11y.js";
+import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
@@ -17,7 +17,7 @@ import { saldoTexto } from "../reposicion/etiquetas.js";
 import AsignacionLibreModal from "./AsignacionLibreModal.jsx";
 
 export default function ModalActividad({ valor, personas, cerrar, guardar, eliminar, actividadesPlan = [] }) {
-  useEscapeClose(cerrar);
+  const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const { roleData = {}, setRoleData, reposiciones = [], setReposiciones, reglas } = useApp();
   const hj = reglas?.horasJornada ?? HORAS_JORNADA_DEFAULT;
@@ -117,10 +117,10 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
   const titulo = esExistente ? t("modalActividad.editar") : t("modalActividad.agregar");
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm md:items-center md:p-4" onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}>
-      <div role="dialog" aria-modal="true" aria-label={titulo} className="max-h-[94vh] w-full max-w-4xl overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl">
+      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="max-h-[100dvh] w-full max-w-4xl overflow-hidden rounded-none bg-white shadow-2xl outline-none md:max-h-[94dvh] md:rounded-3xl">
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-5">
           <div>
-            <h3 className="text-lg font-semibold">{titulo}</h3>
+            <h3 id={titleId} className="text-lg font-semibold">{titulo}</h3>
             <p className="text-sm text-slate-600">{t("modalActividad.sub")}</p>
           </div>
           <button onClick={cerrar} aria-label={t("acciones.cerrar")} className="-mr-1 inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl text-lg font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700">✕</button>

@@ -25,7 +25,10 @@ function renderConProvider(props = {}) {
   return { ...utils, getSetPersonas: () => setPersonasRef };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  sessionStorage.clear();
+});
 
 describe("Funcionarios — filtros y búsqueda", () => {
   it("muestra los 3 funcionarios por defecto", () => {

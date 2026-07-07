@@ -7,16 +7,17 @@ const TONE = {
   info: { wrap: "border-blue-600 bg-blue-50 text-blue-950", icon: "text-blue-700" },
 };
 
-export default function AlertItem({ a }) {
+export default function AlertItem({ a, reviewed = false, onReview, onOpen }) {
   const tone = TONE[a.t] || TONE.info;
   return (
-    <div className={`flex gap-3 rounded-xl border-l-4 p-3 ${tone.wrap}`} role={a.t === "danger" ? "alert" : "status"}>
+    <div className={`flex gap-3 rounded-xl border-l-4 p-3 ${tone.wrap} ${reviewed ? "opacity-65" : ""}`} role={a.t === "danger" ? "alert" : "status"}>
       <div className={`mt-0.5 ${tone.icon}`}>
         <Icon name={a.icon} size={20} />
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold">{a.msg}</div>
         <div className="mt-1 text-xs opacity-80">{a.sub}</div>
+        {(onReview || onOpen) && <div className="mt-2 flex flex-wrap gap-2">{onOpen && <button type="button" onClick={onOpen} className="min-h-touch rounded-xl border border-current bg-white/70 px-3 text-xs font-semibold">Abrir registro</button>}{onReview && <button type="button" onClick={onReview} className="min-h-touch rounded-xl px-3 text-xs font-semibold underline">{reviewed ? "Marcar pendiente" : "Marcar revisada"}</button>}</div>}
       </div>
     </div>
   );

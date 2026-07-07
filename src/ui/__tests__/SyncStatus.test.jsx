@@ -35,7 +35,7 @@ describe("SyncStatus — indicador global de respaldo", () => {
       renderConProvider();
     });
     const pill = screen.getByRole("status");
-    expect(pill.getAttribute("aria-label")).toMatch(/Sin respaldo aún|Respaldo/);
+    expect(pill.getAttribute("aria-label")).toMatch(/guardado local/i);
   });
 
   it("reacciona al evento offline del navegador", async () => {

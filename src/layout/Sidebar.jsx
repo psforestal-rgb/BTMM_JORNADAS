@@ -28,7 +28,7 @@ export default function Sidebar({ view, setView, nAlertas }) {
     <aside className="pnlq-no-print hidden w-60 shrink-0 flex-col bg-emerald-900 text-white lg:flex">
       <div className="border-b border-white/10 p-6">
         <div className="mb-3 flex items-center gap-3">
-          <img src="/acc-logo.svg" alt="ACC" className="h-12 w-12 shrink-0 rounded-xl bg-white p-1" />
+          <img src={`${import.meta.env.BASE_URL}acc-logo.svg`} alt="ACC" className="h-12 w-12 shrink-0 rounded-xl bg-white p-1" />
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">{t("app.sinacCR")}</div>
             <div className="mt-0.5 text-xs font-semibold text-white/50">{t("app.accNombre")}</div>

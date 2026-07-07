@@ -21,22 +21,27 @@ export function useSwipe({ onSwipeLeft, onSwipeRight, threshold = 60, restraint 
     let startX = 0
     let startY = 0
     let startTime = 0
+    let blocked = false
 
     const onTouchStart = (e) => {
       const t = e.changedTouches?.[0]
       if (!t) return
+      const target = e.target instanceof Element ? e.target : null
+      blocked = !!target?.closest(
+        'button, a, input, select, textarea, [role="button"], [data-swipe-ignore], table, .overflow-x-auto, .overflow-auto',
+      ) || t.clientX < 24 || t.clientX > window.innerWidth - 24
       startX = t.clientX
       startY = t.clientY
       startTime = Date.now()
     }
     const onTouchEnd = (e) => {
       const t = e.changedTouches?.[0]
-      if (!t) return
+      if (!t || blocked) return
       const dx = t.clientX - startX
       const dy = t.clientY - startY
       const elapsed = Date.now() - startTime
       if (elapsed > allowedTime) return
-      if (Math.abs(dx) < threshold || Math.abs(dy) > restraint) return
+      if (Math.abs(dx) < threshold || Math.abs(dy) > restraint || Math.abs(dx) <= Math.abs(dy) * 1.2) return
       if (dx < 0) onSwipeLeft?.()
       else onSwipeRight?.()
     }

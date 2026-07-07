@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { fecha } from "../../domain/fechas.js";
+import { fecha, toLocalISODate } from "../../domain/fechas.js";
 import { horasDeMagnitud, horasTrabajadas, horasRepuestas, saldoHoras, cuotasDe } from "../../domain/reposicion.js";
-import { useEscapeClose } from "../../lib/a11y.js";
+import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalISODate();
 }
 
 /**
@@ -16,7 +16,7 @@ function hoyISO() {
  * hasta saldar.
  */
 export default function ModalReponer({ registro, hj, cerrar, guardar }) {
-  useEscapeClose(cerrar);
+  const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const [magnitud, setMagnitud] = useState("diaEntero");
   const [horas, setHoras] = useState("");
@@ -56,15 +56,17 @@ export default function ModalReponer({ registro, hj, cerrar, guardar }) {
       }}
     >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label={t("reponer.titulo")}
-        className="max-h-[94vh] w-full max-w-lg overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="max-h-[100dvh] w-full max-w-lg overflow-hidden rounded-none bg-white shadow-2xl outline-none md:max-h-[94dvh] md:rounded-3xl"
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-semibold">{t("reponer.titulo")}</h3>
+              <h3 id={titleId} className="text-lg font-semibold">{t("reponer.titulo")}</h3>
               {registro.folio && (
                 <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
                   {registro.folio}

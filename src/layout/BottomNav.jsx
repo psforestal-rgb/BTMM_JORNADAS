@@ -1,89 +1,89 @@
 import { useState } from "react";
 import Icon from "../ui/Icon.jsx";
+import Modal from "../ui/Modal.jsx";
 import { useT } from "../i18n/useT.js";
 
-export default function BottomNav({ view, setView, nAlertas }) {
+function badgeText(n) {
+  return n > 99 ? "99+" : String(n);
+}
+
+export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
   const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
   const main = [
+    ["dia", t("bottomNav.dia"), "calendar"],
     ["roles", t("bottomNav.roles"), "chart"],
     ["planificacion", t("bottomNav.plan"), "calendarDays"],
     ["funcionarios", t("bottomNav.personal"), "users"],
-    ["alertas", t("bottomNav.alertas"), "bell"],
   ];
   const more = [
-    ["dia", t("bottomNav.dia"), "calendar"],
-    ["planFuncionario", t("bottomNav.planFunc"), "clipboard"],
+    ["alertas", t("bottomNav.alertas"), "bell"],
     ["adelantos", t("bottomNav.viaticos"), "banknote"],
     ["reposicion", t("bottomNav.reposicion"), "refresh"],
     ["disponibilidad", t("bottomNav.disponib"), "shield"],
+    ["planFuncionario", t("bottomNav.planFunc"), "clipboard"],
     ["datos", t("bottomNav.datos"), "shieldAlert"],
     ["configuracion", t("bottomNav.config"), "traffic"],
   ];
+  const moreActive = more.some(([id]) => id === view);
+  const go = (id) => {
+    setView(id);
+    setMoreOpen(false);
+  };
+
+  if (hidden) return null;
+
   return (
     <>
-      {moreOpen && <div className="pnlq-no-print fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMoreOpen(false)} />}
-      {moreOpen && (
-        <div className="pnlq-no-print fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl lg:hidden">
-          <div className="grid grid-cols-2 gap-2">
-            {more.map(([id, label, icon]) => (
-              <button
-                key={id}
-                onClick={() => {
-                  setView(id);
-                  setMoreOpen(false);
-                }}
-                aria-current={view === id ? "page" : undefined}
-                className={`flex min-h-touch items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold ${
-                  view === id ? "bg-emerald-800 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                <Icon name={icon} size={18} />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <nav className="pnlq-no-print fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t("bottomNav.navAria")}>
+      <nav className="pnlq-no-print fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label={t("bottomNav.navAria")}>
         <div className="grid grid-cols-5">
           {main.map(([id, label, icon]) => (
             <button
               key={id}
-              onClick={() => {
-                setView(id);
-                setMoreOpen(false);
-              }}
+              type="button"
+              onClick={() => go(id)}
               aria-current={view === id ? "page" : undefined}
-              className={`relative flex min-h-touch flex-col items-center justify-center gap-0.5 py-3 text-[11px] font-semibold ${
-                view === id ? "text-emerald-800" : "text-slate-500"
-              }`}
+              className={`relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${view === id ? "text-brand" : "text-ink-muted"}`}
             >
               <Icon name={icon} size={22} />
               {label}
-              {id === "alertas" && nAlertas > 0 && (
-                <span
-                  aria-label={t("bottomNav.alertasAria", { n: nAlertas })}
-                  className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white"
-                >
-                  {nAlertas}
-                </span>
-              )}
             </button>
           ))}
           <button
-            onClick={() => setMoreOpen(!moreOpen)}
+            type="button"
+            onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
-            aria-label={t("bottomNav.masAria")}
-            className={`flex min-h-touch flex-col items-center justify-center gap-0.5 py-3 text-[11px] font-semibold ${
-              moreOpen ? "text-emerald-800" : "text-slate-500"
-            }`}
+            aria-current={moreActive ? "page" : undefined}
+            className={`relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${moreOpen || moreActive ? "text-brand" : "text-ink-muted"}`}
           >
             <Icon name="menu" size={22} />
             {t("bottomNav.mas")}
+            {nAlertas > 0 && (
+              <span className="absolute right-[22%] top-1 min-w-5 rounded-full bg-critical px-1 text-center text-[11px] font-bold leading-5 text-white" aria-label={t("bottomNav.alertasAria", { n: nAlertas })}>
+                {badgeText(nAlertas)}
+              </span>
+            )}
           </button>
         </div>
       </nav>
+
+      <Modal open={moreOpen} onClose={() => setMoreOpen(false)} title={t("bottomNav.masTitulo")} description={moreActive ? t(`view.${view}`) : t("bottomNav.masSub")} size="sm" contentClassName="p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="grid grid-cols-2 gap-2">
+          {more.map(([id, label, icon]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => go(id)}
+              aria-current={view === id ? "page" : undefined}
+              className={`relative flex min-h-[56px] items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold ${view === id ? "bg-brand text-brand-fg" : "bg-surface-alt text-ink"}`}
+            >
+              <Icon name={icon} size={20} />
+              <span>{label}</span>
+              {id === "alertas" && nAlertas > 0 && <span className="ml-auto rounded-full bg-critical px-2 py-0.5 text-xs font-bold text-white">{badgeText(nAlertas)}</span>}
+            </button>
+          ))}
+        </div>
+      </Modal>
     </>
   );
 }

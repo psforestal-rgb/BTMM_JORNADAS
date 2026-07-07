@@ -16,8 +16,8 @@ export default function FuncionarioCard({ f, onEditar, onBorrar }) {
       <header className="flex items-start gap-3">
         <Avatar name={f.nombre} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-slate-950">{f.nombre}</h3>
-          <p className="truncate text-xs text-slate-500">{f.cedula} · {f.email}</p>
+          <h3 className="break-words text-sm font-semibold text-slate-950">{f.nombre}</h3>
+          <p className="break-all text-xs text-slate-500">{f.cedula} · {f.email}</p>
         </div>
         <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
       </header>
@@ -32,7 +32,7 @@ export default function FuncionarioCard({ f, onEditar, onBorrar }) {
         </div>
       </section>
 
-      <section className="mt-2 grid grid-cols-2 gap-2">
+      <section className="mt-2 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
         <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t("funcionarios.card.jornada")}</p>
           <Badge
@@ -63,6 +63,13 @@ export default function FuncionarioCard({ f, onEditar, onBorrar }) {
           )}
         </div>
       </section>
+
+      {f.obs && (
+        <details className="mt-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+          <summary className="min-h-touch cursor-pointer py-3 font-semibold">Observaciones</summary>
+          <p className="break-words whitespace-pre-wrap">{f.obs}</p>
+        </details>
+      )}
 
       <section className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2">
         <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t("funcionarios.card.atributos")}</span>

@@ -87,7 +87,6 @@ describe("Planificación — modos agenda y cuadrícula", () => {
     renderPlanificacion();
     fireEvent.click(screen.getByRole("button", { name: /^Agenda$/ }));
     fireEvent.click(screen.getByRole("button", { name: /Patrullaje sector norte/ }));
-    const dialog = screen.getByRole("dialog");
-    expect(dialog.getAttribute("aria-label")).toMatch(/Editar actividad/);
+    expect(screen.getByRole("dialog", { name: /Editar actividad/ })).toBeDefined();
   });
 });

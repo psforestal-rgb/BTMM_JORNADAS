@@ -5,12 +5,14 @@ import { useT } from "./i18n/useT.js";
 import Sidebar from "./layout/Sidebar.jsx";
 import Topbar from "./layout/Topbar.jsx";
 import BottomNav from "./layout/BottomNav.jsx";
+import { useAppNavigation } from "./lib/useAppNavigation.js";
+import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
 import Roles from "./features/roles/Roles.jsx";
 
-const DashboardDia = lazy(() => import("./features/dia/DashboardDia.jsx"));
+const Dia = lazy(() => import("./features/dia/Dia.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
@@ -68,18 +70,20 @@ function AppShell() {
     () => alerts.filter((a) => a.t === "danger" || a.t === "warn").length,
     [alerts],
   );
+  const navigate = useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista });
+  const keyboardOpen = useVirtualKeyboard();
 
   return (
     <div className="pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950">
       <div className="flex min-h-screen">
-        <Sidebar view={view} setView={setView} nAlertas={nAlertas} />
+        <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
         {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho
             (tabla con overflow-x propio, modal mal medido, etc.) NO
             produzca scroll horizontal de la página entera en móvil. */}
         <main className="min-w-0 flex-1 overflow-x-clip">
           <Topbar
             view={view}
-            setView={setView}
+            setView={navigate}
             month={month}
             setMonth={setMonth}
             year={year}
@@ -92,7 +96,7 @@ function AppShell() {
           <div className="space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
               {view === "dia" && (
-                <DashboardDia
+                <Dia
                   diaVista={diaVista}
                   setDiaVista={setDiaVista}
                   personas={personas}
@@ -101,6 +105,7 @@ function AppShell() {
                   roleData={roleData}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
+                  setView={navigate}
                 />
               )}
               {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}
@@ -126,7 +131,7 @@ function AppShell() {
                   actividadesPlan={actividadesPlan}
                   setActividadesPlan={setActividadesPlan}
                   roleData={roleData}
-                  setView={setView}
+                  setView={navigate}
                   setDiaVista={setDiaVista}
                 />
               )}
@@ -141,7 +146,7 @@ function AppShell() {
                   setRoleData={setRoleData}
                 />
               )}
-              {view === "adelantos" && <AdelantoViaticos actividadesPlan={actividadesPlan} personas={personas} />}
+              {view === "adelantos" && <AdelantoViaticos actividadesPlan={actividadesPlan} personas={personas} setView={navigate} />}
               {view === "reposicion" && (
                 <Reposicion
                   personas={personas}
@@ -149,15 +154,15 @@ function AppShell() {
                   setReposiciones={setReposiciones}
                 />
               )}
-              {view === "disponibilidad" && <Disponibilidad personas={personas} />}
-              {view === "alertas" && <Alertas alerts={alerts} />}
+              {view === "disponibilidad" && <Disponibilidad personas={personas} setPersonas={setPersonas} />}
+              {view === "alertas" && <Alertas alerts={alerts} setView={navigate} />}
               {view === "datos" && <Datos />}
               {view === "configuracion" && <Configuracion />}
             </Suspense>
           </div>
         </main>
       </div>
-      <BottomNav view={view} setView={setView} nAlertas={nAlertas} />
+      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
     </div>
   );
 }

@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { dim, pad2, isoFecha, fecha, faltan, primerDiaLaboral } from "../fechas.js";
+import {
+  dim,
+  pad2,
+  isoFecha,
+  fecha,
+  faltan,
+  primerDiaLaboral,
+  toLocalISODate,
+  toLocalFileTimestamp,
+} from "../fechas.js";
 
 describe("fechas.dim", () => {
   it("devuelve días del mes", () => {
@@ -15,6 +24,18 @@ describe("fechas.pad2", () => {
     expect(pad2(1)).toBe("01");
     expect(pad2(10)).toBe("10");
     expect(pad2(0)).toBe("00");
+  });
+});
+
+describe("fechas civiles locales", () => {
+  it("no convierte a UTC cerca del cambio de día", () => {
+    const fechaLocal = new Date(2026, 6, 7, 23, 45, 12);
+    expect(toLocalISODate(fechaLocal)).toBe("2026-07-07");
+  });
+
+  it("conserva ceros y hora local en nombres de respaldo", () => {
+    const fechaLocal = new Date(2026, 0, 2, 3, 4, 5);
+    expect(toLocalFileTimestamp(fechaLocal)).toBe("2026-01-02_03-04-05");
   });
 });
 

@@ -112,28 +112,28 @@ export default defineConfig({
         // PWA de Lighthouse.
         shortcuts: [
           {
-            name: 'Dashboard',
-            short_name: 'Dashboard',
-            description: 'Resumen de cobertura, alertas y KPIs del día/mes',
-            url: BASE + '#dashboard',
+            name: 'Día',
+            short_name: 'Día',
+            description: 'Centro operativo del día actual',
+            url: BASE + '#/dia',
           },
           {
             name: 'Roles',
             short_name: 'Roles',
             description: 'Roles mensuales de turno por funcionario',
-            url: BASE + '#roles',
+            url: BASE + '#/roles',
           },
           {
             name: 'Planificación',
             short_name: 'Plan',
             description: 'Planificación general de actividades',
-            url: BASE + '#planificacion',
+            url: BASE + '#/planificacion',
           },
           {
             name: 'Alertas',
             short_name: 'Alertas',
             description: 'Listado completo de alertas del sistema',
-            url: BASE + '#alertas',
+            url: BASE + '#/alertas',
           },
         ],
         icons: [

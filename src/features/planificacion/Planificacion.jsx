@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import { meses, diasLargos } from "../../data/calendario.js";
@@ -7,7 +7,9 @@ import { codigoRolFuncionario, esRolActivo } from "../../domain/roles.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useIsMobile } from "../../lib/responsive.js";
+import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
+import Modal from "../../ui/Modal.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 
 /** Tarjeta de actividad compartida por la cuadrícula y la agenda. */
@@ -25,11 +27,13 @@ function ActividadItem({ a, conflictos, abrir, compacta }) {
       }`}
     >
       <div className={`line-clamp-2 font-semibold leading-tight ${compacta ? "text-[11px]" : "text-sm"}`}>{a.titulo}</div>
+      {!compacta && <div className="mt-1 text-xs font-medium opacity-75">📅 {a.inicio}{a.fin && a.fin !== a.inicio ? ` — ${a.fin}` : ""}</div>}
       <div className={`mt-1 font-bold opacity-80 ${compacta ? "text-[10px]" : "text-xs"}`}>
         {a.funcionarios.length ? a.funcionarios.slice(0, 3).join(", ") : t("planificacion.sinFuncionarios")}
         {a.funcionarios.length > 3 ? " " + t("planificacion.masFuncionarios", { n: a.funcionarios.length - 3 }) : ""}
       </div>
       {a.lugar && <div className={`mt-0.5 font-bold opacity-70 ${compacta ? "text-[10px]" : "text-xs"}`}>📍 {a.lugar}</div>}
+      {!compacta && a.observaciones && <div className="mt-1 line-clamp-2 text-xs opacity-75">{a.observaciones}</div>}
       {a.viatico && (
         <div className={`mt-1 inline-flex rounded-md bg-orange-200 px-1.5 py-0.5 font-bold text-orange-950 ${compacta ? "text-[9px]" : "text-[11px]"}`}>
           {t("planificacion.viaticoTag")}
@@ -40,6 +44,7 @@ function ActividadItem({ a, conflictos, abrir, compacta }) {
           {t("planificacion.rolBadge", { nombres: conflictos.join(", ") })}
         </div>
       )}
+      {!compacta && <div className="mt-2 text-xs font-semibold underline decoration-2 underline-offset-2">Editar actividad</div>}
     </button>
   );
 }
@@ -57,9 +62,18 @@ export default function Planificacion({
   const t = useT();
   const [modal, setModal] = useState(null);
   // null = sin preferencia explícita: agenda en móvil, cuadrícula en escritorio.
-  const [vistaManual, setVistaManual] = useState(null);
+  const [vistaManual, setVistaManual] = useSessionState("btmm:planificacion:vista", null);
+  const [rangoManual, setRangoManual] = useSessionState("btmm:planificacion:rango", null);
+  const [texto, setTexto] = useSessionState("btmm:planificacion:texto", "");
+  const [filtros, setFiltros] = useSessionState("btmm:planificacion:filtros", {
+    persona: "",
+    lugar: "",
+    viatico: "todos",
+  });
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const isMobile = useIsMobile();
   const modo = vistaManual ?? (isMobile ? "agenda" : "cuadricula");
+  const rango = rangoManual ?? (isMobile ? "proximos7" : "mes");
   const feriados = useFeriadosDelAno(year);
   const hoyRef = useRef(null);
   const hoy = new Date();
@@ -83,6 +97,10 @@ export default function Planificacion({
   const actividadesDia = (d) =>
     actividadesPlan
       .filter((a) => enDia(a, isoDia(d)))
+      .filter((a) => !texto.trim() || `${a.titulo} ${a.lugar} ${a.observaciones} ${a.funcionarios.join(" ")}`.toLocaleLowerCase().includes(texto.trim().toLocaleLowerCase()))
+      .filter((a) => !filtros.persona || a.funcionarios.includes(filtros.persona))
+      .filter((a) => !filtros.lugar || (a.lugar || "").toLocaleLowerCase().includes(filtros.lugar.toLocaleLowerCase()))
+      .filter((a) => filtros.viatico === "todos" || Boolean(a.viatico) === (filtros.viatico === "si"))
       .sort((a, b) => a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo));
   const guardar = (act) => {
     if (!act.titulo.trim()) return;
@@ -103,9 +121,22 @@ export default function Planificacion({
     setDiaVista(isoDia(d));
     setView("dia");
   };
-  useEffect(() => {
-    hoyRef.current?.scrollIntoView?.({ block: "center", inline: "center" });
-  }, [diaActual, modo, month, year]);
+  const tieneConflicto = (d, a) => conflictosActividadDia(a, d, year, month, personas, roleData, feriados).length > 0;
+  const hoyDia = diaActual || 1;
+  const daysVisible = days.filter((d) => {
+    const items = actividadesDia(d);
+    if (rango === "hoy") return d === hoyDia;
+    if (rango === "proximos7") return d >= hoyDia && d <= Math.min(hoyDia + 6, days.length);
+    if (rango === "actividades") return items.length > 0;
+    if (rango === "conflictos") return items.some((a) => tieneConflicto(d, a));
+    if (rango === "sinAsignar") return items.some((a) => !a.funcionarios.length);
+    return true;
+  });
+  const irHoy = () => {
+    if (!diaActual) return;
+    setRangoManual("hoy");
+    requestAnimationFrame(() => hoyRef.current?.scrollIntoView?.({ block: "center", behavior: "smooth" }));
+  };
   const botonModo = (valor, etiqueta) => (
     <button
       onClick={() => setVistaManual(valor)}
@@ -124,7 +155,7 @@ export default function Planificacion({
       action={
         <button
           onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
-          className="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+          className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
         >
           {t("planificacion.agregar")}
         </button>
@@ -145,12 +176,36 @@ export default function Planificacion({
         </div>
       </div>
 
+      {modo === "agenda" && (
+        <div className="mb-4 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+          <div className="flex gap-2">
+            <input
+              type="search"
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              placeholder="Buscar actividad, lugar o persona"
+              aria-label="Buscar en planificación"
+              className="min-h-touch min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm"
+            />
+            <button type="button" onClick={() => setFiltrosAbiertos(true)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold">
+              Filtros{Object.values(filtros).filter((v) => v && v !== "todos").length ? ` (${Object.values(filtros).filter((v) => v && v !== "todos").length})` : ""}
+            </button>
+          </div>
+          <div className="flex snap-x gap-2 overflow-x-auto pb-1">
+            {[["hoy","Hoy"],["proximos7","Próximos 7"],["actividades","Con actividades"],["conflictos","Conflictos"],["sinAsignar","Sin asignar"],["mes","Mes completo"]].map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setRangoManual(value)} aria-pressed={rango === value} className={`min-h-touch shrink-0 snap-start rounded-xl px-3 text-xs font-semibold ${rango === value ? "bg-emerald-800 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{label}</button>
+            ))}
+          </div>
+          {diaActual && rango !== "hoy" && <button type="button" onClick={irHoy} className="min-h-touch text-sm font-semibold text-emerald-800 underline">Ir a Hoy</button>}
+        </div>
+      )}
+
       {modo === "agenda" ? (
         /* Agenda vertical: un renglón por día, pensada para pantallas angostas.
            Misma información que la cuadrícula (actividades, turno, conflictos)
            más alta rápida con la fecha del día prellenada. */
         <ol className="space-y-2">
-          {days.map((d) => {
+          {daysVisible.map((d) => {
             const dow = new Date(year, month, d).getDay();
             const finde = dow === 0 || dow === 6;
             const items = actividadesDia(d);
@@ -212,6 +267,7 @@ export default function Planificacion({
               </li>
             );
           })}
+          {daysVisible.length === 0 && <li className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">No hay días que coincidan con estos filtros.</li>}
         </ol>
       ) : (
         /* Cuadrícula mensual de 7 columnas. En pantallas angostas necesita
@@ -301,6 +357,19 @@ export default function Planificacion({
           actividadesPlan={actividadesPlan}
         />
       )}
+      <Modal
+        open={filtrosAbiertos}
+        onClose={() => setFiltrosAbiertos(false)}
+        title="Filtros de planificación"
+        description="Combina filtros para reducir la agenda."
+        actions={<><button type="button" onClick={() => setFiltros({ persona: "", lugar: "", viatico: "todos" })} className="min-h-touch rounded-xl px-4 font-semibold text-slate-700">Limpiar</button><button type="button" onClick={() => setFiltrosAbiertos(false)} className="min-h-touch rounded-xl bg-emerald-800 px-5 font-semibold text-white">Ver resultados</button></>}
+      >
+        <div className="space-y-4">
+          <label className="block text-sm font-semibold">Persona<select value={filtros.persona} onChange={(e) => setFiltros((prev) => ({ ...prev, persona: e.target.value }))} className="mt-1 min-h-touch w-full rounded-xl border border-slate-300 bg-white px-3 font-normal"><option value="">Todas</option>{personasActivas.map((p) => <option key={p.nombre}>{p.nombre}</option>)}</select></label>
+          <label className="block text-sm font-semibold">Ubicación<input value={filtros.lugar} onChange={(e) => setFiltros((prev) => ({ ...prev, lugar: e.target.value }))} className="mt-1 min-h-touch w-full rounded-xl border border-slate-300 bg-white px-3 font-normal" /></label>
+          <label className="block text-sm font-semibold">Viático<select value={filtros.viatico} onChange={(e) => setFiltros((prev) => ({ ...prev, viatico: e.target.value }))} className="mt-1 min-h-touch w-full rounded-xl border border-slate-300 bg-white px-3 font-normal"><option value="todos">Todos</option><option value="si">Con viático</option><option value="no">Sin viático</option></select></label>
+        </div>
+      </Modal>
     </Card>
   );
 }
