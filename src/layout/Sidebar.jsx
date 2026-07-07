@@ -7,13 +7,12 @@ export default function Sidebar({ view, setView, nAlertas }) {
   // Cada item: [viewId, claveDelDiccionario, iconName].
   const grupos = [
     [t("sidebar.grupoPrincipal"), [
-      ["dashboard", t("view.dashboard"), "home"],
+      ["roles", t("view.roles"), "chart"],
+      ["planificacion", t("view.planificacion"), "calendarDays"],
       ["funcionarios", t("view.funcionarios"), "users"],
     ]],
     [t("sidebar.grupoJornadas"), [
       ["dia", t("view.dia"), "calendar"],
-      ["roles", t("view.roles"), "chart"],
-      ["planificacion", t("view.planificacion"), "calendarDays"],
       ["planFuncionario", t("view.planFuncionario"), "clipboard"],
       ["adelantos", t("view.adelantos"), "banknote"],
       ["reposicion", t("view.reposicion"), "refresh"],
