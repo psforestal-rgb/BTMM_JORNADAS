@@ -8,6 +8,7 @@ import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
+import Modal from "../../ui/Modal.jsx";
 
 function descargarArchivo(nombre, contenido) {
   try {
@@ -33,21 +34,32 @@ export default function Datos() {
   const [importError, setImportError] = useState(null);
   const [importOk, setImportOk] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [pendingImport, setPendingImport] = useState(null);
 
   const totalPersonas = (ctx.personas || []).length;
   const totalActividades = (ctx.actividadesPlan || []).length;
   const totalRoleEntries = Object.keys(ctx.roleData || {}).length;
   const totalReposiciones = (ctx.reposiciones || []).length;
 
-  const onExport = () => {
-    const snap = exportSnapshot({
+  const crearRespaldo = () => {
+    const snapshot = exportSnapshot({
       personas: ctx.personas,
       actividadesPlan: ctx.actividadesPlan,
       reposiciones: ctx.reposiciones,
       roleData: ctx.roleData,
     });
-    const ts = toLocalFileTimestamp();
-    descargarArchivo(`pnlq-snapshot-${ts}.json`, JSON.stringify(snap, null, 2));
+    return { snapshot, name: `pnlq-snapshot-${toLocalFileTimestamp()}.json`, text: JSON.stringify(snapshot, null, 2) };
+  };
+  const onExport = () => { const backup = crearRespaldo(); descargarArchivo(backup.name, backup.text); };
+  const onShare = async () => {
+    const backup = crearRespaldo();
+    const file = new File([backup.text], backup.name, { type: "application/json" });
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title: "Respaldo BTMM Jornadas", files: [file] });
+    } else {
+      descargarArchivo(backup.name, backup.text);
+      setImportOk({ archivo: backup.name, mensaje: "El navegador no permite compartir archivos; se descargó el respaldo." });
+    }
   };
 
   const onPickImport = () => fileInputRef.current?.click();
@@ -64,18 +76,27 @@ export default function Datos() {
         setImportError(parsed.reason);
         return;
       }
-      ctx.replaceState({
-        personas: parsed.state.personas ?? ctx.personas,
-        actividadesPlan: parsed.state.actividadesPlan ?? ctx.actividadesPlan,
-        reposiciones: parsed.state.reposiciones ?? ctx.reposiciones,
-        roleData: parsed.state.roleData ?? ctx.roleData,
-      });
-      setImportOk({ exportadoEn: parsed.exportadoEn, archivo: file.name });
+      setPendingImport({ parsed, archivo: file.name });
     } catch (err) {
       setImportError(`Error al leer archivo: ${err.message}`);
     } finally {
       e.target.value = "";
     }
+  };
+
+  const aplicarImport = () => {
+    if (!pendingImport) return;
+    const backup = crearRespaldo();
+    descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text);
+    const { parsed, archivo } = pendingImport;
+    ctx.replaceState({
+      personas: parsed.state.personas ?? ctx.personas,
+      actividadesPlan: parsed.state.actividadesPlan ?? ctx.actividadesPlan,
+      reposiciones: parsed.state.reposiciones ?? ctx.reposiciones,
+      roleData: parsed.state.roleData ?? ctx.roleData,
+    });
+    setImportOk({ exportadoEn: parsed.exportadoEn, archivo });
+    setPendingImport(null);
   };
 
   const onReset = () => {
@@ -108,8 +129,18 @@ export default function Datos() {
           </Badge>
         }
       >
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <button type="button" onClick={onExport} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"><Icon name="banknote" size={18} />Crear respaldo</button>
+          <button type="button" onClick={onShare} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-emerald-700 bg-white px-4 py-3 text-sm font-semibold text-emerald-900"><Icon name="clipboard" size={18} />Compartir respaldo</button>
+          <button type="button" onClick={onPickImport} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"><Icon name="refresh" size={18} />Restaurar respaldo</button>
+          <button type="button" onClick={() => setConfirmReset(true)} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-50"><Icon name="refresh" size={18} />{t("datos.reiniciar")}</button>
+          <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={onImportFile} className="hidden" aria-label={t("datos.archivoAria")} />
+        </div>
+
+        <details className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-semibold text-slate-800">Ver información técnica</summary>
         {/* Tarjeta: backend de almacenamiento durable (Fase 5 paso 1). */}
-        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50 p-4">
+        <div className="mt-2 flex items-start gap-3 rounded-2xl border border-slate-300 bg-white p-4">
           <Icon name="shield" size={20} className="text-slate-700" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -147,6 +178,7 @@ export default function Datos() {
             </p>
           </div>
         </div>
+        </details>
 
         <div
           className={`mb-4 flex items-start gap-3 rounded-2xl border p-4 ${
@@ -183,41 +215,6 @@ export default function Datos() {
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <button
-            type="button"
-            onClick={onExport}
-            className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
-          >
-            <Icon name="banknote" size={18} />
-            {t("datos.exportar")}
-          </button>
-          <button
-            type="button"
-            onClick={onPickImport}
-            className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-          >
-            <Icon name="clipboard" size={18} />
-            {t("datos.importar")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmReset(true)}
-            className="inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-50"
-          >
-            <Icon name="refresh" size={18} />
-            {t("datos.reiniciar")}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={onImportFile}
-            className="hidden"
-            aria-label={t("datos.archivoAria")}
-          />
-        </div>
-
         {importError && (
           <div className="mt-4 rounded-2xl border border-red-300 bg-red-50 p-3 text-sm text-red-950" role="alert">
             <p className="font-semibold">{t("datos.importRechazado")}</p>
@@ -228,7 +225,7 @@ export default function Datos() {
           <div className="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-950" role="status">
             <p className="font-semibold">{t("datos.importadoTitulo")}</p>
             <p className="mt-1 text-xs opacity-90">
-              {t("datos.importadoDesc", {
+              {importOk.mensaje || t("datos.importadoDesc", {
                 archivo: importOk.archivo,
                 exportadoEn: importOk.exportadoEn ? t("datos.importadoExtra", { fecha: formatBuildTime(importOk.exportadoEn) }) : "",
               })}
@@ -236,25 +233,10 @@ export default function Datos() {
           </div>
         )}
 
-        {confirmReset && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label={t("datos.reiniciarTitulo")}>
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-              <h3 className="text-lg font-semibold text-red-900">{t("datos.reiniciarTitulo")}</h3>
-              <p className="mt-2 text-sm text-slate-700">{t("datos.reiniciarSub")}</p>
-              <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
-                {t("datos.reiniciarRec")}
-              </div>
-              <div className="mt-5 flex justify-end gap-2">
-                <button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold">
-                  {t("acciones.cancelar")}
-                </button>
-                <button type="button" onClick={onReset} className="min-h-touch rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
-                  {t("datos.confirmarReiniciar")}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title={t("datos.reiniciarTitulo")} description={t("datos.reiniciarSub")} size="sm" actions={<><button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">{t("acciones.cancelar")}</button><button type="button" onClick={onReset} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">{t("datos.confirmarReiniciar")}</button></>}><div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{t("datos.reiniciarRec")}</div></Modal>
+        <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
+          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
+        </Modal>
       </Card>
 
       <Card title={t("datos.porQueTitulo")} icon="ℹ️">

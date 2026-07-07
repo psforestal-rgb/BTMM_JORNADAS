@@ -66,10 +66,8 @@ export default function Configuracion() {
         </div>
 
         {/* Cobertura */}
-        <section className="mb-4">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-700">
-            {t("configuracion.coberturaTitulo")}
-          </h3>
+        <details open className="mb-3 rounded-2xl border border-slate-200 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.coberturaTitulo")}</summary>
           <p className="mb-2 text-xs text-slate-500">{t("configuracion.coberturaSub")}</p>
           <div className="flex flex-wrap gap-2">
             {opcionesPuestoOperativo.map((p) => {
@@ -92,13 +90,11 @@ export default function Configuracion() {
               );
             })}
           </div>
-        </section>
+        </details>
 
         {/* Viáticos */}
-        <section className="mb-4">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-700">
-            {t("configuracion.viaticosTitulo")}
-          </h3>
+        <details open className="mb-3 rounded-2xl border border-slate-200 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.viaticosTitulo")}</summary>
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{t("configuracion.diaCorte")}</span>
@@ -133,13 +129,11 @@ export default function Configuracion() {
             </label>
           </div>
           <p className="mt-2 text-xs text-slate-500">{t("configuracion.permitirConsultaSub")}</p>
-        </section>
+        </details>
 
         {/* Feriados */}
-        <section className="mb-4">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-700">
-            {t("configuracion.feriadosTitulo")}
-          </h3>
+        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.feriadosTitulo")}</summary>
           <label className="flex items-start gap-2 rounded-xl border border-slate-300 p-3 text-sm">
             <input
               type="checkbox"
@@ -160,7 +154,7 @@ export default function Configuracion() {
               {aniosDisponibles.map((ano) => (
                 <div key={ano} className="rounded-lg bg-white p-2 ring-1 ring-slate-200">
                   <p className="text-xs font-bold text-slate-700">{ano}</p>
-                  <ul className="mt-1 space-y-0.5 text-[10px] text-slate-600">
+                  <ul className="mt-1 space-y-1 text-xs text-slate-600">
                     {FERIADOS_CR[ano].map((f) => (
                       <li key={f.fecha} className="flex justify-between">
                         <span>{f.fecha}</span>
@@ -172,13 +166,11 @@ export default function Configuracion() {
               ))}
             </div>
           </details>
-        </section>
+        </details>
 
         {/* Alertas adicionales */}
-        <section className="mb-4">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-700">
-            {t("configuracion.alertasTitulo")}
-          </h3>
+        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.alertasTitulo")}</summary>
           <div className="grid gap-2 md:grid-cols-3">
             {[
               ["alertaInactivoConActividad", t("configuracion.alertaInactivo")],
@@ -198,13 +190,11 @@ export default function Configuracion() {
             ))}
           </div>
           <p className="mt-1 text-xs text-slate-500">{t("configuracion.alertasNota")}</p>
-        </section>
+        </details>
 
         {/* Reposición de tiempo */}
-        <section className="mb-4">
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-700">
-            {t("configuracion.reposicionTitulo")}
-          </h3>
+        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.reposicionTitulo")}</summary>
           <label className="block max-w-xs">
             <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{t("configuracion.horasJornada")}</span>
             <input
@@ -218,7 +208,7 @@ export default function Configuracion() {
             />
           </label>
           <p className="mt-1 text-xs text-slate-500">{t("configuracion.horasJornadaSub")}</p>
-        </section>
+        </details>
 
         {advertencias.length > 0 && (
           <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950" role="alert">
@@ -229,7 +219,8 @@ export default function Configuracion() {
           </div>
         )}
 
-        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3">
+        <footer className={`flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 ${sucia ? "sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 -mx-3 rounded-2xl bg-white p-3 shadow-xl lg:bottom-2" : ""}`}>
+          {sucia && <strong className="w-full text-sm text-amber-900 sm:w-auto">Cambios pendientes</strong>}
           <button
             type="button"
             onClick={onResetTotal}
