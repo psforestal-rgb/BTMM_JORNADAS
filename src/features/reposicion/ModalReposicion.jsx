@@ -2,12 +2,12 @@ import { useState } from "react";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { fecha } from "../../domain/fechas.js";
 import { TIPOS_DIA, MOTIVOS, cuotasDe, saldoHoras, HORAS_JORNADA_DEFAULT } from "../../domain/reposicion.js";
-import { useEscapeClose } from "../../lib/a11y.js";
+import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 
 export default function ModalReposicion({ valor, personas, cerrar, guardar, eliminar, reposiciones = [], hj = HORAS_JORNADA_DEFAULT }) {
-  useEscapeClose(cerrar);
+  const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const [r, setR] = useState(valor);
   const set = (k, v) => setR((p) => ({ ...p, [k]: v }));
@@ -50,15 +50,17 @@ export default function ModalReposicion({ valor, personas, cerrar, guardar, elim
       }}
     >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label={titulo}
-        className="max-h-[94vh] w-full max-w-2xl overflow-hidden rounded-t-3xl bg-white shadow-2xl md:rounded-3xl"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="max-h-[100dvh] w-full max-w-2xl overflow-hidden rounded-none bg-white shadow-2xl outline-none md:max-h-[94dvh] md:rounded-3xl"
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-semibold">{titulo}</h3>
+              <h3 id={titleId} className="text-lg font-semibold">{titulo}</h3>
               {r.folio && (
                 <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-700">
                   {r.folio}

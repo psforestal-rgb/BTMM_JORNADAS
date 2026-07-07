@@ -6,6 +6,7 @@ import Sidebar from "./layout/Sidebar.jsx";
 import Topbar from "./layout/Topbar.jsx";
 import BottomNav from "./layout/BottomNav.jsx";
 import { useAppNavigation } from "./lib/useAppNavigation.js";
+import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
@@ -70,6 +71,7 @@ function AppShell() {
     [alerts],
   );
   const navigate = useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista });
+  const keyboardOpen = useVirtualKeyboard();
 
   return (
     <div className="pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950">
@@ -159,7 +161,7 @@ function AppShell() {
           </div>
         </main>
       </div>
-      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} />
+      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
     </div>
   );
 }

@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { meses } from "../data/calendario.js";
 import Icon from "../ui/Icon.jsx";
 import ThemeToggle from "../ui/ThemeToggle.jsx";
 import SyncStatus from "../ui/SyncStatus.jsx";
 import { useT } from "../i18n/useT.js";
+import Modal from "../ui/Modal.jsx";
 
 /** Vistas que muestran navegación de mes/año en la barra superior. */
 const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
 
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();
+  const [accionesOpen, setAccionesOpen] = useState(false);
   const titulo = t(`view.${view}`);
   const anioActual = new Date().getFullYear();
   const opcionesAnio = Array.from({ length: 11 }, (_, i) => anioActual - 5 + i);
@@ -32,7 +35,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setYear(hoy.getFullYear());
   };
   return (
-    <header className="pnlq-no-print sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3">
+    <header className={`pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen ? "z-50" : "z-30"}`}>
       <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -106,7 +109,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               {view === "roles" && (
                 <button
                   onClick={() => setCompact(!compact)}
-                  className="inline-flex min-h-touch items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="hidden min-h-touch items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 md:inline-flex"
                   aria-pressed={compact}
                 >
                   {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
@@ -114,13 +117,29 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               )}
             </>
           )}
-          <ThemeToggle />
+          <span className="hidden md:inline-flex"><ThemeToggle /></span>
+          <button type="button" onClick={() => setAccionesOpen(true)} aria-label={t("topbar.acciones")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl border border-line bg-surface text-ink md:hidden">
+            <Icon name="menu" size={20} />
+          </button>
           {/* En escritorio, estado de respaldo al final de la barra de acciones. */}
           <span className="hidden xl:inline-flex">
             <SyncStatus />
           </span>
         </div>
       </div>
+      <Modal open={accionesOpen} onClose={() => setAccionesOpen(false)} title={t("topbar.acciones")} size="sm">
+        <div className="space-y-3">
+          <div className="flex min-h-touch items-center justify-between rounded-xl border border-line p-3">
+            <span className="text-sm font-semibold text-ink">{t("topbar.tema")}</span>
+            <ThemeToggle />
+          </div>
+          {view === "roles" && (
+            <button type="button" onClick={() => { setCompact(!compact); setAccionesOpen(false); }} className="min-h-touch w-full rounded-xl border border-line bg-surface-alt px-3 text-left text-sm font-semibold text-ink">
+              {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
+            </button>
+          )}
+        </div>
+      </Modal>
     </header>
   );
 }
