@@ -18,6 +18,22 @@ import { plural } from "../../i18n/es-CR.js";
 import { magnitudLabel } from "../reposicion/etiquetas.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 
+// Encabezado de columna que apila sus palabras en dos líneas en móvil
+// (p. ej. "En" / "turno", "Sin" / "actividad") y las deja en una sola línea
+// desde `sm`. Las etiquetas de una sola palabra quedan igual.
+function ColHead({ label }) {
+  const [first, ...rest] = String(label).split(" ");
+  if (rest.length === 0) return label;
+  return (
+    <>
+      {first}
+      <br className="sm:hidden" />
+      <span className="hidden sm:inline"> </span>
+      {rest.join(" ")}
+    </>
+  );
+}
+
 function SubgrupoPuesto({ label, n }) {
   return (
     <div className="mb-1.5 flex items-center gap-2">
@@ -235,13 +251,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       <Card title={t("dia.porPuesto")} icon="📍" collapsible>
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full table-fixed border-collapse text-sm">
-            <thead className="bg-slate-100 text-[8px] uppercase leading-[1.15] tracking-tight text-slate-500 sm:text-[11px] sm:tracking-wide">
+            <thead className="bg-slate-100 text-[9px] uppercase leading-[1.15] tracking-tight text-slate-500 sm:text-[11px] sm:tracking-wide">
               <tr>
                 <th scope="col" className="w-[26%] px-1.5 py-2 text-left sm:px-3 sm:py-3">{t("dia.th.puesto")}</th>
-                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.fuera")}</th>
-                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.enTurno")}</th>
-                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.conActividad")}</th>
-                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.sinActividad")}</th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.fuera")} /></th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.enTurno")} /></th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.conActividad")} /></th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.sinActividad")} /></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -257,7 +273,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-300 bg-slate-50">
-                <th scope="row" className="px-1.5 py-2 text-left text-[13px] font-bold text-slate-900 sm:px-3 sm:py-3 sm:text-sm">{t("dia.th.total")}</th>
+                <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-bold text-slate-900 sm:px-3 sm:py-3 sm:text-sm">{t("dia.th.total")}</th>
                 <td className="px-1 py-2 text-center text-base font-bold text-slate-700 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.fuera}</td>
                 <td className="px-1 py-2 text-center text-base font-bold text-emerald-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.turno}</td>
                 <td className="px-1 py-2 text-center text-base font-bold text-blue-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.conActividad}</td>
