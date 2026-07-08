@@ -17,10 +17,12 @@ import Modal from "../../ui/Modal.jsx";
  */
 export default function Configuracion() {
   const t = useT();
-  const { reglas, setReglas, resetReglas } = useApp();
+  const { reglas, setReglas, resetReglas, resetToSeed } = useApp();
   const [draft, setDraft] = useState(reglas);
   const [confirmar, setConfirmar] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmSeed, setConfirmSeed] = useState(false);
+  const [seedConfirmStep, setSeedConfirmStep] = useState(false);
 
   const sucia = JSON.stringify(draft) !== JSON.stringify(reglas);
   const advertencias = useMemo(() => validarReglas(draft), [draft]);
@@ -47,6 +49,13 @@ export default function Configuracion() {
     resetReglas();
     setDraft(REGLAS_DEFAULT);
     setConfirmReset(false);
+  };
+
+  const onSeed = () => { setConfirmSeed(true); setSeedConfirmStep(false); };
+  const confirmarSeed = () => {
+    resetToSeed();
+    setConfirmSeed(false);
+    setSeedConfirmStep(false);
   };
 
   return (
@@ -270,6 +279,23 @@ export default function Configuracion() {
           </div>
         </footer>
       </Card>
+
+      {/* ── Datos de ejemplo ─────────────────────────────────────────── */}
+      <Card title={t("datos.reiniciarTitulo")} icon="🗄️">
+        <p className="mb-3 text-sm text-ink-muted">{t("datos.reiniciarSub")}</p>
+        <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+          ⚠ {t("datos.reiniciarRec")}
+        </p>
+        <button
+          type="button"
+          onClick={onSeed}
+          className="min-h-touch w-full rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-bold text-red-800 hover:bg-red-100 sm:w-auto"
+        >
+          {t("datos.reiniciar")}
+        </button>
+      </Card>
+
+      {/* Modal: reset reglas */}
       <Modal
         open={confirmReset}
         onClose={() => setConfirmReset(false)}
@@ -288,6 +314,52 @@ export default function Configuracion() {
         )}
       >
         <p className="text-sm text-ink-muted">{t("configuracion.reglaDuraIntro")}</p>
+      </Modal>
+
+      {/* Modal: reiniciar datos semilla (dos pasos) */}
+      <Modal
+        open={confirmSeed}
+        onClose={() => { setConfirmSeed(false); setSeedConfirmStep(false); }}
+        title={t("datos.reiniciarTitulo")}
+        description={t("datos.reiniciarSub")}
+        size="sm"
+        actions={(
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setConfirmSeed(false); setSeedConfirmStep(false); }}
+              className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold"
+            >
+              {t("acciones.cancelar")}
+            </button>
+            {!seedConfirmStep ? (
+              <button
+                type="button"
+                onClick={() => setSeedConfirmStep(true)}
+                className="min-h-touch rounded-xl border border-red-400 bg-red-50 px-4 text-sm font-bold text-red-800 hover:bg-red-100"
+              >
+                {t("datos.confirmarReiniciar")}…
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={confirmarSeed}
+                className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-bold text-white hover:bg-red-800"
+              >
+                {t("datos.confirmarReiniciar")} ✓
+              </button>
+            )}
+          </div>
+        )}
+      >
+        <p className="mb-2 text-xs font-semibold text-amber-900">
+          ⚠ {t("datos.reiniciarRec")}
+        </p>
+        {seedConfirmStep && (
+          <p className="mt-2 rounded-lg border border-red-300 bg-red-50 p-2 text-xs font-bold text-red-900">
+            Esta acción no se puede deshacer. Pulse «{t("datos.confirmarReiniciar")}» para confirmar.
+          </p>
+        )}
       </Modal>
     </section>
   );
