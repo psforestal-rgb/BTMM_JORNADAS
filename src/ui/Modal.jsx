@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useModalA11y } from '../lib/a11y.js'
 import { t } from '../i18n/es-CR.js'
 import Icon from './Icon.jsx'
@@ -39,7 +40,11 @@ export default function Modal({
   if (!open) return null
   const maxW = sizeClasses[size] || sizeClasses.lg
 
-  return (
+  // Portal a <body>: evita que un ancestro con `filter`/`backdrop-filter`
+  // (p. ej. el topbar con `backdrop-blur`) actúe como bloque contenedor del
+  // backdrop `fixed`, lo que lo descolocaba y dejaba parte del modal fuera de
+  // la pantalla.
+  const modal = (
     <div
       className="pnlq-modal-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm md:items-center md:p-4"
       onClick={(e) => {
@@ -91,4 +96,6 @@ export default function Modal({
       </div>
     </div>
   )
+
+  return typeof document !== 'undefined' ? createPortal(modal, document.body) : modal
 }
