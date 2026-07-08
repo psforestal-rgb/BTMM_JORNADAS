@@ -75,14 +75,25 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   const conViatico = statusDia.filter((p) => p.tieneViatico);
   const actsDelDia = actividadesEnDia(actividadesPlan, diaVista).sort((a, b) => a.titulo.localeCompare(b.titulo));
   const statsPuesto = opcionesPuestoOperativo.map((puesto) => {
-    const enTurno = statusDia.filter((p) => (p.puestoOperativo || "") === puesto && p.enTurno);
+    const delPuesto = statusDia.filter((p) => (p.puestoOperativo || "") === puesto);
+    const enTurno = delPuesto.filter((p) => p.enTurno);
     return {
       puesto,
+      fuera: delPuesto.length - enTurno.length,
       turno: enTurno.length,
       conActividad: enTurno.filter((p) => p.tieneActividad).length,
       sinActividad: enTurno.filter((p) => !p.tieneActividad).length,
     };
   });
+  const totalPuesto = statsPuesto.reduce(
+    (a, s) => ({
+      fuera: a.fuera + s.fuera,
+      turno: a.turno + s.turno,
+      conActividad: a.conActividad + s.conActividad,
+      sinActividad: a.sinActividad + s.sinActividad,
+    }),
+    { fuera: 0, turno: 0, conActividad: 0, sinActividad: 0 },
+  );
   const catLabel = { L: "Libre", V: "Vacaciones", I: "Incapacidad", O: "Otro", "": "Sin marcar" };
   const catCls = {
     L: "border-amber-200 bg-amber-100 text-amber-900",
@@ -222,26 +233,37 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* Resumen por puesto */}
       <Card title={t("dia.porPuesto")} icon="📍" collapsible>
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-slate-100 text-[11px] uppercase tracking-wider text-slate-500">
+        <div className="overflow-hidden rounded-xl border border-slate-200">
+          <table className="w-full table-fixed border-collapse text-sm">
+            <thead className="bg-slate-100 text-[8px] uppercase leading-[1.15] tracking-tight text-slate-500 sm:text-[11px] sm:tracking-wide">
               <tr>
-                <th scope="col" className="p-3 text-left">{t("dia.th.puesto")}</th>
-                <th scope="col" className="p-3 text-center">{t("dia.th.enTurno")}</th>
-                <th scope="col" className="p-3 text-center">{t("dia.th.conActividad")}</th>
-                <th scope="col" className="p-3 text-center">{t("dia.th.sinActividad")}</th>
+                <th scope="col" className="w-[26%] px-1.5 py-2 text-left sm:px-3 sm:py-3">{t("dia.th.puesto")}</th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.fuera")}</th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.enTurno")}</th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.conActividad")}</th>
+                <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3">{t("dia.th.sinActividad")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {statsPuesto.map(({ puesto, turno, conActividad, sinActividad }) => (
+              {statsPuesto.map(({ puesto, fuera, turno, conActividad, sinActividad }) => (
                 <tr key={puesto} className="hover:bg-slate-50">
-                  <th scope="row" className="p-3 text-left font-semibold text-slate-800">{puesto.replace("Puesto ", "")}</th>
-                  <td className="p-3 text-center text-lg font-semibold text-emerald-700">{turno}</td>
-                  <td className="p-3 text-center text-lg font-semibold text-blue-700">{conActividad}</td>
-                  <td className={`p-3 text-center text-lg font-semibold ${sinActividad > 0 ? "text-amber-600" : "text-slate-400"}`}>{sinActividad}</td>
+                  <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-semibold text-slate-800 sm:px-3 sm:py-3 sm:text-sm">{puesto.replace("Puesto ", "")}</th>
+                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${fuera > 0 ? "text-slate-600" : "text-slate-300"}`}>{fuera}</td>
+                  <td className="px-1 py-2 text-center text-base font-semibold text-emerald-700 sm:px-3 sm:py-3 sm:text-lg">{turno}</td>
+                  <td className="px-1 py-2 text-center text-base font-semibold text-blue-700 sm:px-3 sm:py-3 sm:text-lg">{conActividad}</td>
+                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${sinActividad > 0 ? "text-amber-600" : "text-slate-300"}`}>{sinActividad}</td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-slate-300 bg-slate-50">
+                <th scope="row" className="px-1.5 py-2 text-left text-[13px] font-bold text-slate-900 sm:px-3 sm:py-3 sm:text-sm">{t("dia.th.total")}</th>
+                <td className="px-1 py-2 text-center text-base font-bold text-slate-700 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.fuera}</td>
+                <td className="px-1 py-2 text-center text-base font-bold text-emerald-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.turno}</td>
+                <td className="px-1 py-2 text-center text-base font-bold text-blue-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.conActividad}</td>
+                <td className={`px-1 py-2 text-center text-base font-bold sm:px-3 sm:py-3 sm:text-lg ${totalPuesto.sinActividad > 0 ? "text-amber-700" : "text-slate-400"}`}>{totalPuesto.sinActividad}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </Card>
