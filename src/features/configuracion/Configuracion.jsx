@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
+import ThemeToggle from "../../ui/ThemeToggle.jsx";
 import { useApp } from "../../context/AppContext.jsx";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { VIATICOS_OBJETIVO_OPCIONES, validarReglas, REGLAS_DEFAULT } from "../../config/reglas.js";
@@ -50,6 +51,17 @@ export default function Configuracion() {
 
   return (
     <section className="space-y-4">
+      {/* Apariencia: el tema es global (toda la app), por eso vive aquí y no
+          en la barra de cada módulo. */}
+      <Card title={t("configuracion.aparienciaTitulo")} icon="🎨">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">{t("topbar.tema")}</p>
+            <p className="mt-0.5 text-xs text-ink-muted">{t("configuracion.aparienciaSub")}</p>
+          </div>
+          <ThemeToggle />
+        </div>
+      </Card>
       <Card
         title={t("configuracion.titulo")}
         icon="🚦"
