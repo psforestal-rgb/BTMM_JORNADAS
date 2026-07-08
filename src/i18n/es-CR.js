@@ -140,9 +140,11 @@ const dict = {
     porPuesto: "Por puesto operativo",
     th: {
       puesto: "Puesto",
+      fuera: "Fuera",
       enTurno: "En turno",
       conActividad: "Con actividad",
       sinActividad: "Sin actividad",
+      total: "Total",
     },
     actividadesTitulo: "Actividades planificadas ({n})",
     nueva: "+ Nueva",
