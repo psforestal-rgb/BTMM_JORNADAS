@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { meses } from "../data/calendario.js";
 import Icon from "../ui/Icon.jsx";
-import ThemeToggle from "../ui/ThemeToggle.jsx";
 import SyncStatus from "../ui/SyncStatus.jsx";
 import { useT } from "../i18n/useT.js";
 import Modal from "../ui/Modal.jsx";
@@ -138,10 +137,11 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               <span className="rounded-md bg-surface px-1.5 py-0.5 text-xs text-ink-muted">Temporal</span>
             </button>
           )}
-          <span className="hidden md:inline-flex"><ThemeToggle /></span>
-          <button type="button" onClick={() => setAccionesOpen(true)} aria-label={t("topbar.acciones")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl border border-line bg-surface text-ink md:hidden">
-            <Icon name="menu" size={20} />
-          </button>
+          {view === "roles" && (
+            <button type="button" onClick={() => setAccionesOpen(true)} aria-label={t("topbar.acciones")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl border border-line bg-surface text-ink md:hidden">
+              <Icon name="menu" size={20} />
+            </button>
+          )}
           {/* En escritorio, estado de respaldo al final de la barra de acciones. */}
           <span className="hidden xl:inline-flex">
             <SyncStatus />
@@ -150,10 +150,6 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
       </div>
       <Modal open={accionesOpen} onClose={() => setAccionesOpen(false)} title={t("topbar.acciones")} size="sm">
         <div className="space-y-3">
-          <div className="flex min-h-touch items-center justify-between rounded-xl border border-line p-3">
-            <span className="text-sm font-semibold text-ink">{t("topbar.tema")}</span>
-            <ThemeToggle />
-          </div>
           {view === "roles" && (
             <button type="button" onClick={() => { setCompact(!compact); setAccionesOpen(false); }} className="min-h-touch w-full rounded-xl border border-line bg-surface-alt px-3 text-left text-sm font-semibold text-ink">
               {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}

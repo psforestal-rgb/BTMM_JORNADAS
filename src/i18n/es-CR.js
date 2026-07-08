@@ -667,6 +667,8 @@ const dict = {
     pendientesN: "{n} cambios locales pendientes de guardar.",
   },
   configuracion: {
+    aparienciaTitulo: "Apariencia",
+    aparienciaSub: "El tema (claro / oscuro / alto contraste) se aplica a toda la aplicación.",
     titulo: "Configuración · reglas administrativas",
     badgeSucia: "Cambios sin aplicar",
     badgeOk: "Guardado localmente",

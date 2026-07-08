@@ -190,73 +190,36 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
   return (
     <section ref={swipeRef} className="space-y-5">
-      {/* Navegación de fecha. Móvil: fecha+selector arriba; Anterior y
-          Siguiente debajo, cada uno ocupando media línea (mínimo 48 px).
-          Desde `sm` vuelve a tres columnas en línea, sin desbordes. */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:px-4 sm:py-3">
-        <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-2">
-          <button
-            onClick={() => moveDay(-1)}
-            aria-label={t("dia.diaAnterior")}
-            className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-          >
-            <Icon name="chevronLeft" size={16} />
-            {t("dia.anterior")}
-          </button>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {dowLabel} · {meses[monthIdx]} {yearD}
-            </span>
-            <input
-              type="date"
-              value={diaVista}
-              onChange={(e) => e.target.value && setDiaVista(e.target.value)}
-              aria-label={t("dia.seleccionarFecha")}
-              className="min-h-touch rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700"
-            />
-          </div>
-          <button
-            onClick={() => moveDay(1)}
-            aria-label={t("dia.diaSiguiente")}
-            className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-          >
-            {t("dia.siguiente")}
-            <Icon name="chevronRight" size={16} />
-          </button>
+      {/* Navegación de fecha en una sola fila: flechas ‹ › (solo ícono) a los
+          lados y el selector de día al centro, con la etiqueta día · mes · año
+          encima. El swipe horizontal sigue disponible en móvil. */}
+      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:p-3">
+        <button
+          onClick={() => moveDay(-1)}
+          aria-label={t("dia.diaAnterior")}
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+        >
+          <Icon name="chevronLeft" size={20} />
+        </button>
+        <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
+          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:text-xs">
+            {dowLabel} · {meses[monthIdx]} {yearD}
+          </span>
+          <input
+            type="date"
+            value={diaVista}
+            onChange={(e) => e.target.value && setDiaVista(e.target.value)}
+            aria-label={t("dia.seleccionarFecha")}
+            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700"
+          />
         </div>
-        <div className="flex flex-col items-stretch gap-2 sm:hidden">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {dowLabel} · {meses[monthIdx]} {yearD}
-            </span>
-            <input
-              type="date"
-              value={diaVista}
-              onChange={(e) => e.target.value && setDiaVista(e.target.value)}
-              aria-label={t("dia.seleccionarFecha")}
-              className="min-h-touch w-full max-w-xs rounded-xl border border-slate-300 px-3 py-1.5 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700"
-            />
-            <span className="text-[10px] text-slate-400">{t("dia.pistaSwipe")}</span>
-          </div>
-          <div className="flex items-stretch gap-2">
-            <button
-              onClick={() => moveDay(-1)}
-              aria-label={t("dia.diaAnterior")}
-              className="inline-flex min-h-touch flex-1 items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-            >
-              <Icon name="chevronLeft" size={16} />
-              {t("dia.anterior")}
-            </button>
-            <button
-              onClick={() => moveDay(1)}
-              aria-label={t("dia.diaSiguiente")}
-              className="inline-flex min-h-touch flex-1 items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50"
-            >
-              {t("dia.siguiente")}
-              <Icon name="chevronRight" size={16} />
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => moveDay(1)}
+          aria-label={t("dia.diaSiguiente")}
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+        >
+          <Icon name="chevronRight" size={20} />
+        </button>
       </div>
 
       {/* Resumen por puesto */}
