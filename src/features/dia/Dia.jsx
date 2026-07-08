@@ -34,12 +34,24 @@ function ColHead({ label }) {
   );
 }
 
-function SubgrupoPuesto({ label, n }) {
+// Subgrupo de un puesto operativo dentro de un listado de funcionarios.
+// El encabezado es un botón que colapsa/expande la lista de ese puesto.
+function SubgrupoPuesto({ label, n, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="mb-1.5 flex items-center gap-2">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
-      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{n}</span>
-      <span className="h-px flex-1 bg-slate-100" />
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="mb-1.5 flex w-full items-center gap-2 text-left"
+      >
+        <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="shrink-0 text-slate-400" />
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{n}</span>
+        <span className="h-px flex-1 bg-slate-100" />
+      </button>
+      {open && children}
     </div>
   );
 }
@@ -248,7 +260,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </div>
 
       {/* Resumen por puesto */}
-      <Card title={t("dia.porPuesto")} icon="📍" collapsible>
+      <Card title={t("dia.porPuesto")} icon="📍" collapsible defaultOpen={false}>
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full table-fixed border-collapse text-sm">
             <thead className="bg-slate-100 text-[9px] uppercase leading-[1.15] tracking-tight text-slate-500 sm:text-[11px] sm:tracking-wide">
@@ -289,6 +301,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         title={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
         collapsible
+        defaultOpen={false}
         action={
           <button onClick={() => setModalActividad(nuevaAct())} className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
             {t("dia.nueva")}
@@ -354,14 +367,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </Card>
 
       {/* En turno con actividad */}
-      <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible>
+      <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible defaultOpen={false}>
         {enTurnoConAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoConActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoConAct).map((g) => (
-              <div key={g.key}>
-                <SubgrupoPuesto label={g.label} n={g.items.length} />
+              <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
                 <div className="divide-y divide-slate-100">
                   {g.items.map((p) => (
                     <div key={p.id} className="flex items-start gap-3 py-3">
@@ -384,7 +396,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                     </div>
                   ))}
                 </div>
-              </div>
+              </SubgrupoPuesto>
             ))}
           </div>
         )}
@@ -392,14 +404,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* En turno sin actividad — botón Asignar como acción primaria; en
           móvil ocupa una línea propia para no chocar con el badge del rol. */}
-      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible>
+      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen={false}>
         {enTurnoSinAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoSinAct).map((g) => (
-              <div key={g.key}>
-                <SubgrupoPuesto label={g.label} n={g.items.length} />
+              <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
                 <div className="divide-y divide-slate-100">
                   {g.items.map((p) => (
                     <div key={p.id} className="py-3">
@@ -423,14 +434,14 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                     </div>
                   ))}
                 </div>
-              </div>
+              </SubgrupoPuesto>
             ))}
           </div>
         )}
       </Card>
 
       {/* Fuera de turno */}
-      <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴" collapsible>
+      <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴" collapsible defaultOpen={false}>
         {fueraDeTurno.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.fueraDeTurnoVacio")}</p>
         ) : (
@@ -467,11 +478,10 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* Con viático */}
       {conViatico.length > 0 && (
-        <Card title={t("dia.conViaticoTitulo", { n: conViatico.length })} icon="💵" collapsible>
+        <Card title={t("dia.conViaticoTitulo", { n: conViatico.length })} icon="💵" collapsible defaultOpen={false}>
           <div className="space-y-4">
             {agruparPorPuesto(conViatico).map((g) => (
-              <div key={g.key}>
-                <SubgrupoPuesto label={g.label} n={g.items.length} />
+              <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
                 <div className="divide-y divide-slate-100">
                   {g.items.map((p) => (
                     <div key={p.id} className="flex items-start gap-3 py-2.5">
@@ -492,7 +502,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                     </div>
                   ))}
                 </div>
-              </div>
+              </SubgrupoPuesto>
             ))}
           </div>
         </Card>
