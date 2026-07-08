@@ -3,6 +3,7 @@ import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
+import BottomSheet from "../../ui/BottomSheet.jsx";
 import { codigoCls } from "../../ui/styles.js";
 import { meses, diasLargos } from "../../data/calendario.js";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
@@ -12,15 +13,13 @@ import { actividadesEnDia } from "../../domain/actividades.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { useSwipe } from "../../lib/useSwipe.js";
+import { useMobile } from "../../lib/useMobile.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
 import { magnitudLabel } from "../reposicion/etiquetas.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 
-// Encabezado de columna que apila sus palabras en dos líneas en móvil
-// (p. ej. "En" / "turno", "Sin" / "actividad") y las deja en una sola línea
-// desde `sm`. Las etiquetas de una sola palabra quedan igual.
 function ColHead({ label }) {
   const [first, ...rest] = String(label).split(" ");
   if (rest.length === 0) return label;
@@ -34,8 +33,6 @@ function ColHead({ label }) {
   );
 }
 
-// Subgrupo de un puesto operativo dentro de un listado de funcionarios.
-// El encabezado es un botón que colapsa/expande la lista de ese puesto.
 function SubgrupoPuesto({ label, n, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -44,7 +41,7 @@ function SubgrupoPuesto({ label, n, children, defaultOpen = true }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mb-1.5 flex w-full items-center gap-2 text-left"
+        className="mb-1.5 flex w-full items-center gap-2 text-left active:scale-95"
       >
         <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="shrink-0 text-slate-400" />
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
@@ -76,6 +73,7 @@ function MarcasDia({ trabajada, reposicion, t }) {
 
 export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj }) {
   const t = useT();
+  const isMobile = useMobile();
   const { trabajadas, reposiciones: reposicionesDia } = indexarReposiciones(reposiciones, hj);
   const marcaDe = (nombre) => ({
     trabajada: trabajadas[`${nombre}|${diaVista}`],
@@ -124,11 +122,11 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   );
   const catLabel = { L: "Libre", V: "Vacaciones", I: "Incapacidad", O: "Otro", "": "Sin marcar" };
   const catCls = {
-    L: "border-amber-200 bg-amber-100 text-amber-900",
-    V: "border-sky-200 bg-sky-100 text-sky-900",
-    I: "border-red-200 bg-red-100 text-red-900",
-    O: "border-violet-200 bg-violet-100 text-violet-900",
-    "": "border-slate-200 bg-slate-100 text-slate-700",
+    L: "border-amber-700 bg-amber-700 text-white",
+    V: "border-sky-700 bg-sky-700 text-white",
+    I: "border-red-700 bg-red-700 text-white",
+    O: "border-violet-700 bg-violet-700 text-white",
+    "": "border-slate-500 bg-slate-500 text-white",
   };
   const fueraPorCat = fueraDeTurno.reduce((acc, p) => {
     const k = p.cat || "";
@@ -137,9 +135,6 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     return acc;
   }, {});
 
-  // Subagrupa una lista de funcionarios por puesto operativo, respetando el
-  // orden de `opcionesPuestoOperativo` (Orosi, Quetzales, Esperanza). Los que
-  // no tengan un puesto conocido caen en un grupo final. Omite grupos vacíos.
   const agruparPorPuesto = (lista) => {
     const grupos = opcionesPuestoOperativo.map((puesto) => ({
       key: puesto,
@@ -181,23 +176,35 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     viatico: false,
   });
 
-  // Swipe horizontal entre días. Los botones de navegación siguen siendo la
-  // ruta principal (a11y, teclado, escritorio).
   const swipeRef = useSwipe({
     onSwipeLeft: () => moveDay(1),
     onSwipeRight: () => moveDay(-1),
   });
 
+  // Título dinámico para el BottomSheet según si es edición o creación.
+  const tituloModal = modalActividad && actividadesPlan.some((a) => a.id === modalActividad.id)
+    ? t("dia.editarActividad", { defaultValue: "Editar actividad" })
+    : t("dia.nuevaActividad", { defaultValue: "Nueva actividad" });
+
+  const modalContent = modalActividad ? (
+    <ModalActividad
+      valor={modalActividad}
+      personas={personasActivas}
+      cerrar={() => setModalActividad(null)}
+      guardar={guardar}
+      eliminar={eliminar}
+      actividadesPlan={actividadesPlan}
+    />
+  ) : null;
+
   return (
     <section ref={swipeRef} className="space-y-5">
-      {/* Navegación de fecha en una sola fila: flechas ‹ › (solo ícono) a los
-          lados y el selector de día al centro, con la etiqueta día · mes · año
-          encima. El swipe horizontal sigue disponible en móvil. */}
+      {/* Navegación de fecha — una sola fila con flechas ‹ › y selector central */}
       <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:p-3">
         <button
           onClick={() => moveDay(-1)}
           aria-label={t("dia.diaAnterior")}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95 active:bg-slate-100"
         >
           <Icon name="chevronLeft" size={20} />
         </button>
@@ -216,7 +223,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         <button
           onClick={() => moveDay(1)}
           aria-label={t("dia.diaSiguiente")}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95 active:bg-slate-100"
         >
           <Icon name="chevronRight" size={20} />
         </button>
@@ -266,7 +273,10 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         collapsible
         defaultOpen={false}
         action={
-          <button onClick={() => setModalActividad(nuevaAct())} className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+          <button
+            onClick={() => setModalActividad(nuevaAct())}
+            className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-700 active:scale-95 active:brightness-90"
+          >
             {t("dia.nueva")}
           </button>
         }
@@ -301,7 +311,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       )}
                       <button
                         onClick={() => setModalActividad({ ...act })}
-                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
                       >
                         {t("acciones.editar")}
                       </button>
@@ -345,7 +355,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
                           <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
-                          {p.tieneViatico && <Badge className="border-orange-200 bg-orange-100 text-orange-900">{t("dia.viaticoBadge")}</Badge>}
+                          {p.tieneViatico && <Badge className="border-orange-600 bg-orange-600 text-white">{t("dia.viaticoBadge")}</Badge>}
                           <MarcasDia {...marcaDe(p.nombre)} t={t} />
                         </div>
                         <div className="mt-1.5 flex flex-wrap gap-1">
@@ -365,8 +375,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         )}
       </Card>
 
-      {/* En turno sin actividad — botón Asignar como acción primaria; en
-          móvil ocupa una línea propia para no chocar con el badge del rol. */}
+      {/* En turno sin actividad */}
       <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen={false}>
         {enTurnoSinAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoSinActVacio")}</p>
@@ -390,7 +399,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       </div>
                       <button
                         onClick={() => setModalActividad(nuevaAct([p.nombre], p.puestoOperativo || ""))}
-                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 sm:w-auto"
+                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-700 active:scale-95 active:brightness-90 sm:w-auto"
                       >
                         {t("dia.asignar")}
                       </button>
@@ -471,15 +480,18 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         </Card>
       )}
 
+      {/* Modal de actividad:
+          - Móvil (< 768 px): BottomSheet deslizable desde la base.
+          - Desktop (≥ 768 px): Modal centrado clásico.
+          Ambas rutas renderizan el mismo ModalActividad. */}
       {modalActividad && (
-        <ModalActividad
-          valor={modalActividad}
-          personas={personasActivas}
-          cerrar={() => setModalActividad(null)}
-          guardar={guardar}
-          eliminar={eliminar}
-          actividadesPlan={actividadesPlan}
-        />
+        isMobile ? (
+          <BottomSheet open={!!modalActividad} onClose={() => setModalActividad(null)} title={tituloModal}>
+            {modalContent}
+          </BottomSheet>
+        ) : (
+          modalContent
+        )
       )}
     </section>
   );

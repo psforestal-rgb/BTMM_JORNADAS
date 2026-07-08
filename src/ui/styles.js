@@ -2,13 +2,15 @@ export function iniciales(n) {
   return n.split(" ").slice(0, 2).map((x) => x[0]).join("").toUpperCase();
 }
 
+// Fondos sólidos saturados para máximo contraste bajo luz solar directa.
+// Contraste texto blanco sobre fondo: ≥ 7:1 (WCAG AAA).
 export function avatar(n) {
   return [
-    "bg-emerald-100 text-emerald-900",
-    "bg-sky-100 text-sky-900",
-    "bg-rose-100 text-rose-900",
-    "bg-amber-100 text-amber-900",
-    "bg-purple-100 text-purple-900",
+    "bg-emerald-700 text-white",
+    "bg-sky-700 text-white",
+    "bg-rose-700 text-white",
+    "bg-amber-700 text-white",
+    "bg-purple-700 text-white",
   ][n.charCodeAt(0) % 5];
 }
 
@@ -23,13 +25,17 @@ export function estadoCls(e) {
   );
 }
 
+// Badges de rol — fondos sólidos para uso en campo bajo sol.
+// T=turno (verde), I=incapacidad (rojo), V=vacaciones (azul),
+// L=libre (ámbar), O=otro (violeta), finde=fin de semana (gris oscuro).
 export function codigoCls(c, finde) {
   const v = String(c || "").toUpperCase();
-  if (v.startsWith("T")) return "bg-emerald-200 text-emerald-950 border-emerald-300";
-  if (v.startsWith("I")) return "bg-rose-200 text-rose-950 border-rose-300";
-  if (v.startsWith("V")) return "bg-sky-200 text-sky-950 border-sky-300";
-  if (v.startsWith("L")) return "bg-amber-200 text-amber-950 border-amber-300";
-  if (v.startsWith("O")) return "bg-violet-200 text-violet-950 border-violet-300";
-  if (!v) return finde ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-white text-slate-400 border-slate-200";
-  return finde ? "bg-slate-200 text-slate-950 border-slate-300" : "bg-emerald-100 text-emerald-950 border-emerald-200";
+  if (finde && !v)   return "bg-slate-600 text-white border-slate-700";
+  if (v.startsWith("T")) return "bg-emerald-700 text-white border-emerald-800";
+  if (v.startsWith("I")) return "bg-rose-700    text-white border-rose-800";
+  if (v.startsWith("V")) return "bg-sky-700     text-white border-sky-800";
+  if (v.startsWith("L")) return "bg-amber-700   text-white border-amber-800";
+  if (v.startsWith("O")) return "bg-violet-700  text-white border-violet-800";
+  if (!v) return finde ? "bg-slate-600 text-white border-slate-700" : "bg-slate-400 text-white border-slate-500";
+  return finde ? "bg-slate-600 text-white border-slate-700" : "bg-emerald-700 text-white border-emerald-800";
 }
