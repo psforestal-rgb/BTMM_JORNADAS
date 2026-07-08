@@ -10,7 +10,8 @@ import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
-import Dia from "./features/dia/Dia.jsx";
+// DiaLayout es el thin wrapper mobile-first que envuelve Dia con FAB + BottomSheet.
+import DiaLayout from "./features/dia/DiaLayout.jsx";
 
 const Roles = lazy(() => import("./features/roles/Roles.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
@@ -96,7 +97,7 @@ function AppShell() {
           <div className="pnlq-app-content space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
               {view === "dia" && (
-                <Dia
+                <DiaLayout
                   diaVista={diaVista}
                   setDiaVista={setDiaVista}
                   personas={personas}
