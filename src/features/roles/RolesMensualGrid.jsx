@@ -247,7 +247,7 @@ export default function RolesMensualGrid({
         >
           <thead>
             <tr>
-              <th className="sticky left-0 z-30 min-w-[8rem] max-w-[8rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-semibold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
+              <th className="sticky left-0 z-30 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-semibold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
                 {t("roles.funcionarioCol")}
               </th>
               <th className={`border-b border-r border-slate-200 p-2 text-center text-sm font-black uppercase ${tone.band}`} colSpan={days.length}>
@@ -255,7 +255,7 @@ export default function RolesMensualGrid({
               </th>
             </tr>
             <tr>
-              <th className="sticky left-0 z-30 min-w-[8rem] max-w-[8rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-bold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
+              <th className="sticky left-0 z-30 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-bold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
                 {t("roles.puestoFuncionario")}
               </th>
               {days.map((d) => {
@@ -291,7 +291,7 @@ export default function RolesMensualGrid({
             {grupos.length === 0 ? (
               <tr>
                 <td
-                  className="sticky left-0 z-10 min-w-[8rem] max-w-[8rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] lg:min-w-[18rem] lg:max-w-[18rem]"
+                  className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] lg:min-w-[18rem] lg:max-w-[18rem]"
                   colSpan={days.length + 1}
                 >
                   {t("roles.sinFuncionariosFiltro")}
@@ -380,7 +380,7 @@ function RowsGrupo({
     <>
       <tr>
         <td className={`sticky left-0 z-20 border-b border-r border-slate-200 p-2 text-xs font-black uppercase shadow-[2px_0_8px_rgba(15,23,42,0.06)] ${grupo.color}`}>
-          {grupo.nombre}
+          {grupo.nombre.replace(/^Puesto\s+/, "")}
         </td>
         {days.map((d) => (
           <td key={`${grupo.nombre}-sep-${d}`} className="border-b border-r border-slate-200 bg-slate-50 p-0.5 text-center text-[10px] font-bold text-slate-400">
@@ -394,13 +394,13 @@ function RowsGrupo({
         const nombrePartes = nombreEnDosLineas(nombre);
         return (
           <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
-            <td className="sticky left-0 z-10 min-w-[8rem] max-w-[8rem] border-b border-r border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem]">
+            <td className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem]">
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
                 <button
                   type="button"
                   onClick={() => toggleEdit(grupo.nombre, nombre)}
-                  className="flex min-h-10 w-full items-center justify-between gap-1 rounded-lg border border-slate-200 bg-white px-1 py-1 text-left text-[11px] font-semibold leading-tight shadow-sm hover:bg-slate-50 sm:gap-2 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs"
+                  className="flex min-h-10 w-full items-center justify-between gap-1 rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight shadow-sm hover:bg-slate-50 sm:gap-2 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs"
                 >
                   <span className="min-w-0 flex-1 leading-[1.05]">
                     <span className="block truncate">{nombrePartes.nombre}</span>
@@ -463,7 +463,7 @@ function RowsGrupo({
         );
       })}
       <tr>
-        <td className="sticky left-0 z-10 min-w-[8rem] max-w-[8rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
+        <td className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
           {t("roles.cantidadEnTurno")}
         </td>
         {days.map((d) => {
