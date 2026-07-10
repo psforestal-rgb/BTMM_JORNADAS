@@ -97,6 +97,27 @@ export default function RolesMensualGrid({
     });
   }, [diaActual, focusDate, month, year]);
 
+  // Desplaza la tabla horizontalmente N columnas de día (± una semana),
+  // pensado para moverse por el mes con el pulgar en teléfono.
+  const scrollDias = (n) => {
+    const contenedor = scrollRef.current;
+    if (!contenedor) return;
+    const celda = contenedor.querySelector("th[data-dia]");
+    const ancho = celda?.getBoundingClientRect().width || 44;
+    contenedor.scrollBy({ left: n * ancho, behavior: "smooth" });
+  };
+
+  // Recentra la tabla en el día de hoy (solo aplica si el mes visible lo contiene).
+  const centrarHoy = () => {
+    const contenedor = scrollRef.current;
+    const objetivo = diaActual ? contenedor?.querySelector(`[data-dia="${diaActual}"]`) : null;
+    if (!contenedor || !objetivo) return;
+    contenedor.scrollTo({
+      left: Math.max(0, objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2),
+      behavior: "smooth",
+    });
+  };
+
   const toggleEdit = (puesto, nombre) =>
     setEditRows((prev) => ({ ...prev, [rowId(puesto, nombre)]: !prev[rowId(puesto, nombre)] }));
 
@@ -174,9 +195,47 @@ export default function RolesMensualGrid({
               {t("roles.resumenFiltro", { n: totalFuncionarios })}
             </p>
           </div>
-          <Badge className="border-white/60 bg-white/80 text-slate-900">
-            {meses[month]} {year}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* Desplazamiento por días con el pulgar: ‹ semana · (centrar hoy / 7 días) · semana › */}
+            <div
+              role="group"
+              aria-label={t("roles.desplazarDias")}
+              className="pnlq-no-print inline-flex items-stretch overflow-hidden rounded-lg border border-black/10 bg-white/85 shadow-sm"
+            >
+              <button
+                type="button"
+                onClick={() => scrollDias(-7)}
+                aria-label={t("roles.semanaAnterior")}
+                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-white"
+              >
+                <Icon name="chevronLeft" size={16} />
+              </button>
+              {diaActual ? (
+                <button
+                  type="button"
+                  onClick={centrarHoy}
+                  className="inline-flex min-h-touch items-center whitespace-nowrap border-x border-black/10 px-2 text-[11px] font-bold text-emerald-900 hover:bg-white"
+                >
+                  {t("roles.centrarHoy")}
+                </button>
+              ) : (
+                <span className="inline-flex min-h-touch items-center whitespace-nowrap border-x border-black/10 px-2 text-[11px] font-bold text-slate-600">
+                  {t("roles.semana7")}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => scrollDias(7)}
+                aria-label={t("roles.semanaSiguiente")}
+                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-white"
+              >
+                <Icon name="chevronRight" size={16} />
+              </button>
+            </div>
+            <Badge className="border-white/60 bg-white/80 text-slate-900">
+              {meses[month]} {year}
+            </Badge>
+          </div>
         </div>
       </div>
 
