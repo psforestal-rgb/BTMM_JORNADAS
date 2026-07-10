@@ -278,10 +278,9 @@ const dict = {
     editarFechaDesc: "No lo agrega; vuelve al formulario para cambiar la fecha de la actividad.",
   },
   roles: {
-    titulo: "Roles mensuales — {mes} {anio}",
+    titulo: "Distribución de roles",
     vistaMensualLineal: "Vista mensual lineal",
     filtros: "Filtros",
-    seleccionados: "{n} funcionarios",
     verTodos: "Ver todos",
     limpiarFiltros: "Limpiar",
     todos: "Todos",
