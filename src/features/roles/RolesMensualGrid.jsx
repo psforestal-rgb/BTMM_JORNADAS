@@ -83,8 +83,14 @@ export default function RolesMensualGrid({
     const sameMonth = focusDate?.year === year && focusDate?.month === month;
     const targetDay = sameMonth ? focusDate.day : diaActual;
     const contenedor = scrollRef.current;
-    const objetivo = targetDay ? contenedor?.querySelector(`[data-dia="${targetDay}"]`) : null;
-    if (!contenedor || !objetivo) return;
+    if (!contenedor) return;
+    const objetivo = targetDay ? contenedor.querySelector(`[data-dia="${targetDay}"]`) : null;
+    if (!objetivo) {
+      // Mes sin "hoy" ni fecha buscada: arrancar desde el día 1 en lugar de
+      // conservar el desplazamiento del mes anterior.
+      contenedor.scrollTo({ left: 0, behavior: "auto" });
+      return;
+    }
     contenedor.scrollTo({
       left: Math.max(0, objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2),
       behavior: focusDate ? "smooth" : "auto",

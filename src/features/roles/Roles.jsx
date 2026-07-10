@@ -85,6 +85,21 @@ export default function Roles({
 
   const buscarFecha = () => enfocarFecha(partesFecha(fechaBusqueda));
 
+  const moverMes = (paso) => {
+    let nuevoMes = month + paso;
+    let nuevoAno = year;
+    if (nuevoMes < 0) {
+      nuevoMes = 11;
+      nuevoAno -= 1;
+    }
+    if (nuevoMes > 11) {
+      nuevoMes = 0;
+      nuevoAno += 1;
+    }
+    setMonth?.(nuevoMes);
+    setYear?.(nuevoAno);
+  };
+
   const seleccionarTodo = () => {
     setPuestosSeleccionados(puestosDisponibles);
     setFuncionariosSeleccionados(funcionariosDisponibles);
@@ -182,6 +197,33 @@ export default function Roles({
             </div>
           </details>
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
+            {/* Navegación de mes dentro de la vista, sin depender de la barra superior:
+                ‹ Mes Año › + Hoy + ir a una fecha concreta. */}
+            <div
+              role="group"
+              aria-label={t("topbar.periodo")}
+              className="inline-flex items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
+              <button
+                type="button"
+                onClick={() => moverMes(-1)}
+                aria-label={t("topbar.mesAnterior")}
+                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-slate-50"
+              >
+                <Icon name="chevronLeft" size={16} />
+              </button>
+              <span className="inline-flex min-h-touch items-center border-x border-slate-200 px-3 text-xs font-black whitespace-nowrap text-slate-800">
+                {meses[month]} {year}
+              </span>
+              <button
+                type="button"
+                onClick={() => moverMes(1)}
+                aria-label={t("topbar.mesSiguiente")}
+                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-slate-50"
+              >
+                <Icon name="chevronRight" size={16} />
+              </button>
+            </div>
             <button
               type="button"
               onClick={irAHoy}
@@ -190,22 +232,24 @@ export default function Roles({
               <Icon name="calendar" size={14} />
               {t("roles.irHoy")}
             </button>
-            <input
-              type="date"
-              value={fechaBusqueda}
-              onChange={(e) => setFechaBusqueda(e.target.value)}
-              className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700"
-              aria-label={t("roles.buscarFecha")}
-            />
-            <button
-              type="button"
-              onClick={buscarFecha}
-              disabled={!fechaBusqueda}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
-            >
-              <Icon name="search" size={14} />
-              {t("roles.buscar")}
-            </button>
+            <div className="inline-flex items-stretch overflow-hidden rounded-xl border border-slate-300 bg-white">
+              <input
+                type="date"
+                value={fechaBusqueda}
+                onChange={(e) => setFechaBusqueda(e.target.value)}
+                className="min-h-touch bg-white px-3 py-2 text-xs font-bold text-slate-700"
+                aria-label={t("roles.buscarFecha")}
+              />
+              <button
+                type="button"
+                onClick={buscarFecha}
+                disabled={!fechaBusqueda}
+                className="inline-flex min-h-touch items-center gap-1 border-l border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
+              >
+                <Icon name="search" size={14} />
+                {t("roles.buscar")}
+              </button>
+            </div>
           </div>
         </div>
 
