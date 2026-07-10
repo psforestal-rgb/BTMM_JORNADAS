@@ -11,8 +11,11 @@ import {
   mobilePreviewUrl,
 } from "../lib/mobilePreview.js";
 
-/** Vistas que muestran navegación de mes/año en la barra superior. */
-const VISTAS_CON_PERIODO = ["roles", "planificacion", "planFuncionario"];
+/** Vistas que muestran navegación de mes/año en la barra superior.
+ *  Roles se excluye a propósito: su calendario se navega dentro de la
+ *  propia vista (mes anterior/siguiente, Hoy e ir a una fecha), para
+ *  concentrar todos sus controles en un solo lugar. */
+const VISTAS_CON_PERIODO = ["planificacion", "planFuncionario"];
 
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();
@@ -114,16 +117,16 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               >
                 {t("topbar.hoy")}
               </button>
-              {view === "roles" && (
-                <button
-                  onClick={() => setCompact(!compact)}
-                  className="hidden min-h-touch items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 md:inline-flex"
-                  aria-pressed={compact}
-                >
-                  {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
-                </button>
-              )}
             </>
+          )}
+          {view === "roles" && (
+            <button
+              onClick={() => setCompact(!compact)}
+              className="hidden min-h-touch items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 md:inline-flex"
+              aria-pressed={compact}
+            >
+              {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
+            </button>
           )}
           {!dentroDePreview && (
             <button
