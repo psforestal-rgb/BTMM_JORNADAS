@@ -113,8 +113,6 @@ function AppShell() {
                 <Roles
                   year={year}
                   month={month}
-                  setYear={setYear}
-                  setMonth={setMonth}
                   compact={compact}
                   roleData={roleData}
                   setRoleData={setRoleData}
