@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { baseFuncionarios } from "../data/seedFuncionarios.js";
 import { baseActividadesPlan } from "../data/seedActividades.js";
 import { baseReposiciones } from "../data/seedReposiciones.js";
+import { baseRoleData } from "../data/seedRoles.js";
 import {
   loadState,
   loadStateAsync,
@@ -26,7 +27,7 @@ const seedState = {
   month: fechaInicial.getMonth(),
   year: fechaInicial.getFullYear(),
   compact: false,
-  roleData: {},
+  roleData: baseRoleData,
   actividadesPlan: baseActividadesPlan,
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
@@ -39,6 +40,37 @@ function vistaActiva(view) {
   return view === "dashboard" ? "dia" : view;
 }
 
+// Incorpora datos semilla nuevos a instalaciones existentes sin borrar
+// información del usuario: las fichas y celdas ya persistidas tienen
+// prioridad sobre lo importado desde la fuente institucional.
+function mergePersistedWithSeed(stored) {
+  const storedPersonas = (Array.isArray(stored?.personas) ? stored.personas : []).filter(
+    (persona) => persona.nombre !== "Enzo Martini",
+  );
+  const storedByName = new Map(storedPersonas.map((persona) => [persona.nombre, persona]));
+  const seedNames = new Set(baseFuncionarios.map((persona) => persona.nombre));
+  const storedRoleData = Object.fromEntries(
+    Object.entries(stored?.roleData || {}).filter(
+      ([key]) => !/^2026-(?:9|10|11|12)-/.test(key) && !key.includes("-Enzo Martini-"),
+    ),
+  );
+  const personas = [
+    ...baseFuncionarios.map((persona) => ({ ...persona, ...(storedByName.get(persona.nombre) || {}) })),
+    ...storedPersonas.filter((persona) => !seedNames.has(persona.nombre)),
+  ];
+
+  return {
+    ...seedState,
+    ...stored,
+    view: vistaActiva(stored?.view ?? seedState.view),
+    personas,
+    // La planificación fuente termina en agosto. Se descartan overrides
+    // persistidos de setiembre-diciembre para que ese período quede limpio.
+    roleData: { ...baseRoleData, ...storedRoleData },
+    reglas: mergeReglas(stored?.reglas),
+  };
+}
+
 // Inicializador perezoso: intenta cargar desde storage, cae al seed.
 function initialState() {
   const stored = loadState();
@@ -47,12 +79,7 @@ function initialState() {
   // completamos con seed para evitar `undefined`. Las reglas se mezclan
   // con los defaults para garantizar que campos nuevos (futuras versiones)
   // siempre tengan un valor.
-  return {
-    ...seedState,
-    ...stored,
-    view: vistaActiva(stored.view ?? seedState.view),
-    reglas: mergeReglas(stored.reglas),
-  };
+  return mergePersistedWithSeed(stored);
 }
 
 function resolveUpdater(value, current) {
@@ -146,7 +173,8 @@ export function AppProvider({ children }) {
       if (cancelado) return;
       if (migrated) setMigracionLs(true);
       if (dbState && source === "indexeddb") {
-        const dbSerialized = JSON.stringify(dbState);
+        const hydratedState = mergePersistedWithSeed(dbState);
+        const dbSerialized = JSON.stringify(pickPersistable(hydratedState));
         const initialSerialized = initialSignatureRef.current;
         const currentSerialized = JSON.stringify(pickPersistable(currentStateRef.current));
 
@@ -159,7 +187,7 @@ export function AppProvider({ children }) {
         // Si LS y Dexie ya coinciden, no hace falta despachar (evita
         // render extra en el caso normal del segundo arranque).
         if (initialSerialized !== dbSerialized) {
-          dispatch({ type: "REPLACE_STATE", payload: dbState });
+          dispatch({ type: "REPLACE_STATE", payload: hydratedState });
         }
       }
       hydratedFromIDBRef.current = true;

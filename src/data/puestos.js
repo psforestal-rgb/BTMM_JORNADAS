@@ -3,7 +3,14 @@ export const puestos = [
     nombre: "Puesto Orosi",
     tag: "OR",
     color: "bg-orange-100 text-orange-950",
-    funcionarios: ["Errol Salazar", "Mayra Espinoza", "Yeison Cortés", "Kenneth Mena", "Fabricio Carbonell"],
+    funcionarios: [
+      "Errol Salazar",
+      "Mayra Espinoza",
+      "Yeison Cortés",
+      "Kenneth Mena",
+      "Fabricio Carbonell",
+      "Monserrath Navarro",
+    ],
   },
   {
     nombre: "Puesto Quetzales",
@@ -15,7 +22,13 @@ export const puestos = [
     nombre: "Puesto Esperanza",
     tag: "LE",
     color: "bg-sky-100 text-sky-950",
-    funcionarios: ["Yolanda Elizondo", "Mariano Solís", "Guillermo Pérez", "Carlos Cordero"],
+    funcionarios: ["Yolanda Elizondo", "Mariano Solís", "Guillermo Pérez", "Carlos Cordero", "Alexander Alvarado"],
+  },
+  {
+    nombre: "Puesto Villa Mills",
+    tag: "VM",
+    color: "bg-stone-100 text-stone-950",
+    funcionarios: ["Mauricio Hernandez", "Mariali Salazar"],
   },
 ];
 

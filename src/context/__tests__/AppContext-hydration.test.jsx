@@ -70,16 +70,25 @@ describe("AppContext — hidratación async desde Dexie", () => {
 
   it("aplica el snapshot de Dexie si el usuario no editó nada", async () => {
     await saveToDexie({
-      personas: [{ id: "f-dexie", nombre: "Sembrado en Dexie" }],
+      personas: [
+        { id: "f-dexie", nombre: "Sembrado en Dexie" },
+        { id: "f-enzo", nombre: "Enzo Martini" },
+      ],
       actividadesPlan: [],
-      roleData: {},
+      roleData: {
+        "2026-5-Puesto Orosi-Errol Salazar-1": "T99",
+        "2026-9-Puesto Orosi-Errol Salazar-1": "T1",
+        "2026-8-Puesto Orosi-Enzo Martini-1": "T6",
+      },
       reglas: {},
     });
 
     let observedNombres = null;
+    let observedRoleData = null;
     function Probe() {
       const ctx = useApp();
       observedNombres = ctx.personas.map((p) => p.nombre);
+      observedRoleData = ctx.roleData;
       return null;
     }
 
@@ -94,6 +103,11 @@ describe("AppContext — hidratación async desde Dexie", () => {
     // La hidratación async debe aplicar el snapshot de Dexie.
     await waitFor(() => {
       expect(observedNombres).toContain("Sembrado en Dexie");
+      expect(observedNombres).not.toContain("Enzo Martini");
     });
+    expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-1"]).toBe("T99");
+    expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-2"]).toBe("T11");
+    expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("");
+    expect(observedRoleData["2026-8-Puesto Orosi-Enzo Martini-1"]).toBeUndefined();
   });
 });
