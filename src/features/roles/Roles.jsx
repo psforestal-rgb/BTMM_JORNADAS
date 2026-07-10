@@ -8,24 +8,9 @@ import { useT } from "../../i18n/useT.js";
 import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
 
-function inputFecha(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function partesFecha(valor) {
-  const [y, m, d] = String(valor || "").split("-").map(Number);
-  if (!y || !m || !d) return null;
-  return { year: y, month: m - 1, day: d };
-}
-
 export default function Roles({
   year,
   month,
-  setYear,
-  setMonth,
   compact,
   roleData,
   setRoleData,
@@ -36,8 +21,6 @@ export default function Roles({
   hj,
 }) {
   const t = useT();
-  const [fechaBusqueda, setFechaBusqueda] = useState("");
-  const [focusDate, setFocusDate] = useState(null);
   const [busqueda, setBusqueda] = useState("");
 
   const days = useMemo(() => Array.from({ length: dim(year, month) }, (_, i) => i + 1), [month, year]);
@@ -79,37 +62,6 @@ export default function Roles({
       .map((g) => ({ ...g, funcionarios: g.funcionarios.filter((n) => n.toLowerCase().includes(q)) }))
       .filter((g) => g.funcionarios.length > 0);
   }, [busqueda, gruposRoles]);
-
-  const enfocarFecha = (partes) => {
-    if (!partes) return;
-    setYear?.(partes.year);
-    setMonth?.(partes.month);
-    setFocusDate({ ...partes, id: Date.now() });
-  };
-
-  const irAHoy = () => {
-    const hoy = new Date();
-    const valor = inputFecha(hoy);
-    setFechaBusqueda(valor);
-    enfocarFecha(partesFecha(valor));
-  };
-
-  const buscarFecha = () => enfocarFecha(partesFecha(fechaBusqueda));
-
-  const moverMes = (paso) => {
-    let nuevoMes = month + paso;
-    let nuevoAno = year;
-    if (nuevoMes < 0) {
-      nuevoMes = 11;
-      nuevoAno -= 1;
-    }
-    if (nuevoMes > 11) {
-      nuevoMes = 0;
-      nuevoAno += 1;
-    }
-    setMonth?.(nuevoMes);
-    setYear?.(nuevoAno);
-  };
 
   const seleccionarTodo = () => {
     setPuestosSeleccionados(puestosDisponibles);
@@ -223,62 +175,6 @@ export default function Roles({
             </span>
           </div>
 
-          {/* Navegación de calendario dentro de la vista, sin depender de la barra superior:
-              ‹ Mes Año › + Hoy + ir a una fecha concreta. */}
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
-            <div
-              role="group"
-              aria-label={t("topbar.periodo")}
-              className="inline-flex items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
-            >
-              <button
-                type="button"
-                onClick={() => moverMes(-1)}
-                aria-label={t("topbar.mesAnterior")}
-                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-slate-50"
-              >
-                <Icon name="chevronLeft" size={16} />
-              </button>
-              <span className="inline-flex min-h-touch items-center border-x border-slate-200 px-3 text-xs font-black whitespace-nowrap text-slate-800">
-                {meses[month]} {year}
-              </span>
-              <button
-                type="button"
-                onClick={() => moverMes(1)}
-                aria-label={t("topbar.mesSiguiente")}
-                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-slate-50"
-              >
-                <Icon name="chevronRight" size={16} />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={irAHoy}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-emerald-700 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900"
-            >
-              <Icon name="calendar" size={14} />
-              {t("roles.irHoy")}
-            </button>
-            <div className="inline-flex items-stretch overflow-hidden rounded-xl border border-slate-300 bg-white">
-              <input
-                type="date"
-                value={fechaBusqueda}
-                onChange={(e) => setFechaBusqueda(e.target.value)}
-                className="min-h-touch bg-white px-3 py-2 text-xs font-bold text-slate-700"
-                aria-label={t("roles.buscarFecha")}
-              />
-              <button
-                type="button"
-                onClick={buscarFecha}
-                disabled={!fechaBusqueda}
-                className="inline-flex min-h-touch items-center gap-1 border-l border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 disabled:opacity-50"
-              >
-                <Icon name="search" size={14} />
-                {t("roles.buscar")}
-              </button>
-            </div>
-          </div>
-
           {/* Filtro fino por funcionario: buscar por nombre + selección individual
               (permite combinar funcionarios de distintos puestos). */}
           <details className="rounded-xl border border-slate-200 bg-white p-2">
@@ -387,7 +283,6 @@ export default function Roles({
             year={year}
             month={month}
             compact={compact}
-            focusDate={focusDate}
             roleData={roleData}
             setRoleData={setRoleData}
             personas={personas}
