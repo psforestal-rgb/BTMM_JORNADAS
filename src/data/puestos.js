@@ -24,12 +24,6 @@ export const puestos = [
     color: "bg-sky-100 text-sky-950",
     funcionarios: ["Yolanda Elizondo", "Mariano Solís", "Guillermo Pérez", "Carlos Cordero", "Alexander Alvarado"],
   },
-  {
-    nombre: "Puesto Villa Mills",
-    tag: "VM",
-    color: "bg-stone-100 text-stone-950",
-    funcionarios: ["Mauricio Hernandez", "Mariali Salazar"],
-  },
 ];
 
 export const opcionesPuestoOperativo = puestos.map((p) => p.nombre);
