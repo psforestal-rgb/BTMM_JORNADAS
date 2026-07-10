@@ -385,6 +385,7 @@ body {
   .pnlq-roles-scroll {
     max-height: none !important;
     overflow: visible !important;
+    padding-bottom: 0 !important;
   }
   tr {
     page-break-inside: avoid;

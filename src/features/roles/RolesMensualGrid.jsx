@@ -77,6 +77,10 @@ export default function RolesMensualGrid({
   const scrollRef = useRef(null);
   const theadRef = useRef(null);
   const [theadHeight, setTheadHeight] = useState(44);
+  const [bodyHeight, setBodyHeight] = useState(0);
+  const lastGroupRef = useRef(null);
+  const [lastGroupHeight, setLastGroupHeight] = useState(0);
+  const [grupoActivoNombre, setGrupoActivoNombre] = useState(null);
   const hoy = new Date();
   const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
   const tone = monthTone(month);
@@ -120,6 +124,59 @@ export default function RolesMensualGrid({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Mide el alto visible del panel para poder agregar, al final, el relleno
+  // justo (ver más abajo) que permite que hasta el último puesto —aunque
+  // tenga pocos funcionarios— llegue a ocupar la franja congelada.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const medir = () => setBodyHeight(el.clientHeight);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Mide el alto real del último puesto: el relleno solo debe cubrir lo que
+  // falte para llegar a la franja congelada, no el alto completo del panel
+  // (si no, al llegar al final solo se vería un espacio en blanco).
+  useEffect(() => {
+    const el = lastGroupRef.current;
+    if (!el) {
+      setLastGroupHeight(0);
+      return;
+    }
+    const medir = () => setLastGroupHeight(el.getBoundingClientRect().height);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [grupos]);
+
+  // El nombre de puesto vive en la única celda superior izquierda (congelada
+  // junto a los días), así que no puede resolverse con sticky puro: se
+  // pregunta al navegador qué fila está renderizada justo debajo del
+  // encabezado congelado (más robusto que calcular posiciones a mano,
+  // porque funciona igual aunque el último grupo sea más corto que el
+  // alto visible y nunca "alcance" la línea de congelado).
+  useEffect(() => {
+    const contenedor = scrollRef.current;
+    if (!contenedor) return;
+    const actualizar = () => {
+      const contRect = contenedor.getBoundingClientRect();
+      const x = contRect.left + 10;
+      const y = contRect.top + theadHeight + 4;
+      const el = document.elementFromPoint(x, y);
+      const tbody = el ? el.closest("tbody[data-grupo]") : null;
+      if (tbody) setGrupoActivoNombre(tbody.dataset.grupo);
+    };
+    actualizar();
+    contenedor.addEventListener("scroll", actualizar, { passive: true });
+    return () => contenedor.removeEventListener("scroll", actualizar);
+  }, [grupos, theadHeight]);
+
+  const grupoActivo = grupos.find((g) => g.nombre === grupoActivoNombre) || grupos[0];
 
   // Recentra la tabla en el día de hoy (solo aplica si el mes visible lo contiene).
   const centrarHoy = () => {
@@ -253,7 +310,11 @@ export default function RolesMensualGrid({
         </div>
       </div>
 
-      <div ref={scrollRef} className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]">
+      <div
+        ref={scrollRef}
+        className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]"
+        style={{ paddingBottom: Math.max(0, bodyHeight - theadHeight - lastGroupHeight) }}
+      >
         <table
           className={`border-separate border-spacing-0 text-[11px] sm:text-xs ${
             compact ? "min-w-[1040px] lg:min-w-[1140px]" : "min-w-[1160px] lg:min-w-[1380px]"
@@ -261,8 +322,10 @@ export default function RolesMensualGrid({
         >
           <thead ref={theadRef}>
             <tr>
-              <th className="sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 bg-white p-1.5 text-left text-[11px] font-black uppercase text-slate-700 shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
-                {meses[month]} {year}
+              <th
+                className={`sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-black uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
+              >
+                {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
               {days.map((d) => {
                 const dow = new Date(year, month, d).getDay();
@@ -305,7 +368,7 @@ export default function RolesMensualGrid({
               </tr>
             </tbody>
           ) : (
-            grupos.map((grupo) => (
+            grupos.map((grupo, idx) => (
               <RowsGrupo
                 key={grupo.nombre}
                 grupo={grupo}
@@ -325,7 +388,7 @@ export default function RolesMensualGrid({
                 actividadesPlan={actividadesPlan}
                 trabajadas={trabajadas}
                 reposicionesDia={reposicionesDia}
-                theadHeight={theadHeight}
+                registerBodyRef={idx === grupos.length - 1 ? lastGroupRef : undefined}
                 t={t}
               />
             ))
@@ -381,29 +444,20 @@ function RowsGrupo({
   actividadesPlan,
   trabajadas,
   reposicionesDia,
-  theadHeight,
+  registerBodyRef,
   t,
 }) {
   return (
-    <tbody>
-      <tr>
-        <td
-          className={`sticky left-0 z-20 border-b border-r-2 border-slate-300 p-2 text-xs font-black uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] ${grupo.color}`}
-          style={{ position: "sticky", top: theadHeight }}
-        >
-          {grupo.nombre.replace(/^Puesto\s+/, "")}
-        </td>
-        {days.map((d) => (
-          <td key={`${grupo.nombre}-sep-${d}`} className="border-b border-r border-slate-200 bg-slate-50 p-0.5" />
-        ))}
-      </tr>
-      {grupo.funcionarios.map((nombre) => {
+    <tbody data-grupo={grupo.nombre} ref={registerBodyRef}>
+      {grupo.funcionarios.map((nombre, idx) => {
         const editing = !!editRows[rowId(grupo.nombre, nombre)];
         const modalidad = getCfg(grupo, nombre);
         const nombrePartes = nombreEnDosLineas(nombre);
         return (
           <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
-            <td className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem]">
+            <td
+              className={`sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem] ${idx === 0 ? "border-t-2 border-t-slate-300" : ""}`}
+            >
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
                 <button
