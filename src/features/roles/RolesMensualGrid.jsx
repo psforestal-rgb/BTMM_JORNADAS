@@ -75,6 +75,8 @@ export default function RolesMensualGrid({
   const feriados = useFeriadosDelAno(year);
   const inicio = primerDiaLaboral(year, month, feriados);
   const scrollRef = useRef(null);
+  const theadRef = useRef(null);
+  const [theadHeight, setTheadHeight] = useState(44);
   const hoy = new Date();
   const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
   const tone = monthTone(month);
@@ -106,6 +108,18 @@ export default function RolesMensualGrid({
     const ancho = celda?.getBoundingClientRect().width || 44;
     contenedor.scrollBy({ left: n * ancho, behavior: "smooth" });
   };
+
+  // Mide el alto real del encabezado de días (varía por breakpoint) para
+  // que el nombre de puesto se congele justo debajo, sin solaparse.
+  useEffect(() => {
+    const el = theadRef.current;
+    if (!el) return;
+    const medir = () => setTheadHeight(el.getBoundingClientRect().height);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Recentra la tabla en el día de hoy (solo aplica si el mes visible lo contiene).
   const centrarHoy = () => {
@@ -239,24 +253,16 @@ export default function RolesMensualGrid({
         </div>
       </div>
 
-      <div ref={scrollRef} className="overflow-auto bg-white">
+      <div ref={scrollRef} className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]">
         <table
           className={`border-separate border-spacing-0 text-[11px] sm:text-xs ${
             compact ? "min-w-[1040px] lg:min-w-[1140px]" : "min-w-[1160px] lg:min-w-[1380px]"
           }`}
         >
-          <thead>
+          <thead ref={theadRef}>
             <tr>
-              <th className="sticky left-0 z-30 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-semibold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
-                {t("roles.funcionarioCol")}
-              </th>
-              <th className={`border-b border-r border-slate-200 p-2 text-center text-sm font-black uppercase ${tone.band}`} colSpan={days.length}>
+              <th className="sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 bg-white p-1.5 text-left text-[11px] font-black uppercase text-slate-700 shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
                 {meses[month]} {year}
-              </th>
-            </tr>
-            <tr>
-              <th className="sticky left-0 z-30 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-1.5 text-left text-[10px] font-bold uppercase text-slate-500 shadow-[2px_0_8px_rgba(15,23,42,0.05)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-[11px] lg:min-w-[18rem] lg:max-w-[18rem]">
-                {t("roles.puestoFuncionario")}
               </th>
               {days.map((d) => {
                 const dow = new Date(year, month, d).getDay();
@@ -268,7 +274,7 @@ export default function RolesMensualGrid({
                     key={d}
                     data-dia={d}
                     aria-current={isToday ? "date" : undefined}
-                    className={`border-b border-r border-slate-200 p-0.5 text-center font-semibold sm:p-1 ${
+                    className={`sticky top-0 z-30 border-b border-r border-slate-200 p-0.5 text-center font-semibold sm:p-1 ${
                       isToday
                         ? "bg-emerald-700 text-white ring-2 ring-inset ring-emerald-300"
                         : isFocused
@@ -287,8 +293,8 @@ export default function RolesMensualGrid({
               })}
             </tr>
           </thead>
-          <tbody>
-            {grupos.length === 0 ? (
+          {grupos.length === 0 ? (
+            <tbody>
               <tr>
                 <td
                   className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] lg:min-w-[18rem] lg:max-w-[18rem]"
@@ -297,32 +303,33 @@ export default function RolesMensualGrid({
                   {t("roles.sinFuncionariosFiltro")}
                 </td>
               </tr>
-            ) : (
-              grupos.map((grupo) => (
-                <RowsGrupo
-                  key={grupo.nombre}
-                  grupo={grupo}
-                  days={days}
-                  year={year}
-                  month={month}
-                  compact={compact}
-                  editRows={editRows}
-                  toggleEdit={toggleEdit}
-                  getCfg={getCfg}
-                  setCfg={setCfg}
-                  getCelda={getCelda}
-                  aplicarPatron={aplicarPatron}
-                  abrirConflicto={abrirConflicto}
-                  setMenu={setMenu}
-                  inicio={inicio}
-                  actividadesPlan={actividadesPlan}
-                  trabajadas={trabajadas}
-                  reposicionesDia={reposicionesDia}
-                  t={t}
-                />
-              ))
-            )}
-          </tbody>
+            </tbody>
+          ) : (
+            grupos.map((grupo) => (
+              <RowsGrupo
+                key={grupo.nombre}
+                grupo={grupo}
+                days={days}
+                year={year}
+                month={month}
+                compact={compact}
+                editRows={editRows}
+                toggleEdit={toggleEdit}
+                getCfg={getCfg}
+                setCfg={setCfg}
+                getCelda={getCelda}
+                aplicarPatron={aplicarPatron}
+                abrirConflicto={abrirConflicto}
+                setMenu={setMenu}
+                inicio={inicio}
+                actividadesPlan={actividadesPlan}
+                trabajadas={trabajadas}
+                reposicionesDia={reposicionesDia}
+                theadHeight={theadHeight}
+                t={t}
+              />
+            ))
+          )}
         </table>
       </div>
 
@@ -374,18 +381,20 @@ function RowsGrupo({
   actividadesPlan,
   trabajadas,
   reposicionesDia,
+  theadHeight,
   t,
 }) {
   return (
-    <>
+    <tbody>
       <tr>
-        <td className={`sticky left-0 z-20 border-b border-r border-slate-200 p-2 text-xs font-black uppercase shadow-[2px_0_8px_rgba(15,23,42,0.06)] ${grupo.color}`}>
+        <td
+          className={`sticky left-0 z-20 border-b border-r-2 border-slate-300 p-2 text-xs font-black uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] ${grupo.color}`}
+          style={{ position: "sticky", top: theadHeight }}
+        >
           {grupo.nombre.replace(/^Puesto\s+/, "")}
         </td>
         {days.map((d) => (
-          <td key={`${grupo.nombre}-sep-${d}`} className="border-b border-r border-slate-200 bg-slate-50 p-0.5 text-center text-[10px] font-bold text-slate-400">
-            {d}
-          </td>
+          <td key={`${grupo.nombre}-sep-${d}`} className="border-b border-r border-slate-200 bg-slate-50 p-0.5" />
         ))}
       </tr>
       {grupo.funcionarios.map((nombre) => {
@@ -481,6 +490,6 @@ function RowsGrupo({
           );
         })}
       </tr>
-    </>
+    </tbody>
   );
 }
