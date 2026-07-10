@@ -51,7 +51,6 @@ export default function Roles({
         .filter((g) => g.funcionarios.length > 0),
     [funcionariosSeleccionados, gruposRoles, puestosSeleccionados],
   );
-  const totalFiltrado = gruposFiltrados.reduce((acc, g) => acc + g.funcionarios.length, 0);
   const todoSeleccionado =
     funcionariosDisponibles.length > 0 && funcionariosDisponibles.every((f) => funcionariosSeleccionados.includes(f));
   // Lista de puestos/funcionarios acotada por el texto de búsqueda (panel avanzado).
@@ -121,58 +120,45 @@ export default function Roles({
 
   return (
     <section className="space-y-4">
-      <Card title={t("roles.titulo", { mes: meses[month], anio: year })} icon="📊">
-        <div className="pnlq-no-print mb-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap shadow-sm">
-          <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
-          <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
-          <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
-          <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
-          <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
-        </div>
-
+      <Card title={t("roles.titulo")} icon="📊">
         <div className="pnlq-no-print mb-4 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
           {/* Filtro rápido por puesto: un toque muestra/oculta el puesto completo.
               Desplazamiento horizontal para caber en pantallas de teléfono. */}
-          <div className="flex items-center gap-1.5">
-            <div
-              role="group"
-              aria-label={t("roles.filtrarPorPuesto")}
-              className="flex flex-1 items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2"
+          <div
+            role="group"
+            aria-label={t("roles.filtrarPorPuesto")}
+            className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2"
+          >
+            <button
+              type="button"
+              onClick={seleccionarTodo}
+              aria-pressed={todoSeleccionado}
+              className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${
+                todoSeleccionado
+                  ? "border-emerald-700 bg-emerald-600 text-white shadow-sm"
+                  : "border-slate-300 bg-white text-slate-600"
+              }`}
             >
-              <button
-                type="button"
-                onClick={seleccionarTodo}
-                aria-pressed={todoSeleccionado}
-                className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${
-                  todoSeleccionado
-                    ? "border-emerald-700 bg-emerald-600 text-white shadow-sm"
-                    : "border-slate-300 bg-white text-slate-600"
-                }`}
-              >
-                {t("roles.todos")}
-              </button>
-              {gruposRoles.map((grupo) => {
-                const estado = estadoPuesto(grupo);
-                const sel = grupo.funcionarios.filter((f) => funcionariosSeleccionados.includes(f)).length;
-                return (
-                  <button
-                    key={grupo.nombre}
-                    type="button"
-                    onClick={() => togglePuesto(grupo)}
-                    aria-pressed={estado !== "none"}
-                    className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${chipClase(estado)}`}
-                  >
-                    {grupo.nombre.replace(/^Puesto\s+/, "")}
-                    <span className="ml-1 tabular-nums opacity-80">
-                      {sel}/{grupo.funcionarios.length}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <span className="shrink-0 rounded-lg bg-white px-2 py-1 text-[11px] font-bold text-slate-600 shadow-sm ring-1 ring-slate-200">
-              {t("roles.seleccionados", { n: totalFiltrado })}
-            </span>
+              {t("roles.todos")}
+            </button>
+            {gruposRoles.map((grupo) => {
+              const estado = estadoPuesto(grupo);
+              const sel = grupo.funcionarios.filter((f) => funcionariosSeleccionados.includes(f)).length;
+              return (
+                <button
+                  key={grupo.nombre}
+                  type="button"
+                  onClick={() => togglePuesto(grupo)}
+                  aria-pressed={estado !== "none"}
+                  className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${chipClase(estado)}`}
+                >
+                  {grupo.nombre.replace(/^Puesto\s+/, "")}
+                  <span className="ml-1 tabular-nums opacity-80">
+                    {sel}/{grupo.funcionarios.length}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Filtro fino por funcionario: buscar por nombre + selección individual
@@ -292,6 +278,14 @@ export default function Roles({
             hj={hj}
           />
           <RolesPrintFooter />
+        </div>
+
+        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap shadow-sm">
+          <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
+          <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
+          <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
+          <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
+          <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
         </div>
       </Card>
     </section>
