@@ -379,6 +379,13 @@ body {
   table {
     page-break-inside: auto;
   }
+
+  /* El panel de roles limita su alto en pantalla para congelar encabezados
+     (estilo Excel); al imprimir debe mostrar todas las filas sin recortar. */
+  .pnlq-roles-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
   tr {
     page-break-inside: avoid;
   }

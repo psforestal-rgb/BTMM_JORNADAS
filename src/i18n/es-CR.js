@@ -296,7 +296,6 @@ const dict = {
     semanaSiguiente: "Semana siguiente",
     semana7: "7 días",
     centrarHoy: "Centrar hoy",
-    puestoFuncionario: "Puesto / funcionario",
     todosLosPuestos: "Todos los puestos",
     sinFuncionariosFiltro: "No hay funcionarios visibles con el filtro actual.",
     leyenda: {
@@ -306,7 +305,6 @@ const dict = {
       incapacidad: "I1 Incapacidad",
       otro: "O1 Otro",
     },
-    funcionarioCol: "Funcionario / edición",
     cantidadEnTurno: "CANTIDAD EN TURNO",
     editarTipoRol: "Tipo de rol desde 1er día laboral",
     aplicar: "Aplicar",
