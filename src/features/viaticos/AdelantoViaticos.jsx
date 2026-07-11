@@ -135,7 +135,7 @@ export default function AdelantoViaticos({ actividadesPlan, personas, setView })
         ) : vista === "funcionario" ? (
           <div className="grid gap-3 xl:grid-cols-2">
             {registrosFuncionario.map(({ funcionario, actividades }) => (
-              <div key={funcionario.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div key={funcionario.id} className="rounded-lg border border-slate-200 bg-white p-4">
                 <div className="mb-3 flex items-center gap-3">
                   <Avatar name={funcionario.nombre} />
                   <div className="min-w-0 flex-1">
@@ -163,7 +163,7 @@ export default function AdelantoViaticos({ actividadesPlan, personas, setView })
         ) : (
           <div className="space-y-3">
             {actividades.map((a) => (
-              <div key={a.id} className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-orange-950 shadow-sm">
+              <div key={a.id} className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-orange-950">
                 <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                   <div>
                     <div className="text-base font-semibold">{a.titulo}</div>

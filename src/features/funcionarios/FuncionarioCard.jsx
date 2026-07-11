@@ -12,7 +12,7 @@ import { useT } from "../../i18n/useT.js";
 export default function FuncionarioCard({ f, onEditar, onBorrar }) {
   const t = useT();
   return (
-    <article className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
+    <article className="rounded-lg border border-slate-300 bg-white p-4">
       <header className="flex items-start gap-3">
         <Avatar name={f.nombre} />
         <div className="min-w-0 flex-1">

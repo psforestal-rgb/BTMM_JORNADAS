@@ -21,7 +21,7 @@ export default function ReposicionCard({ registro, hj, onReponer, onEditar, onRe
   const ultimaCuota = cuotas[cuotas.length - 1];
 
   return (
-    <article className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
+    <article className="rounded-lg border border-line bg-surface p-4">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="break-words text-base font-semibold text-ink">{registro.funcionario || "—"}</h3>
@@ -31,12 +31,12 @@ export default function ReposicionCard({ registro, hj, onReponer, onEditar, onRe
       </header>
 
       <dl className="mt-3 grid gap-2 text-sm">
-        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.fecha")}</dt><dd className="text-right font-semibold">{fecha(registro.fecha)}</dd></div>
-        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.tipoDia")}</dt><dd className="text-right">{registro.tipoDia}</dd></div>
-        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.motivo")}</dt><dd className="max-w-[65%] text-right font-semibold">{registro.motivo}{registro.motivoDetalle ? ` · ${registro.motivoDetalle}` : ""}</dd></div>
-        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.tiempo")}</dt><dd className="text-right font-semibold">{magnitudLabel(registro, t)}</dd></div>
-        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.saldoCorto")}</dt><dd className="text-right font-semibold text-amber-800">{saldoTexto(saldo, hj)}</dd></div>
-        {ultimaCuota && <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.ultimaReposicion")}</dt><dd className="text-right">{fecha(ultimaCuota.fecha)}</dd></div>}
+        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.fecha")}</dt><dd className="text-right font-semibold text-ink">{fecha(registro.fecha)}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.tipoDia")}</dt><dd className="text-right text-ink">{registro.tipoDia}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.motivo")}</dt><dd className="max-w-[65%] text-right font-semibold text-ink">{registro.motivo}{registro.motivoDetalle ? ` · ${registro.motivoDetalle}` : ""}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.th.tiempo")}</dt><dd className="text-right font-semibold text-ink">{magnitudLabel(registro, t)}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.saldoCorto")}</dt><dd className="text-right font-semibold text-warning">{saldoTexto(saldo, hj)}</dd></div>
+        {ultimaCuota && <div className="flex justify-between gap-3"><dt className="text-ink-muted">{t("reposicion.ultimaReposicion")}</dt><dd className="text-right text-ink">{fecha(ultimaCuota.fecha)}</dd></div>}
       </dl>
 
       {registro.observaciones && (

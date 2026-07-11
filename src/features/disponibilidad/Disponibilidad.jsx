@@ -54,7 +54,7 @@ export default function Disponibilidad({ personas, setPersonas }) {
   );
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row">
+      <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row">
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar funcionario o puesto" className="min-h-touch min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm" />
         <select value={estado} onChange={(e) => setEstado(e.target.value)} aria-label="Filtrar disponibilidad" className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 text-sm"><option value="todos">Todos</option><option value="activos">Activos</option><option value="inactivos">Inactivos</option><option value="porVencer">Vence en 60 días</option></select>
       </div>
