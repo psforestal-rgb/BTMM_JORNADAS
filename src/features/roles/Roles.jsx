@@ -22,6 +22,12 @@ export default function Roles({
 }) {
   const t = useT();
   const [busqueda, setBusqueda] = useState("");
+  // Cada puesto arranca contraído dentro del panel de selección: solo se ve
+  // la fila de encabezado (casilla + "Solo"); el detalle de funcionarios
+  // (para deseleccionar a alguien puntual) se expande bajo demanda.
+  const [puestosAbiertos, setPuestosAbiertos] = useState({});
+  const togglePuestoAbierto = (nombrePuesto) =>
+    setPuestosAbiertos((prev) => ({ ...prev, [nombrePuesto]: !prev[nombrePuesto] }));
 
   const days = useMemo(() => Array.from({ length: dim(year, month) }, (_, i) => i + 1), [month, year]);
   const gruposRoles = useMemo(
@@ -174,6 +180,10 @@ export default function Roles({
               <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {gruposBusqueda.map((grupo) => {
                   const estado = estadoPuesto(grupo);
+                  // Con búsqueda activa siempre se muestra el detalle (es el
+                  // resultado que la persona está buscando); sin búsqueda,
+                  // respeta el contraído/expandido manual de cada puesto.
+                  const abierto = busqueda.trim() !== "" || !!puestosAbiertos[grupo.nombre];
                   return (
                     <fieldset key={grupo.nombre} className="rounded-xl border border-slate-200 p-2">
                       <div className="flex items-center justify-between gap-2">
@@ -196,7 +206,17 @@ export default function Roles({
                         >
                           {t("roles.solo")}
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => togglePuestoAbierto(grupo.nombre)}
+                          aria-expanded={abierto}
+                          aria-label={abierto ? t("roles.contraerPuesto") : t("roles.expandirPuesto")}
+                          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                        >
+                          <Icon name={abierto ? "chevronDown" : "chevronRight"} size={16} />
+                        </button>
                       </div>
+                      {abierto && (
                       <div className="mt-2 space-y-0.5">
                         {grupo.funcionarios.map((nombre) => (
                           <label
@@ -213,6 +233,7 @@ export default function Roles({
                           </label>
                         ))}
                       </div>
+                      )}
                     </fieldset>
                   );
                 })}
