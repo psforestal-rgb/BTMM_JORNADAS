@@ -463,13 +463,15 @@ function RowsGrupo({
                 <button
                   type="button"
                   onClick={() => toggleEdit(grupo.nombre, nombre)}
-                  className="flex min-h-10 w-full items-center justify-between gap-1 rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight hover:bg-slate-50 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+                  className="flex min-h-10 w-full items-center rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight hover:bg-slate-50 sm:px-3 sm:py-2 sm:text-xs"
                 >
-                  <span className="min-w-0 flex-1 leading-[1.05]">
-                    <span className="block truncate">{nombrePartes.nombre}</span>
-                    {nombrePartes.apellido && <span className="block truncate">{nombrePartes.apellido}</span>}
+                  <span className="inline-flex max-w-full items-center gap-px">
+                    <span className="min-w-0 leading-[1.05]">
+                      <span className="block truncate">{nombrePartes.nombre}</span>
+                      {nombrePartes.apellido && <span className="block truncate">{nombrePartes.apellido}</span>}
+                    </span>
+                    <Icon name={editing ? "unlock" : "lock"} size={14} className="shrink-0 text-slate-500" />
                   </span>
-                  <Icon name={editing ? "unlock" : "lock"} size={14} className="shrink-0 text-slate-500" />
                 </button>
                 {editing && (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-1.5 shadow-inner sm:rounded-2xl sm:p-2">
