@@ -25,7 +25,9 @@
  *    arranques rápidos (loadState() sigue siendo síncrono).
  */
 
-export const SCHEMA_VERSION_DB = 1;
+import { SCHEMA_VERSION } from "./schemaVersion.js";
+
+export { SCHEMA_VERSION };
 export const SNAPSHOT_ID = "current";
 const LS_STATE_KEY = "pnlq:state";
 const LS_LAST_SAVED_KEY = "pnlq:lastSavedAt";
@@ -74,7 +76,7 @@ export async function loadFromDexie() {
   try {
     const row = await db.state.get(SNAPSHOT_ID);
     if (!row) return null;
-    if (row.schemaVersion !== SCHEMA_VERSION_DB) return null;
+    if (row.schemaVersion !== SCHEMA_VERSION) return null;
     return row.payload ?? null;
   } catch {
     return null;
@@ -91,7 +93,7 @@ export async function saveToDexie(payload) {
   try {
     await db.state.put({
       id: SNAPSHOT_ID,
-      schemaVersion: SCHEMA_VERSION_DB,
+      schemaVersion: SCHEMA_VERSION,
       savedAt: new Date().toISOString(),
       payload,
     });
@@ -139,12 +141,12 @@ export async function migrateFromLocalStorageIfNeeded() {
     // Guard de schemaVersion: NO migrar payloads incompatibles. Si la
     // versión es distinta o ausente, se ignora silenciosamente; loadState()
     // ya creará un backup la próxima vez que se invoque.
-    if (parsed.schemaVersion !== SCHEMA_VERSION_DB) {
+    if (parsed.schemaVersion !== SCHEMA_VERSION) {
       return { migrated: false, source: null };
     }
     await db.state.put({
       id: SNAPSHOT_ID,
-      schemaVersion: SCHEMA_VERSION_DB,
+      schemaVersion: SCHEMA_VERSION,
       savedAt: parsed.savedAt || new Date().toISOString(),
       payload: parsed.state,
       migradoDeLocalStorage: true,

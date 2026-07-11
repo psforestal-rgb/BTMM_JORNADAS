@@ -32,9 +32,10 @@ import {
   getLastSavedFromDexie,
   wipeDexie,
 } from "./db.js";
+import { SCHEMA_VERSION } from "./schemaVersion.js";
 
+export { SCHEMA_VERSION };
 export const STORAGE_KEY = "pnlq:state";
-export const SCHEMA_VERSION = 1;
 export const LAST_SAVED_KEY = "pnlq:lastSavedAt";
 
 const BACKUP_PREFIX = "pnlq:backup:v";
