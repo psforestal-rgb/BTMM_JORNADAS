@@ -33,6 +33,7 @@ import {
   wipeDexie,
 } from "./db.js";
 import { SCHEMA_VERSION } from "./schemaVersion.js";
+import { sanitizeImportedState } from "./sanitize.js";
 
 export { SCHEMA_VERSION };
 export const STORAGE_KEY = "pnlq:state";
@@ -185,7 +186,7 @@ export function parseSnapshot(text) {
       return { ok: false, reason: `Versión de esquema incompatible: encontrada v${parsed.schemaVersion ?? "?"} esperada v${SCHEMA_VERSION}` };
     }
     if (!parsed.state || typeof parsed.state !== "object") return { ok: false, reason: "Snapshot sin estado" };
-    return { ok: true, state: parsed.state, exportadoEn: parsed.exportadoEn };
+    return { ok: true, state: sanitizeImportedState(parsed.state), exportadoEn: parsed.exportadoEn };
   } catch (e) {
     return { ok: false, reason: `JSON malformado: ${e.message}` };
   }
