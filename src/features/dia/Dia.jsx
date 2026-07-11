@@ -217,7 +217,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             value={diaVista}
             onChange={(e) => e.target.value && setDiaVista(e.target.value)}
             aria-label={t("dia.seleccionarFecha")}
-            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 bg-white px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700 [color-scheme:light]"
+            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 bg-white px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700 [color-scheme:light] dark:[color-scheme:dark]"
           />
         </div>
         <button

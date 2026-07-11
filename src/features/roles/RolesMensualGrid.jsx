@@ -323,7 +323,7 @@ export default function RolesMensualGrid({
           <thead ref={theadRef}>
             <tr>
               <th
-                className={`sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
+                className={`sticky top-0 left-0 z-40 min-w-[7.5rem] max-w-[7.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
@@ -360,7 +360,7 @@ export default function RolesMensualGrid({
             <tbody>
               <tr>
                 <td
-                  className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] lg:min-w-[18rem] lg:max-w-[18rem]"
+                  className="sticky left-0 z-10 min-w-[7.5rem] max-w-[7.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] lg:min-w-[18rem] lg:max-w-[18rem]"
                   colSpan={days.length + 1}
                 >
                   {t("roles.sinFuncionariosFiltro")}
@@ -456,7 +456,7 @@ function RowsGrupo({
         return (
           <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
             <td
-              className={`sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem] ${idx === 0 ? "border-t-2 border-t-slate-300" : ""}`}
+              className={`sticky left-0 z-10 min-w-[7.5rem] max-w-[7.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-2 lg:min-w-[18rem] lg:max-w-[18rem] ${idx === 0 ? "border-t-2 border-t-slate-300" : ""}`}
             >
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
@@ -526,7 +526,7 @@ function RowsGrupo({
         );
       })}
       <tr>
-        <td className="sticky left-0 z-10 min-w-[6.5rem] max-w-[6.5rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
+        <td className="sticky left-0 z-10 min-w-[7.5rem] max-w-[7.5rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem]">
           {t("roles.cantidadEnTurno")}
         </td>
         {days.map((d) => {
