@@ -10,9 +10,15 @@ afterEach(() => {
   localStorage.clear();
 });
 
-// jsdom no implementa ResizeObserver ni Element.scrollTo; RolesMensualGrid
-// los usa para el encabezado/columna congelados (no relevante aquí).
+// jsdom no implementa ResizeObserver, IntersectionObserver ni
+// Element.scrollTo; RolesMensualGrid los usa para el encabezado/columna
+// congelados y la carga progresiva de meses (no relevante aquí).
 global.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+global.IntersectionObserver = class {
   observe() {}
   unobserve() {}
   disconnect() {}

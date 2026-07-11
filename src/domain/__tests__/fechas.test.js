@@ -8,6 +8,7 @@ import {
   primerDiaLaboral,
   toLocalISODate,
   toLocalFileTimestamp,
+  addMonths,
 } from "../fechas.js";
 
 describe("fechas.dim", () => {
@@ -61,6 +62,21 @@ describe("fechas.faltan", () => {
     expect(faltan("2026-05-20")).toBe(1);
     expect(faltan("2026-05-18")).toBe(-1);
     expect(faltan("")).toBeNull();
+  });
+});
+
+describe("fechas.addMonths", () => {
+  it("suma meses dentro del mismo año", () => {
+    expect(addMonths(2026, 6, 1)).toEqual({ year: 2026, month: 7 });
+    expect(addMonths(2026, 0, 11)).toEqual({ year: 2026, month: 11 });
+  });
+  it("acarrea el año hacia adelante", () => {
+    expect(addMonths(2026, 6, 6)).toEqual({ year: 2027, month: 0 });
+    expect(addMonths(2026, 11, 1)).toEqual({ year: 2027, month: 0 });
+    expect(addMonths(2026, 6, 120)).toEqual({ year: 2036, month: 6 });
+  });
+  it("con n=0 devuelve el mismo (year, month)", () => {
+    expect(addMonths(2026, 6, 0)).toEqual({ year: 2026, month: 6 });
   });
 });
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../../ui/Icon.jsx";
 import { meses, dias } from "../../data/calendario.js";
 import { opcionesModalidad } from "../../data/opciones.js";
-import { isoFecha, primerDiaLaboral } from "../../domain/fechas.js";
+import { isoFecha, primerDiaLaboral, dim, addMonths } from "../../domain/fechas.js";
 import {
   rolKey,
   rolCfgKey,
@@ -13,12 +13,19 @@ import {
 } from "../../domain/roles.js";
 import { actividadesEnDia } from "../../domain/actividades.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
-import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
+import { buildFeriadosSet } from "../../domain/feriados.js";
+import { useApp } from "../../context/AppContext.jsx";
 import { useT } from "../../i18n/useT.js";
 import RoleCell from "./RoleCell.jsx";
 import MenuCelda from "./MenuCelda.jsx";
 import ConflictoModal from "./ConflictoModal.jsx";
 import ActividadesDiaModal from "./ActividadesDiaModal.jsx";
+
+// Tope del scroll continuo hacia adelante: 10 años (120 meses) desde el mes
+// inicial. Los meses se cargan progresivamente (uno a la vez) a medida que
+// el usuario se acerca al borde derecho de la tabla, para no renderizar de
+// entrada miles de columnas.
+const MAX_MESES = 120;
 
 function monthTone(month) {
   return month % 2 === 0
@@ -49,7 +56,6 @@ function nombreEnDosLineas(nombreCompleto) {
 
 export default function RolesMensualGrid({
   grupos,
-  days,
   year,
   month,
   compact,
@@ -63,6 +69,7 @@ export default function RolesMensualGrid({
   hj,
 }) {
   const t = useT();
+  const { reglas } = useApp();
   const { trabajadas, reposiciones: reposicionesDia } = useMemo(
     () => indexarReposiciones(reposiciones, hj),
     [reposiciones, hj],
@@ -71,36 +78,117 @@ export default function RolesMensualGrid({
   const [menu, setMenu] = useState(null);
   const [conflictoActivo, setConflictoActivo] = useState(null);
   const [actividadesDiaModal, setActividadesDiaModal] = useState(null);
-  const feriados = useFeriadosDelAno(year);
-  const inicio = primerDiaLaboral(year, month, feriados);
   const scrollRef = useRef(null);
   const theadRef = useRef(null);
+  const sentinelRef = useRef(null);
+  const scrollHandledKeyRef = useRef(null);
   const [theadHeight, setTheadHeight] = useState(44);
   const [bodyHeight, setBodyHeight] = useState(0);
   const lastGroupRef = useRef(null);
   const [lastGroupHeight, setLastGroupHeight] = useState(0);
   const [grupoActivoNombre, setGrupoActivoNombre] = useState(null);
+  const [mesesCargados, setMesesCargados] = useState(1);
   const hoy = new Date();
-  const diaActual = hoy.getFullYear() === year && hoy.getMonth() === month ? hoy.getDate() : null;
-  const tone = monthTone(month);
 
+  // Meses actualmente cargados (arranca en el mes seleccionado, crece hacia
+  // adelante). No se recarga desde `mesesCargados=1` si cambia el mes/año
+  // seleccionado desde otra vista: cada mes inicial nuevo reinicia la carga.
   useEffect(() => {
-    const sameMonth = focusDate?.year === year && focusDate?.month === month;
-    const targetDay = sameMonth ? focusDate.day : diaActual;
+    setMesesCargados(1);
+  }, [year, month]);
+
+  const rangoMeses = useMemo(
+    () => Array.from({ length: mesesCargados }, (_, i) => addMonths(year, month, i)),
+    [year, month, mesesCargados],
+  );
+
+  const feriadosPorAnio = useMemo(() => {
+    const anios = [...new Set(rangoMeses.map((m) => m.year))];
+    const mapa = new Map();
+    anios.forEach((y) => mapa.set(y, buildFeriadosSet(y, reglas)));
+    return mapa;
+  }, [rangoMeses, reglas]);
+
+  const inicioPorMes = useMemo(() => {
+    const mapa = new Map();
+    rangoMeses.forEach(({ year: y, month: m }) => {
+      mapa.set(`${y}-${m}`, primerDiaLaboral(y, m, feriadosPorAnio.get(y)));
+    });
+    return mapa;
+  }, [rangoMeses, feriadosPorAnio]);
+  const inicioDeMes = (y, m) => inicioPorMes.get(`${y}-${m}`) ?? 1;
+
+  // Lista plana y cronológica de todas las columnas de día actualmente
+  // cargadas, cada una con su (year, month, dia) explícito — reemplaza al
+  // antiguo arreglo `days` (1..N) de un solo mes.
+  const columnas = useMemo(() => {
+    const lista = [];
+    rangoMeses.forEach(({ year: y, month: m }) => {
+      const n = dim(y, m);
+      for (let d = 1; d <= n; d++) lista.push({ year: y, month: m, dia: d });
+    });
+    return lista;
+  }, [rangoMeses]);
+
+  // Carga progresiva: al acercarse al borde derecho de lo ya cargado, se
+  // agrega un mes más (hasta el tope de 10 años). El nodo centinela es el
+  // mismo durante toda la vida del componente, así que el observer se crea
+  // una sola vez.
+  useEffect(() => {
+    const contenedor = scrollRef.current;
+    const sentinel = sentinelRef.current;
+    if (!contenedor || !sentinel || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMesesCargados((prev) => Math.min(prev + 1, MAX_MESES));
+        }
+      },
+      { root: contenedor, rootMargin: "0px 300px 0px 0px" },
+    );
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, []);
+
+  // Si `focusDate` apunta a un mes que todavía no está cargado (pero está
+  // dentro del rango de 10 años hacia adelante), se adelanta la carga para
+  // que el efecto de scroll de abajo pueda encontrarlo.
+  useEffect(() => {
+    if (!focusDate) return;
+    const distancia = (focusDate.year - year) * 12 + (focusDate.month - month);
+    if (distancia >= 0 && distancia < MAX_MESES) {
+      setMesesCargados((prev) => Math.max(prev, distancia + 1));
+    }
+  }, [focusDate, year, month]);
+
+  // Centra la tabla en `focusDate` (o en "hoy" si no hay uno) al entrar a la
+  // vista o cuando cambia el objetivo. Se reintenta en cada carga de meses
+  // (por si el mes objetivo todavía no estaba disponible), pero una vez
+  // encontrado y centrado para un objetivo dado, no se repite — así el
+  // scroll manual del usuario (que dispara más cargas progresivas) no se ve
+  // interrumpido por un recentrado inesperado.
+  useEffect(() => {
     const contenedor = scrollRef.current;
     if (!contenedor) return;
-    const objetivo = targetDay ? contenedor.querySelector(`[data-dia="${targetDay}"]`) : null;
+    const targetIso = focusDate
+      ? isoFecha(focusDate.year, focusDate.month, focusDate.day)
+      : isoFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    if (scrollHandledKeyRef.current === targetIso) return;
+    const objetivo = contenedor.querySelector(`[data-fecha="${targetIso}"]`);
     if (!objetivo) {
-      // Mes sin "hoy" ni fecha buscada: arrancar desde el día 1 en lugar de
-      // conservar el desplazamiento del mes anterior.
-      contenedor.scrollTo({ left: 0, behavior: "auto" });
+      if (!focusDate) {
+        scrollHandledKeyRef.current = targetIso;
+        contenedor.scrollTo({ left: 0, behavior: "auto" });
+      }
       return;
     }
+    scrollHandledKeyRef.current = targetIso;
     contenedor.scrollTo({
       left: Math.max(0, objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2),
       behavior: focusDate ? "smooth" : "auto",
     });
-  }, [diaActual, focusDate, month, year]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusDate, columnas]);
 
   // Mide el alto real del encabezado de días (varía por breakpoint) para
   // que el nombre de puesto se congele justo debajo, sin solaparse.
@@ -170,43 +258,52 @@ export default function RolesMensualGrid({
   const toggleEdit = (puesto, nombre) =>
     setEditRows((prev) => ({ ...prev, [rowId(puesto, nombre)]: !prev[rowId(puesto, nombre)] }));
 
-  const getCfg = (grupo, persona) =>
-    roleData[rolCfgKey(year, month, grupo.nombre, persona)] ||
+  const getCfg = (grupo, persona, y, m) =>
+    roleData[rolCfgKey(y, m, grupo.nombre, persona)] ||
     personas.find((f) => f.nombre === persona)?.modalidad ||
     "10x5";
 
+  // La modalidad configurable desde la fila se lee/escribe siempre en el mes
+  // inicial (igual que antes de soportar varios meses); "Aplicar" reusa ese
+  // mismo valor para regenerar el patrón en todos los meses cargados.
   const setCfg = (grupo, persona, valor) =>
     setRoleData((prev) => ({ ...prev, [rolCfgKey(year, month, grupo.nombre, persona)]: valor }));
 
-  const getCelda = (grupo, persona, dia) =>
-    roleData[rolKey(year, month, grupo.nombre, persona, dia)] ??
-    generarValorPatron(getCfg(grupo, persona), dia, inicio, year, month);
+  const getCelda = (grupo, persona, y, m, dia) =>
+    roleData[rolKey(y, m, grupo.nombre, persona, dia)] ??
+    generarValorPatron(getCfg(grupo, persona, y, m), dia, inicioDeMes(y, m), y, m);
 
   const aplicarPatron = (grupo, persona) => {
-    const modalidad = getCfg(grupo, persona);
+    const modalidad = getCfg(grupo, persona, year, month);
     const cambios = {};
-    days.forEach((d) => {
-      cambios[rolKey(year, month, grupo.nombre, persona, d)] = generarValorPatron(modalidad, d, inicio, year, month);
+    columnas.forEach(({ year: y, month: m, dia }) => {
+      cambios[rolKey(y, m, grupo.nombre, persona, dia)] = generarValorPatron(modalidad, dia, inicioDeMes(y, m), y, m);
     });
     setRoleData((prev) => ({ ...prev, ...cambios }));
   };
 
-  const renumerarFila = (grupo, persona, diaEditado, categoria) => {
-    const modalidad = getCfg(grupo, persona);
+  // `diaEditadoIso` es la fecha ISO del día que disparó el cambio (antes
+  // era solo el número de día: con varios meses cargados, dos meses pueden
+  // compartir el mismo número de día, así que hace falta la fecha completa).
+  const renumerarFila = (grupo, persona, diaEditadoIso, categoria) => {
+    const modalidad = getCfg(grupo, persona, year, month);
     const categorias = {};
-    days.forEach((d) => {
-      categorias[d] = categoriaDe(getCelda(grupo, persona, d));
+    columnas.forEach((col) => {
+      const iso = isoFecha(col.year, col.month, col.dia);
+      categorias[iso] = categoriaDe(getCelda(grupo, persona, col.year, col.month, col.dia));
     });
-    categorias[diaEditado] = categoria;
+    categorias[diaEditadoIso] = categoria;
     const cambios = {};
     let categoriaAnterior = null;
     let consecutivo = 0;
-    days.forEach((d) => {
-      const cat = categorias[d] || "";
+    columnas.forEach((col) => {
+      const iso = isoFecha(col.year, col.month, col.dia);
+      const cat = categorias[iso] || "";
+      const key = rolKey(col.year, col.month, grupo.nombre, persona, col.dia);
       if (!cat) {
         categoriaAnterior = null;
         consecutivo = 0;
-        cambios[rolKey(year, month, grupo.nombre, persona, d)] = "";
+        cambios[key] = "";
         return;
       }
       if (cat !== categoriaAnterior) {
@@ -215,22 +312,36 @@ export default function RolesMensualGrid({
       } else {
         consecutivo += 1;
       }
-      cambios[rolKey(year, month, grupo.nombre, persona, d)] = formatearCategoria(cat, consecutivo, modalidad);
+      cambios[key] = formatearCategoria(cat, consecutivo, modalidad);
     });
     setRoleData((prev) => ({ ...prev, ...cambios }));
   };
 
   const seleccionarMenu = (valor) => {
     if (!menu) return;
-    renumerarFila(menu.grupo, menu.persona, menu.dia, valor);
+    const iso = isoFecha(menu.year, menu.month, menu.dia);
+    renumerarFila(menu.grupo, menu.persona, iso, valor);
     setMenu(null);
   };
 
-  const abrirConflicto = (grupo, nombre, d, val) => {
-    const iso = isoFecha(year, month, d);
+  const abrirConflicto = (grupo, nombre, y, m, d, val) => {
+    const iso = isoFecha(y, m, d);
     const acts = actividadesEnDia(actividadesPlan || [], iso).filter((a) => (a.funcionarios || []).includes(nombre));
-    setConflictoActivo({ grupo, persona: nombre, pi: 0, dia: d, valor: val, iso, acts, esInicio: d === inicio });
+    setConflictoActivo({
+      grupo,
+      persona: nombre,
+      pi: 0,
+      dia: d,
+      valor: val,
+      iso,
+      acts,
+      esInicio: d === inicioDeMes(y, m),
+      year: y,
+      month: m,
+    });
   };
+
+  const totalDias = columnas.length;
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -252,34 +363,41 @@ export default function RolesMensualGrid({
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
-              {/* Barra delgada de mes: siempre visible sobre el encabezado de
-                  días (congelada junto con el resto del thead) para saber a
-                  qué mes pertenecen las fechas aunque se haya desplazado la
-                  tabla lateralmente. La celda en sí ocupa todo el ancho del
-                  mes (colSpan), pero el texto va en un span sticky con su
-                  propio `left` (alineado justo después de la columna
-                  congelada de nombre) para que se mantenga dentro del
-                  viewport aunque se haga scroll horizontal hacia el
-                  principio o el final del mes. */}
-              <th
-                colSpan={days.length}
-                className="sticky top-0 z-30 h-5 border-b border-slate-300 bg-slate-800 p-0 text-white sm:h-6"
-              >
-                <span className="sticky left-[5.5rem] flex h-5 w-fit items-center px-2 text-[9px] font-bold uppercase tracking-widest sm:left-[10rem] sm:h-6 sm:text-[10px] lg:left-[13rem]">
-                  {meses[month]} {year}
-                </span>
-              </th>
+              {/* Una barra delgada de mes por cada mes cargado: siempre
+                  visible sobre el encabezado de días (congelada junto con
+                  el resto del thead) para saber a qué mes pertenecen las
+                  fechas visibles aunque se haya desplazado la tabla
+                  lateralmente a través de varios meses/años. Cada celda
+                  ocupa todo el ancho de SU mes (colSpan), pero el texto va
+                  en un span sticky con su propio `left` (alineado justo
+                  después de la columna congelada de nombre) para que se
+                  mantenga dentro del viewport mientras ese mes esté en
+                  pantalla. */}
+              {rangoMeses.map(({ year: y, month: m }) => (
+                <th
+                  key={`${y}-${m}`}
+                  colSpan={dim(y, m)}
+                  className="sticky top-0 z-30 h-5 border-b border-r-2 border-slate-600 bg-slate-800 p-0 text-white sm:h-6"
+                >
+                  <span className="sticky left-[5.5rem] flex h-5 w-fit items-center px-2 text-[9px] font-bold uppercase tracking-widest sm:left-[10rem] sm:h-6 sm:text-[10px] lg:left-[13rem]">
+                    {meses[m]} {y}
+                  </span>
+                </th>
+              ))}
             </tr>
             <tr>
-              {days.map((d) => {
-                const dow = new Date(year, month, d).getDay();
+              {columnas.map((col) => {
+                const { year: y, month: m, dia: d } = col;
+                const iso = isoFecha(y, m, d);
+                const dow = new Date(y, m, d).getDay();
                 const isWeekend = dow === 0 || dow === 6;
-                const isToday = d === diaActual;
-                const isFocused = focusDate?.year === year && focusDate?.month === month && focusDate?.day === d;
+                const isToday = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
+                const isFocused = focusDate?.year === y && focusDate?.month === m && focusDate?.day === d;
+                const tone = monthTone(m);
                 return (
                   <th
-                    key={d}
-                    data-dia={d}
+                    key={iso}
+                    data-fecha={iso}
                     aria-current={isToday ? "date" : undefined}
                     className={`sticky top-5 z-30 border-b p-0.5 text-center font-semibold sm:top-6 sm:p-1 ${
                       isToday
@@ -298,6 +416,9 @@ export default function RolesMensualGrid({
                   </th>
                 );
               })}
+              {/* Centinela invisible: al entrar en vista dispara la carga
+                  del siguiente mes (ver IntersectionObserver arriba). */}
+              <th ref={sentinelRef} aria-hidden="true" className="w-px p-0" />
             </tr>
           </thead>
           {grupos.length === 0 ? (
@@ -305,7 +426,7 @@ export default function RolesMensualGrid({
               <tr>
                 <td
                   className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] lg:min-w-[13rem] lg:max-w-[13rem]"
-                  colSpan={days.length + 1}
+                  colSpan={totalDias + 1}
                 >
                   {t("roles.sinFuncionariosFiltro")}
                 </td>
@@ -316,9 +437,7 @@ export default function RolesMensualGrid({
               <RowsGrupo
                 key={grupo.nombre}
                 grupo={grupo}
-                days={days}
-                year={year}
-                month={month}
+                columnas={columnas}
                 compact={compact}
                 editRows={editRows}
                 toggleEdit={toggleEdit}
@@ -328,12 +447,14 @@ export default function RolesMensualGrid({
                 aplicarPatron={aplicarPatron}
                 abrirConflicto={abrirConflicto}
                 setMenu={setMenu}
-                inicio={inicio}
+                inicioDeMes={inicioDeMes}
                 actividadesPlan={actividadesPlan}
                 trabajadas={trabajadas}
                 reposicionesDia={reposicionesDia}
                 registerBodyRef={idx === grupos.length - 1 ? lastGroupRef : undefined}
-                diaActual={diaActual}
+                hoy={hoy}
+                year={year}
+                month={month}
                 t={t}
               />
             ))
@@ -349,7 +470,16 @@ export default function RolesMensualGrid({
           onModificarRol={() => {
             const d = conflictoActivo;
             setConflictoActivo(null);
-            setMenu({ grupo: d.grupo, persona: d.persona, pi: 0, dia: d.dia, valor: d.valor, esInicio: d.esInicio });
+            setMenu({
+              grupo: d.grupo,
+              persona: d.persona,
+              pi: 0,
+              dia: d.dia,
+              valor: d.valor,
+              esInicio: d.esInicio,
+              year: d.year,
+              month: d.month,
+            });
           }}
           onModificarActividad={() => {
             setActividadesDiaModal({ persona: conflictoActivo.persona, iso: conflictoActivo.iso });
@@ -373,9 +503,7 @@ export default function RolesMensualGrid({
 
 function RowsGrupo({
   grupo,
-  days,
-  year,
-  month,
+  columnas,
   compact,
   editRows,
   toggleEdit,
@@ -385,19 +513,21 @@ function RowsGrupo({
   aplicarPatron,
   abrirConflicto,
   setMenu,
-  inicio,
+  inicioDeMes,
   actividadesPlan,
   trabajadas,
   reposicionesDia,
   registerBodyRef,
-  diaActual,
+  hoy,
+  year,
+  month,
   t,
 }) {
   return (
     <tbody data-grupo={grupo.nombre} ref={registerBodyRef}>
       {grupo.funcionarios.map((nombre, idx) => {
         const editing = !!editRows[rowId(grupo.nombre, nombre)];
-        const modalidad = getCfg(grupo, nombre);
+        const modalidad = getCfg(grupo, nombre, year, month);
         const nombrePartes = nombreEnDosLineas(nombre);
         return (
           <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
@@ -446,28 +576,34 @@ function RowsGrupo({
                 )}
               </div>
             </td>
-            {days.map((d) => {
-              const dow = new Date(year, month, d).getDay();
-              const iso = isoFecha(year, month, d);
-              const val = getCelda(grupo, nombre, d);
+            {columnas.map((col) => {
+              const { year: y, month: m, dia: d } = col;
+              const dow = new Date(y, m, d).getDay();
+              const iso = isoFecha(y, m, d);
+              const val = getCelda(grupo, nombre, y, m, d);
               const tieneActividad = actividadesEnDia(actividadesPlan || [], iso).some((a) =>
                 (a.funcionarios || []).includes(nombre),
               );
               const conflicto = tieneActividad && !esRolActivo(val);
+              const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
+              const esInicio = editing && d === inicioDeMes(y, m);
               return (
                 <RoleCell
-                  key={`${grupo.nombre}-${nombre}-${d}`}
+                  key={`${grupo.nombre}-${nombre}-${iso}`}
                   value={val}
                   compact={compact}
                   editable={editing}
                   finde={dow === 0 || dow === 6}
-                  esInicio={editing && d === inicio}
+                  esInicio={esInicio}
                   conflicto={conflicto}
                   repoTrabajada={trabajadas[`${nombre}|${iso}`]}
                   repoReposicion={reposicionesDia[`${nombre}|${iso}`]}
-                  esHoy={d === diaActual}
-                  onOpen={() => editing && setMenu({ grupo, persona: nombre, pi: 0, dia: d, valor: val, esInicio: d === inicio })}
-                  onConflicto={() => abrirConflicto(grupo, nombre, d, val)}
+                  esHoy={esHoy}
+                  onOpen={() =>
+                    editing &&
+                    setMenu({ grupo, persona: nombre, pi: 0, dia: d, valor: val, esInicio, year: y, month: m })
+                  }
+                  onConflicto={() => abrirConflicto(grupo, nombre, y, m, d, val)}
                 />
               );
             })}
@@ -478,15 +614,17 @@ function RowsGrupo({
         <td className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem]">
           {t("roles.cantidadEnTurno")}
         </td>
-        {days.map((d) => {
+        {columnas.map((col) => {
+          const { year: y, month: m, dia: d } = col;
+          const iso = isoFecha(y, m, d);
           const count = grupo.funcionarios.reduce(
-            (acc, nombre) => (esRolActivo(getCelda(grupo, nombre, d)) ? acc + 1 : acc),
+            (acc, nombre) => (esRolActivo(getCelda(grupo, nombre, y, m, d)) ? acc + 1 : acc),
             0,
           );
-          const esHoy = d === diaActual;
+          const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
           return (
             <td
-              key={`${grupo.nombre}-cantidad-${d}`}
+              key={`${grupo.nombre}-cantidad-${iso}`}
               className={`border-b border-b-slate-200 bg-white p-2 text-center font-semibold text-slate-800 ${
                 esHoy ? "border-l-2 border-r-2 border-l-emerald-500 border-r-emerald-500" : "border-r border-r-slate-200"
               }`}

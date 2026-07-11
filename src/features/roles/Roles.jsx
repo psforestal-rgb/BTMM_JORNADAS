@@ -3,7 +3,6 @@ import Card from "../../ui/Card.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { meses } from "../../data/calendario.js";
 import { puestos } from "../../data/puestos.js";
-import { dim } from "../../domain/fechas.js";
 import { useT } from "../../i18n/useT.js";
 import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
@@ -29,7 +28,6 @@ export default function Roles({
   const togglePuestoAbierto = (nombrePuesto) =>
     setPuestosAbiertos((prev) => ({ ...prev, [nombrePuesto]: !prev[nombrePuesto] }));
 
-  const days = useMemo(() => Array.from({ length: dim(year, month) }, (_, i) => i + 1), [month, year]);
   const gruposRoles = useMemo(
     () =>
       puestos.map((p) => ({
@@ -246,7 +244,6 @@ export default function Roles({
           <RolesPrintHeader mes={meses[month]} anio={year} puesto={t("roles.todosLosPuestos")} />
           <RolesMensualGrid
             grupos={gruposFiltrados}
-            days={days}
             year={year}
             month={month}
             compact={compact}
