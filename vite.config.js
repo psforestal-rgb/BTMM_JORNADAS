@@ -11,7 +11,7 @@ const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
 
 const APP_VERSION = pkg.version
 const APP_BUILD_TIME = new Date().toISOString()
-const APP_COMMIT = (() => {
+const APP_COMMIT_FULL = (() => {
   if (process.env.GIT_SHA) return process.env.GIT_SHA.slice(0, 7)
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7)
   try {
@@ -22,6 +22,14 @@ const APP_COMMIT = (() => {
     return 'dev'
   }
 })()
+// En producción se publica solo un prefijo corto del commit: el hash completo
+// facilita correlacionar el despliegue con el historial público del repo
+// para buscar vulnerabilidades conocidas de esa versión exacta. En
+// development/local se mantiene el hash de 7 chars para depurar. Se usa el
+// MISMO valor (truncado o no) tanto en version.json como en el bundle
+// (__APP_COMMIT__) para que versionCheck.js siga comparando ambos lados
+// consistentemente.
+const APP_COMMIT = process.env.NODE_ENV === 'production' ? APP_COMMIT_FULL.slice(0, 4) : APP_COMMIT_FULL
 
 const versionJsonPlugin = () => ({
   name: 'pnlq-version-json',
