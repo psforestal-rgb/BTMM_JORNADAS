@@ -59,7 +59,6 @@ const dict = {
     vistaAmplia: "Vista amplia",
     cargando: "Cargando vista…",
     hoy: "Hoy",
-    acciones: "Acciones del módulo",
     tema: "Tema y contraste",
     previewMobile: "Abrir simulador temporal de vista móvil",
     previewMobileCorto: "Vista móvil",
