@@ -1,4 +1,4 @@
-import { APP_VERSION, APP_VERSION_URL } from './appVersion.js'
+import { APP_VERSION, APP_VERSION_URL, APP_COMMIT } from './appVersion.js'
 
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000
 
@@ -17,7 +17,9 @@ export function startVersionCheck({ intervalMs = DEFAULT_INTERVAL_MS, onOutdated
     if (stopped || typeof navigator === 'undefined' || !navigator.onLine) return
     try {
       const remote = await fetchRemoteVersion()
-      if (remote?.version && remote.version !== APP_VERSION) {
+      // Compara por commit (no solo por número de versión) para detectar
+      // cualquier despliegue nuevo, incluso cuando package.json no cambió.
+      if (remote?.commit && remote.commit !== APP_COMMIT) {
         onOutdated?.({ local: APP_VERSION, remote: remote.version, remoteBuildTime: remote.buildTime, remoteCommit: remote.commit })
       }
     } catch {
