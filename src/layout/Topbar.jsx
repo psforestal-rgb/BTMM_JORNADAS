@@ -54,7 +54,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
             <div className="flex min-w-0 items-baseline gap-1.5 text-xs font-semibold uppercase tracking-widest text-ink-muted">
               <span className="shrink-0">{t("app.short")}</span>
               <span className="shrink-0 text-ink-subtle">/</span>
-              <span className="truncate">{titulo}</span>
+              <span className="truncate text-ink" title={titulo}>{titulo}</span>
             </div>
             {/* El título largo solo aporta en escritorio; en móvil/tablet
                 el breadcrumb superior ya da contexto y el h1 ocupaba
@@ -74,18 +74,18 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               <div
                 role="group"
                 aria-label={t("topbar.periodo")}
-                className="inline-flex items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                className="inline-flex items-stretch overflow-hidden rounded-xl border border-line bg-surface shadow-sm"
               >
                 <button
                   onClick={() => moverMes(-1)}
                   aria-label={t("topbar.mesAnterior")}
-                  className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-slate-50"
+                  className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-ink-muted hover:bg-surface-alt"
                 >
                   <Icon name="chevronLeft" size={16} />
                 </button>
                 <select
                   aria-label={t("topbar.mes")}
-                  className="min-h-touch border-x border-slate-200 bg-white px-1.5 text-sm font-medium text-slate-700 outline-none sm:px-2"
+                  className="min-h-touch border-x border-line bg-surface px-1.5 text-sm font-medium text-ink outline-none sm:px-2 dark:[color-scheme:dark]"
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
                 >
@@ -97,7 +97,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
                 </select>
                 <select
                   aria-label={t("topbar.anio")}
-                  className="min-h-touch bg-white px-1.5 text-sm font-medium text-slate-700 outline-none sm:px-2"
+                  className="min-h-touch bg-surface px-1.5 text-sm font-medium text-ink outline-none sm:px-2 dark:[color-scheme:dark]"
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
                 >
@@ -108,7 +108,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
                 <button
                   onClick={() => moverMes(1)}
                   aria-label={t("topbar.mesSiguiente")}
-                  className="inline-flex min-h-touch min-w-touch items-center justify-center border-l border-slate-200 px-2 text-slate-700 hover:bg-slate-50"
+                  className="inline-flex min-h-touch min-w-touch items-center justify-center border-l border-line px-2 text-ink-muted hover:bg-surface-alt"
                 >
                   <Icon name="chevronRight" size={16} />
                 </button>
@@ -125,7 +125,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
           {view === "roles" && (
             <button
               onClick={() => setCompact(!compact)}
-              className="hidden min-h-touch items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 md:inline-flex"
+              className="hidden min-h-touch items-center rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-surface-alt md:inline-flex"
               aria-pressed={compact}
             >
               {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}

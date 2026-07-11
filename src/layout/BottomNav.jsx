@@ -75,7 +75,7 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
               type="button"
               onClick={() => go(id)}
               aria-current={view === id ? "page" : undefined}
-              className={`relative flex min-h-[56px] items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold ${view === id ? "bg-brand text-brand-fg" : "bg-surface-alt text-ink"}`}
+              className={`relative flex min-h-[56px] items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold ${view === id ? "bg-brand text-brand-fg" : "border border-line bg-surface-alt text-ink"}`}
             >
               <Icon name={icon} size={20} />
               <span>{label}</span>

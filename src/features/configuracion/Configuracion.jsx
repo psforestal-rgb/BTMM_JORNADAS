@@ -82,12 +82,12 @@ export default function Configuracion() {
           )
         }
       >
-        <div className="mb-4 rounded-xl border-l-4 border-red-700 bg-red-50 p-3 text-sm text-red-950">
+        <div className="mb-4 rounded-xl border-l-4 border-critical bg-critical-soft p-3 text-sm text-critical-fg">
           {t("configuracion.reglaDuraIntro")}
         </div>
 
         {/* Cobertura */}
-        <details open className="mb-3 rounded-2xl border border-slate-200 p-3">
+        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
           <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.coberturaTitulo")}</summary>
           <p className="mb-2 text-xs text-slate-500">{t("configuracion.coberturaSub")}</p>
           <div className="flex flex-wrap gap-2">
