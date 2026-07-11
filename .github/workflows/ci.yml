@@ -30,7 +30,10 @@ jobs:
           cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        # --ignore-scripts: ninguna dependencia de este proyecto necesita su
+        # lifecycle script para build/test (verificado con instalación limpia);
+        # evita ejecutar código de terceros con los permisos del runner.
+        run: npm ci --ignore-scripts
 
       - name: Correr tests
         run: npm test
@@ -50,7 +53,10 @@ jobs:
           cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        # --ignore-scripts: ninguna dependencia de este proyecto necesita su
+        # lifecycle script para build/test (verificado con instalación limpia);
+        # evita ejecutar código de terceros con los permisos del runner.
+        run: npm ci --ignore-scripts
 
       - name: Compilar
         env:
