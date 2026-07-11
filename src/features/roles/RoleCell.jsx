@@ -3,7 +3,7 @@ import { codigoCls } from "../../ui/styles.js";
 import { t } from "../../i18n/es-CR.js";
 import MarcaReposicionCelda from "../reposicion/MarcaReposicionCelda.jsx";
 
-function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInicio, conflicto, repoTrabajada, repoReposicion }) {
+function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInicio, conflicto, repoTrabajada, repoReposicion, esHoy }) {
   const v = String(value || "").toUpperCase();
   const handleClick = conflicto ? onConflicto : editable ? onOpen : undefined;
   const clickable = conflicto || editable;
@@ -14,9 +14,9 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
     : t("roles.titleSinEdicion");
   return (
     <td
-      className={`border-b border-r border-slate-200 p-0 text-center font-semibold ${codigoCls(v, finde)} ${
-        esInicio ? "ring-2 ring-inset ring-emerald-700" : ""
-      } ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}
+      className={`border-b border-b-slate-200 p-0 text-center font-semibold ${codigoCls(v, finde)} ${
+        esHoy ? "border-l-2 border-r-2 border-l-emerald-500 border-r-emerald-500" : "border-r border-r-slate-200"
+      } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}
     >
       <button
         type="button"
@@ -62,6 +62,7 @@ function areEqual(prev, next) {
     prev.editable === next.editable &&
     prev.esInicio === next.esInicio &&
     prev.conflicto === next.conflicto &&
+    prev.esHoy === next.esHoy &&
     marcaKey(prev.repoTrabajada) === marcaKey(next.repoTrabajada) &&
     marcaKey(prev.repoReposicion) === marcaKey(next.repoReposicion)
   );
