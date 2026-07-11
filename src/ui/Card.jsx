@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Icon from "./Icon.jsx";
 
-export default function Card({ title, icon, action, children, collapsible = false, defaultOpen = true }) {
+export default function Card({ title, icon, action, children, collapsible = false, defaultOpen = true, bordered = true }) {
   const [open, setOpen] = useState(defaultOpen);
   const abierto = !collapsible || open;
   return (
-    <div className="pnlq-card rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
+    <div className={`pnlq-card rounded-2xl bg-white p-5 shadow-sm ${bordered ? "border border-slate-300" : ""}`}>
       <div className={`pnlq-card-header flex flex-wrap items-center justify-between gap-3 ${abierto ? "mb-4" : ""}`}>
         {collapsible ? (
           <button
