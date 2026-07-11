@@ -17,12 +17,14 @@ function ActividadItem({ a, conflictos, abrir, compacta }) {
   return (
     <button
       onClick={abrir}
-      className={`w-full rounded-lg border px-2 py-1.5 text-left transition hover:brightness-95 ${
+      className={`w-full rounded-lg px-2 py-1.5 text-left transition hover:brightness-95 ${
+        // Conflicto: acento lateral en vez de borde completo + anillo — el
+        // rojo no debe dominar la lectura en días con varias actividades.
         conflictos.length
-          ? "border-red-500 bg-red-50 text-red-950 ring-2 ring-red-500"
+          ? "border-l-4 border-red-600 bg-red-50 text-red-950"
           : a.viatico
-          ? "border-orange-300 bg-orange-50 text-orange-950"
-          : "border-emerald-200 bg-emerald-50 text-emerald-950"
+          ? "border border-orange-300 bg-orange-50 text-orange-950"
+          : "border border-emerald-200 bg-emerald-50 text-emerald-950"
       }`}
     >
       <div className={`line-clamp-2 font-semibold leading-tight ${compacta ? "text-[11px]" : "text-sm"}`}>{a.titulo}</div>
@@ -168,12 +170,19 @@ export default function Planificacion({
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge className="bg-emerald-100 text-emerald-950">{t("planificacion.leyendaProgramada")}</Badge>
-        <Badge className="bg-orange-100 text-orange-950">{t("planificacion.leyendaViatico")}</Badge>
-        <Badge className="bg-slate-100 text-slate-900">{t("planificacion.leyendaFinde")}</Badge>
-        <Badge className="bg-slate-100 text-slate-600">{t("planificacion.leyendaTurno")}</Badge>
-      </div>
+      {/* Leyenda colapsable: no debe competir con los datos por el primer
+          viewport; queda a un toque de distancia para quien la necesite. */}
+      <details className="rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+        <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600">
+          {t("planificacion.verLeyenda")}
+        </summary>
+        <div className="flex flex-wrap items-center gap-2 pb-2 pt-1">
+          <Badge className="bg-emerald-100 text-emerald-950">{t("planificacion.leyendaProgramada")}</Badge>
+          <Badge className="bg-orange-100 text-orange-950">{t("planificacion.leyendaViatico")}</Badge>
+          <Badge className="bg-slate-100 text-slate-900">{t("planificacion.leyendaFinde")}</Badge>
+          <Badge className="bg-slate-100 text-slate-600">{t("planificacion.leyendaTurno")}</Badge>
+        </div>
+      </details>
 
       {modo === "agenda" && (
         <div className="space-y-2 rounded-lg bg-surface-inset p-2">

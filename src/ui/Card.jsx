@@ -22,6 +22,7 @@ export default function Card({
   defaultOpen = true,
   variant = "flat",
   className = "",
+  ariaLabel,
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const abierto = !collapsible || open;
@@ -33,6 +34,7 @@ export default function Card({
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
+            aria-label={ariaLabel}
             className="flex min-h-touch flex-1 items-center gap-2 text-left text-base font-semibold text-ink hover:text-brand"
           >
             <Icon name={open ? "chevronDown" : "chevronRight"} size={18} className="shrink-0 text-ink-subtle" />

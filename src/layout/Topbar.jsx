@@ -49,13 +49,17 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
       <div className="pnlq-topbar-inner flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <div className="truncate text-xs font-semibold uppercase tracking-widest text-slate-500">
-              {t("app.breadcrumbBase", { titulo })}
+            {/* Marca y módulo como elementos separados: PNLQ nunca se trunca,
+                solo el nombre del módulo cede espacio cuando hace falta. */}
+            <div className="flex min-w-0 items-baseline gap-1.5 text-xs font-semibold uppercase tracking-widest text-ink-muted">
+              <span className="shrink-0">{t("app.short")}</span>
+              <span className="shrink-0 text-ink-subtle">/</span>
+              <span className="truncate">{titulo}</span>
             </div>
             {/* El título largo solo aporta en escritorio; en móvil/tablet
                 el breadcrumb superior ya da contexto y el h1 ocupaba
                 demasiada altura por encima de la primera tarjeta. */}
-            <h1 className="hidden text-xl font-semibold tracking-tight lg:block">{t("app.titulo")}</h1>
+            <h1 className="hidden text-xl font-semibold tracking-tight text-ink lg:block">{t("app.titulo")}</h1>
           </div>
           {/* En móvil, estado de respaldo junto al breadcrumb para no crecer en alto. */}
           <div className="flex shrink-0 items-center gap-2 xl:hidden">
