@@ -1,0 +1,1 @@
+import{a4 as r}from"./index-CdG14w0k.js";function f(s,t){const[e,n]=r.useState(()=>{try{const o=window.sessionStorage.getItem(s);return o===null?typeof t=="function"?t():t:JSON.parse(o)}catch{return typeof t=="function"?t():t}});return r.useEffect(()=>{try{window.sessionStorage.setItem(s,JSON.stringify(e))}catch{}},[s,e]),[e,n]}export{f as u};
