@@ -31,7 +31,7 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
         }`}
         title={title}
       >
-        <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-white/45 px-1.5 py-0.5 shadow-sm ring-1 ring-black/5">
+        <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-white/45 px-1.5 py-0.5">
           {v || "—"}
         </span>
         <MarcaReposicionCelda trabajada={repoTrabajada} reposicion={repoReposicion} />

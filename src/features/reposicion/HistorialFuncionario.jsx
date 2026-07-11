@@ -38,7 +38,7 @@ export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEF
       {historial.map((fila) => {
         const open = !!abierto[fila.funcionario];
         return (
-          <div key={fila.funcionario} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div key={fila.funcionario} className="rounded-lg border border-slate-200 bg-white">
             <button
               type="button"
               onClick={() => setAbierto((p) => ({ ...p, [fila.funcionario]: !p[fila.funcionario] }))}
@@ -127,7 +127,7 @@ export default function HistorialFuncionario({ historial, hj = HORAS_JORNADA_DEF
                       return (
                       <tr key={r.id}>
                         <td className="p-2.5 whitespace-nowrap">
-                          <Badge className="border-slate-300 bg-white font-mono text-slate-700">{r.folio || "—"}</Badge>
+                          <Badge bordered className="border-slate-300 bg-white font-mono text-slate-700">{r.folio || "—"}</Badge>
                         </td>
                         <td className="p-2.5 whitespace-nowrap">{fecha(r.fecha)}</td>
                         <td className="p-2.5">{r.tipoDia}</td>

@@ -45,8 +45,8 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setYear(hoy.getFullYear());
   };
   return (
-    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${mobilePreviewOpen ? "z-50" : "z-30"}`}>
-      <div className="pnlq-topbar-inner flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
+    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-line bg-surface/95 px-4 py-2 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${mobilePreviewOpen ? "z-50" : "z-30"}`}>
+      <div className="pnlq-topbar-inner flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-xs font-semibold uppercase tracking-widest text-slate-500">

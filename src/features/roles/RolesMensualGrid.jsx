@@ -257,7 +257,7 @@ export default function RolesMensualGrid({
   const totalFuncionarios = grupos.reduce((acc, grupo) => acc + grupo.funcionarios.length, 0);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className={`flex flex-col gap-2 border-b border-slate-200 p-3 ${tone.band}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -271,7 +271,7 @@ export default function RolesMensualGrid({
             <div
               role="group"
               aria-label={t("roles.desplazarDias")}
-              className="pnlq-no-print inline-flex items-stretch overflow-hidden rounded-lg border border-black/10 bg-white/85 shadow-sm"
+              className="pnlq-no-print inline-flex items-stretch overflow-hidden rounded-lg border border-black/10 bg-white/85"
             >
               <button
                 type="button"
@@ -303,7 +303,7 @@ export default function RolesMensualGrid({
                 <Icon name="chevronRight" size={16} />
               </button>
             </div>
-            <Badge className="border-white/60 bg-white/80 text-slate-900">
+            <Badge bordered className="border-white/60 bg-white/80 text-slate-900">
               {meses[month]} {year}
             </Badge>
           </div>
@@ -323,7 +323,7 @@ export default function RolesMensualGrid({
           <thead ref={theadRef}>
             <tr>
               <th
-                className={`sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-black uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
+                className={`sticky top-0 left-0 z-40 min-w-[6.5rem] max-w-[6.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[14rem] sm:max-w-[14rem] sm:p-3 sm:text-xs lg:min-w-[18rem] lg:max-w-[18rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
@@ -347,9 +347,9 @@ export default function RolesMensualGrid({
                           : tone.day
                     }`}
                   >
-                    <div className="mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg bg-white/80 shadow-sm ring-1 ring-black/5 sm:h-10 sm:w-9">
+                    <div className="mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg bg-white/80 sm:h-10 sm:w-9">
                       <span className="text-[9px] uppercase leading-none text-slate-500">{dias[dow]}</span>
-                      <span className="mt-0.5 text-[12px] leading-none font-black text-slate-950">{d}</span>
+                      <span className="mt-0.5 text-[12px] leading-none font-semibold text-slate-950">{d}</span>
                     </div>
                   </th>
                 );
@@ -463,7 +463,7 @@ function RowsGrupo({
                 <button
                   type="button"
                   onClick={() => toggleEdit(grupo.nombre, nombre)}
-                  className="flex min-h-10 w-full items-center justify-between gap-1 rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight shadow-sm hover:bg-slate-50 sm:gap-2 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs"
+                  className="flex min-h-10 w-full items-center justify-between gap-1 rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight hover:bg-slate-50 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
                 >
                   <span className="min-w-0 flex-1 leading-[1.05]">
                     <span className="block truncate">{nombrePartes.nombre}</span>

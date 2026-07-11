@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
-import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
-import { meses, diasLargos } from "../../data/calendario.js";
+import { diasLargos } from "../../data/calendario.js";
 import { dim, pad2 } from "../../domain/fechas.js";
 import { codigoRolFuncionario, esRolActivo } from "../../domain/roles.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
@@ -18,7 +17,7 @@ function ActividadItem({ a, conflictos, abrir, compacta }) {
   return (
     <button
       onClick={abrir}
-      className={`w-full rounded-xl border px-2 py-1.5 text-left shadow-sm transition hover:brightness-95 ${
+      className={`w-full rounded-lg border px-2 py-1.5 text-left transition hover:brightness-95 ${
         conflictos.length
           ? "border-red-500 bg-red-50 text-red-950 ring-2 ring-red-500"
           : a.viatico
@@ -149,35 +148,35 @@ export default function Planificacion({
     </button>
   );
   return (
-    <Card
-      title={t("planificacion.titulo", { mes: meses[month], anio: year })}
-      icon="🗓️"
-      action={
-        <button
-          onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
-          className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
-        >
-          {t("planificacion.agregar")}
-        </button>
-      }
-    >
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge className="border-emerald-300 bg-emerald-100 text-emerald-950">{t("planificacion.leyendaProgramada")}</Badge>
-        <Badge className="border-orange-300 bg-orange-100 text-orange-950">{t("planificacion.leyendaViatico")}</Badge>
-        <Badge className="border-slate-300 bg-slate-100 text-slate-900">{t("planificacion.leyendaFinde")}</Badge>
-        <Badge className="border-slate-300 bg-slate-100 text-slate-600">{t("planificacion.leyendaTurno")}</Badge>
+    <section className="space-y-3">
+      {/* Barra compacta: título de contexto ya lo da el Topbar; aquí solo
+          controles — modo de vista + acción principal en una fila. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div
           role="group"
           aria-label={t("planificacion.vistaAria")}
-          className="ml-auto inline-flex overflow-hidden rounded-xl border border-slate-200 shadow-sm"
+          className="inline-flex overflow-hidden rounded-lg border border-slate-200"
         >
           {botonModo("agenda", t("planificacion.vistaAgenda"))}
           {botonModo("cuadricula", t("planificacion.vistaCuadricula"))}
         </div>
+        <button
+          onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
+          className="min-h-touch rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-white hover:bg-emerald-700"
+        >
+          {t("planificacion.agregar")}
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className="bg-emerald-100 text-emerald-950">{t("planificacion.leyendaProgramada")}</Badge>
+        <Badge className="bg-orange-100 text-orange-950">{t("planificacion.leyendaViatico")}</Badge>
+        <Badge className="bg-slate-100 text-slate-900">{t("planificacion.leyendaFinde")}</Badge>
+        <Badge className="bg-slate-100 text-slate-600">{t("planificacion.leyendaTurno")}</Badge>
       </div>
 
       {modo === "agenda" && (
-        <div className="mb-4 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+        <div className="space-y-2 rounded-lg bg-surface-inset p-2">
           <div className="flex gap-2">
             <input
               type="search"
@@ -201,10 +200,12 @@ export default function Planificacion({
       )}
 
       {modo === "agenda" ? (
-        /* Agenda vertical: un renglón por día, pensada para pantallas angostas.
-           Misma información que la cuadrícula (actividades, turno, conflictos)
-           más alta rápida con la fecha del día prellenada. */
-        <ol className="space-y-2">
+        /* Agenda vertical: filas de día con divisores, no una tarjeta pesada
+           por fecha. El día actual se distingue con un acento lateral. */
+        daysVisible.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">No hay días que coincidan con estos filtros.</p>
+        ) : (
+        <ol className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-surface">
           {daysVisible.map((d) => {
             const dow = new Date(year, month, d).getDay();
             const finde = dow === 0 || dow === 6;
@@ -215,17 +216,17 @@ export default function Planificacion({
                 key={d}
                 ref={d === diaActual ? hoyRef : undefined}
                 aria-current={d === diaActual ? "date" : undefined}
-                className={`rounded-2xl border p-2 shadow-sm ${
+                className={`p-2 ${
                   d === diaActual
-                    ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
-                    : `border-slate-200 ${finde ? "bg-slate-50" : "bg-white"}`
+                    ? "border-l-4 border-emerald-600 bg-emerald-50 pl-1.5"
+                    : finde ? "bg-slate-50" : ""
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => verDia(d)}
                     title={t("planificacion.titleDetalleDia")}
-                    className={`flex min-h-touch min-w-touch shrink-0 flex-col items-center justify-center rounded-xl text-white shadow-sm hover:bg-emerald-800 ${
+                    className={`flex min-h-touch min-w-touch shrink-0 flex-col items-center justify-center rounded-lg text-white hover:bg-emerald-800 ${
                       d === diaActual ? "bg-emerald-700 ring-2 ring-emerald-300" : "bg-slate-900"
                     }`}
                   >
@@ -247,7 +248,7 @@ export default function Planificacion({
                   <button
                     onClick={() => setModal(nuevo(isoDia(d)))}
                     aria-label={t("planificacion.agregarEnDia", { dia: d })}
-                    className="flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+                    className="flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg font-semibold text-emerald-800 hover:bg-emerald-50"
                   >
                     +
                   </button>
@@ -267,12 +268,12 @@ export default function Planificacion({
               </li>
             );
           })}
-          {daysVisible.length === 0 && <li className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">No hay días que coincidan con estos filtros.</li>}
         </ol>
+        )
       ) : (
         /* Cuadrícula mensual de 7 columnas. En pantallas angostas necesita
            desplazamiento horizontal: min-w fija el ancho legible. */
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
           <div className="min-w-[700px]">
             <div className="grid grid-cols-7 bg-slate-900 text-white">
               {diasLargos.map((d) => (
@@ -370,6 +371,6 @@ export default function Planificacion({
           <label className="block text-sm font-semibold">Viático<select value={filtros.viatico} onChange={(e) => setFiltros((prev) => ({ ...prev, viatico: e.target.value }))} className="mt-1 min-h-touch w-full rounded-xl border border-slate-300 bg-white px-3 font-normal"><option value="todos">Todos</option><option value="si">Con viático</option><option value="no">Sin viático</option></select></label>
         </div>
       </Modal>
-    </Card>
+    </section>
   );
 }

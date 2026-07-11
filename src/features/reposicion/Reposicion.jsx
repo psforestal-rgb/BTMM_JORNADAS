@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
@@ -119,48 +118,34 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
   ];
 
   return (
-    <section className="space-y-4">
-      {/* Resumen */}
-      <div className="flex snap-x gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3">
-        <div className="min-w-[150px] snap-start rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t("reposicion.resumen.total")}</p>
-          <p className="mt-1 text-3xl font-semibold text-slate-900">{resumen.total}</p>
+    <section className="space-y-3">
+      {/* Resumen — grilla visible, sin scroll horizontal */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t("reposicion.resumen.total")}</p>
+          <p className="mt-0.5 text-xl font-semibold text-slate-900 sm:text-2xl">{resumen.total}</p>
         </div>
-        <div className="min-w-[190px] snap-start rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm sm:min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
             {t("reposicion.resumen.pendientes")}
           </p>
-          <p className="mt-1 text-3xl font-semibold text-amber-950">{resumen.pendientes}</p>
-          <p className="mt-1 text-xs font-semibold text-amber-800">
+          <p className="mt-0.5 text-xl font-semibold text-amber-950 sm:text-2xl">{resumen.pendientes}</p>
+          <p className="mt-1 text-[9px] font-semibold leading-tight text-amber-800">
             {t("reposicion.resumen.saldo", { saldo: saldoTexto(resumen.saldoHoras, hj) })}
             {resumen.parciales > 0 ? ` · ${t("reposicion.resumen.parciales", { n: resumen.parciales })}` : ""}
           </p>
         </div>
-        <div className="min-w-[150px] snap-start rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
             {t("reposicion.resumen.repuestos")}
           </p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-950">{resumen.repuestos}</p>
+          <p className="mt-0.5 text-xl font-semibold text-emerald-950 sm:text-2xl">{resumen.repuestos}</p>
         </div>
       </div>
 
-      <Card
-        title={t("reposicion.titulo")}
-        icon="⟳"
-        action={
-          <button
-            onClick={() => setModal(nuevo())}
-            className="inline-flex min-h-touch items-center gap-1 rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-          >
-            <Icon name="plus" size={16} />
-            <span className="hidden sm:inline">{t("reposicion.agregar")}</span>
-            <span className="sm:hidden">{t("reposicion.agregarCorto")}</span>
-          </button>
-        }
-      >
-        <p className="mb-4 text-sm text-slate-600">{t("reposicion.subtitulo")}</p>
-
-        <div role="tablist" aria-label={t("reposicion.tabsAria")} className="mb-4 inline-flex overflow-hidden rounded-xl border border-slate-300 bg-white">
+      {/* Controles compactos: tabs + acción principal en una fila */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div role="tablist" aria-label={t("reposicion.tabsAria")} className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white">
           {[
             ["registros", t("reposicion.tabRegistros")],
             ["historial", t("reposicion.tabHistorial")],
@@ -179,12 +164,21 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setModal(nuevo())}
+          className="inline-flex min-h-touch items-center gap-1 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+        >
+          <Icon name="plus" size={16} />
+          <span className="hidden sm:inline">{t("reposicion.agregar")}</span>
+          <span className="sm:hidden">{t("reposicion.agregarCorto")}</span>
+        </button>
+      </div>
 
-        {tab === "historial" ? (
-          <HistorialFuncionario historial={historial} hj={hj} onEdit={(r) => setModal({ ...r })} />
-        ) : (
-        <>
-        <div className="mb-3 flex gap-2">
+      {tab === "historial" ? (
+        <HistorialFuncionario historial={historial} hj={hj} onEdit={(r) => setModal({ ...r })} />
+      ) : (
+      <>
+      <div className="flex gap-2">
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">{t("reposicion.buscar")}</span>
             <input
@@ -240,7 +234,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             onReabrir={reabrir}
             onEliminar={setBorrar}
           />
-          <div className="pnlq-reposicion-table hidden overflow-auto rounded-xl border border-slate-300 md:block">
+          <div className="pnlq-reposicion-table hidden overflow-auto rounded-lg border border-slate-300 md:block">
             <table className="min-w-[940px] w-full border-collapse text-sm">
               <thead className="bg-slate-100 text-left text-[11px] uppercase tracking-wider text-slate-500">
                 <tr>
@@ -262,7 +256,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
                   return (
                   <tr key={r.id} className="hover:bg-slate-50 align-top">
                     <td className="p-3 whitespace-nowrap">
-                      <Badge className="border-slate-300 bg-white font-mono text-slate-700">{r.folio || "—"}</Badge>
+                      <Badge bordered className="border-slate-300 bg-white font-mono text-slate-700">{r.folio || "—"}</Badge>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
@@ -338,10 +332,11 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
         </>
         )}
 
-        <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
-          <strong>Control interno:</strong> {t("reposicion.nota")}
-        </p>
-      </Card>
+      <details className="rounded-lg border border-slate-200 bg-surface-inset p-3 text-xs text-slate-600">
+        <summary className="cursor-pointer font-semibold text-slate-700">{t("reposicion.acercaDe")}</summary>
+        <p className="mt-2">{t("reposicion.subtitulo")}</p>
+        <p className="mt-2"><strong>{t("reposicion.controlInterno")}:</strong> {t("reposicion.nota")}</p>
+      </details>
 
       {modal && (
         <ModalReposicion

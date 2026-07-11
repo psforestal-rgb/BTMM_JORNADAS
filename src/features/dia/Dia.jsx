@@ -198,9 +198,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   ) : null;
 
   return (
-    <section ref={swipeRef} className="space-y-5">
+    <section ref={swipeRef} className="space-y-4">
       {/* Navegación de fecha — una sola fila con flechas ‹ › y selector central */}
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-3 sm:p-3">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:gap-3 sm:p-3">
         <button
           onClick={() => moveDay(-1)}
           aria-label={t("dia.diaAnterior")}
@@ -217,7 +217,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             value={diaVista}
             onChange={(e) => e.target.value && setDiaVista(e.target.value)}
             aria-label={t("dia.seleccionarFecha")}
-            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700"
+            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 bg-white px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700 [color-scheme:light]"
           />
         </div>
         <button
@@ -229,11 +229,12 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         </button>
       </div>
 
-      {/* Resumen por puesto */}
-      <Card title={t("dia.porPuesto")} icon="📍" collapsible defaultOpen={false}>
-        <div className="overflow-hidden rounded-xl border border-slate-200">
+      {/* Resumen por puesto — siempre visible: es el dato crítico del día,
+          no debe quedar oculto detrás de un colapsable. */}
+      <Card title={t("dia.porPuesto")} icon="📍">
+        <div className="overflow-hidden rounded-lg border border-line">
           <table className="w-full table-fixed border-collapse text-sm">
-            <thead className="bg-slate-100 text-[9px] uppercase leading-[1.15] tracking-tight text-slate-500 sm:text-[11px] sm:tracking-wide">
+            <thead className="bg-surface-alt text-[9px] uppercase leading-[1.15] tracking-tight text-ink-muted sm:text-[11px] sm:tracking-wide">
               <tr>
                 <th scope="col" className="w-[26%] px-1.5 py-2 text-left sm:px-3 sm:py-3">{t("dia.th.puesto")}</th>
                 <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.fuera")} /></th>
@@ -242,36 +243,36 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                 <th scope="col" className="px-0 py-2 text-center sm:px-3 sm:py-3"><ColHead label={t("dia.th.sinActividad")} /></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-line">
               {statsPuesto.map(({ puesto, fuera, turno, conActividad, sinActividad }) => (
-                <tr key={puesto} className="hover:bg-slate-50">
-                  <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-semibold text-slate-800 sm:px-3 sm:py-3 sm:text-sm">{puesto.replace("Puesto ", "")}</th>
-                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${fuera > 0 ? "text-slate-600" : "text-slate-300"}`}>{fuera}</td>
-                  <td className="px-1 py-2 text-center text-base font-semibold text-emerald-700 sm:px-3 sm:py-3 sm:text-lg">{turno}</td>
-                  <td className="px-1 py-2 text-center text-base font-semibold text-blue-700 sm:px-3 sm:py-3 sm:text-lg">{conActividad}</td>
-                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${sinActividad > 0 ? "text-amber-600" : "text-slate-300"}`}>{sinActividad}</td>
+                <tr key={puesto} className="hover:bg-surface-alt">
+                  <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-semibold text-ink sm:px-3 sm:py-3 sm:text-sm">{puesto.replace("Puesto ", "")}</th>
+                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${fuera > 0 ? "text-ink-muted" : "text-ink-subtle"}`}>{fuera}</td>
+                  <td className="px-1 py-2 text-center text-base font-semibold text-ok sm:px-3 sm:py-3 sm:text-lg">{turno}</td>
+                  <td className="px-1 py-2 text-center text-base font-semibold text-info sm:px-3 sm:py-3 sm:text-lg">{conActividad}</td>
+                  <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${sinActividad > 0 ? "text-warning" : "text-ink-subtle"}`}>{sinActividad}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-slate-300 bg-slate-50">
-                <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-bold text-slate-900 sm:px-3 sm:py-3 sm:text-sm">{t("dia.th.total")}</th>
-                <td className="px-1 py-2 text-center text-base font-bold text-slate-700 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.fuera}</td>
-                <td className="px-1 py-2 text-center text-base font-bold text-emerald-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.turno}</td>
-                <td className="px-1 py-2 text-center text-base font-bold text-blue-800 sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.conActividad}</td>
-                <td className={`px-1 py-2 text-center text-base font-bold sm:px-3 sm:py-3 sm:text-lg ${totalPuesto.sinActividad > 0 ? "text-amber-700" : "text-slate-400"}`}>{totalPuesto.sinActividad}</td>
+              <tr className="border-t-2 border-line-strong bg-surface-alt">
+                <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-bold text-ink sm:px-3 sm:py-3 sm:text-sm">{t("dia.th.total")}</th>
+                <td className="px-1 py-2 text-center text-base font-bold text-ink-muted sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.fuera}</td>
+                <td className="px-1 py-2 text-center text-base font-bold text-ok sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.turno}</td>
+                <td className="px-1 py-2 text-center text-base font-bold text-info sm:px-3 sm:py-3 sm:text-lg">{totalPuesto.conActividad}</td>
+                <td className={`px-1 py-2 text-center text-base font-bold sm:px-3 sm:py-3 sm:text-lg ${totalPuesto.sinActividad > 0 ? "text-warning" : "text-ink-subtle"}`}>{totalPuesto.sinActividad}</td>
               </tr>
             </tfoot>
           </table>
         </div>
       </Card>
 
-      {/* Actividades del día */}
+      {/* Actividades del día — abierta por defecto: es información accionable. */}
       <Card
         title={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
         collapsible
-        defaultOpen={false}
+        defaultOpen
         action={
           <button
             onClick={() => setModalActividad(nuevaAct())}
@@ -290,13 +291,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
               return (
                 <div
                   key={act.id}
-                  className={`rounded-2xl border p-4 ${
+                  className={`rounded-lg border p-4 ${
                     conf.length ? "border-red-300 bg-red-50" : act.viatico ? "border-orange-200 bg-orange-50" : "border-emerald-200 bg-emerald-50"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-slate-950">{act.titulo}</div>
+                      <div className="break-words font-semibold text-slate-950">{act.titulo}</div>
                       {act.lugar && <div className="mt-0.5 text-xs text-slate-500">📍 {act.lugar}</div>}
                       {act.inicio !== (act.fin || act.inicio) && (
                         <div className="mt-0.5 text-xs text-slate-400">
@@ -304,19 +305,21 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                         </div>
                       )}
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-start gap-1.5">
+                    <button
+                      onClick={() => setModalActividad({ ...act })}
+                      className="shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
+                    >
+                      {t("acciones.editar")}
+                    </button>
+                  </div>
+                  {(act.viatico || conf.length > 0) && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                       {act.viatico && <Badge className="border-orange-300 bg-orange-100 text-orange-900">{t("dia.viaticoBadge")}</Badge>}
                       {conf.length > 0 && (
                         <Badge className="border-red-300 bg-red-100 text-red-900">{t("dia.conflictosBadge", { n: conf.length, plural: plural(conf.length) })}</Badge>
                       )}
-                      <button
-                        onClick={() => setModalActividad({ ...act })}
-                        className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
-                      >
-                        {t("acciones.editar")}
-                      </button>
                     </div>
-                  </div>
+                  )}
                   {act.funcionarios.length > 0 && (
                     <div className="mt-2.5 flex flex-wrap gap-1">
                       {act.funcionarios.map((n) => (
@@ -375,8 +378,8 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         )}
       </Card>
 
-      {/* En turno sin actividad */}
-      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen={false}>
+      {/* En turno sin actividad — abierta por defecto: requiere asignar. */}
+      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen>
         {enTurnoSinAct.length === 0 ? (
           <p className="text-sm text-slate-400">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
@@ -423,14 +426,14 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
               .map(([cat, list]) => (
                 <div key={cat}>
                   <div className="mb-2 flex items-center gap-2">
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${catCls[cat]}`}>{catLabel[cat] || "Sin marcar"}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${catCls[cat]}`}>{catLabel[cat] || "Sin marcar"}</span>
                     <span className="text-xs text-slate-400">
                       {t("dia.nFuncionarios", { n: list.length, plural: plural(list.length) })}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {list.map((p) => (
-                      <div key={p.id} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                      <div key={p.id} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
                         <Avatar name={p.nombre} />
                         <div>
                           <div className="text-sm font-semibold text-slate-900">{p.nombre}</div>

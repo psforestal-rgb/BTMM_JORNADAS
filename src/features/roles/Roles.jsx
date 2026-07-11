@@ -120,14 +120,14 @@ export default function Roles({
 
   return (
     <section className="space-y-4">
-      <Card title={t("roles.titulo")} icon="📊" bordered={false}>
-        <div className="pnlq-no-print mb-4 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+      <Card title={t("roles.titulo")} icon="📊">
+        <div className="pnlq-no-print mb-3 space-y-2">
           {/* Filtro rápido por puesto: un toque muestra/oculta el puesto completo.
               Desplazamiento horizontal para caber en pantallas de teléfono. */}
           <div
             role="group"
             aria-label={t("roles.filtrarPorPuesto")}
-            className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2"
+            className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white p-2"
           >
             <button
               type="button"
@@ -163,7 +163,7 @@ export default function Roles({
 
           {/* Filtro fino por funcionario: buscar por nombre + selección individual
               (permite combinar funcionarios de distintos puestos). */}
-          <details className="rounded-xl border border-slate-200 bg-white p-2">
+          <details className="rounded-lg border border-slate-200 bg-white p-2">
             <summary className="flex min-h-touch cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-800">
               <Icon name="users" size={14} className="text-slate-500" />
               {t("roles.filtrosFuncionario")}
@@ -217,7 +217,7 @@ export default function Roles({
                   return (
                     <fieldset key={grupo.nombre} className="rounded-xl border border-slate-200 p-2">
                       <div className="flex items-center justify-between gap-2">
-                        <label className="flex min-h-touch flex-1 items-center gap-2 text-xs font-black text-slate-900">
+                        <label className="flex min-h-touch flex-1 items-center gap-2 text-xs font-bold text-slate-900">
                           <input
                             type="checkbox"
                             checked={estado === "all"}
@@ -280,7 +280,7 @@ export default function Roles({
           <RolesPrintFooter />
         </div>
 
-        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap shadow-sm">
+        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap">
           <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
           <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
           <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>

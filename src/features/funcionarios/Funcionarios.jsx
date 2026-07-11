@@ -170,7 +170,7 @@ export default function Funcionarios({ personas, setPersonas }) {
           </div>
         )}
         {filtrados.length > 0 && vistaEfectiva === "tabla" && (
-        <div className="overflow-auto rounded-xl border border-slate-300">
+        <div className="overflow-auto rounded-lg border border-slate-300">
           <table className="min-w-[1040px] w-full border-collapse text-sm">
             <thead className="bg-slate-100 text-left text-[11px] uppercase tracking-wider text-slate-500">
               <tr>
