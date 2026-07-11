@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { meses, dias } from "../../data/calendario.js";
 import { opcionesModalidad } from "../../data/opciones.js";
@@ -103,16 +102,6 @@ export default function RolesMensualGrid({
     });
   }, [diaActual, focusDate, month, year]);
 
-  // Desplaza la tabla horizontalmente N columnas de día (± una semana),
-  // pensado para moverse por el mes con el pulgar en teléfono.
-  const scrollDias = (n) => {
-    const contenedor = scrollRef.current;
-    if (!contenedor) return;
-    const celda = contenedor.querySelector("th[data-dia]");
-    const ancho = celda?.getBoundingClientRect().width || 44;
-    contenedor.scrollBy({ left: n * ancho, behavior: "smooth" });
-  };
-
   // Mide el alto real del encabezado de días (varía por breakpoint) para
   // que el nombre de puesto se congele justo debajo, sin solaparse.
   useEffect(() => {
@@ -177,17 +166,6 @@ export default function RolesMensualGrid({
   }, [grupos, theadHeight]);
 
   const grupoActivo = grupos.find((g) => g.nombre === grupoActivoNombre) || grupos[0];
-
-  // Recentra la tabla en el día de hoy (solo aplica si el mes visible lo contiene).
-  const centrarHoy = () => {
-    const contenedor = scrollRef.current;
-    const objetivo = diaActual ? contenedor?.querySelector(`[data-dia="${diaActual}"]`) : null;
-    if (!contenedor || !objetivo) return;
-    contenedor.scrollTo({
-      left: Math.max(0, objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2),
-      behavior: "smooth",
-    });
-  };
 
   const toggleEdit = (puesto, nombre) =>
     setEditRows((prev) => ({ ...prev, [rowId(puesto, nombre)]: !prev[rowId(puesto, nombre)] }));
@@ -259,54 +237,11 @@ export default function RolesMensualGrid({
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className={`flex flex-col gap-2 border-b border-slate-200 p-3 ${tone.band}`}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 className="text-base font-bold sm:text-lg">{t("roles.vistaMensualLineal")}</h3>
-            <p className="text-[11px] font-semibold opacity-75">
-              {t("roles.resumenFiltro", { n: totalFuncionarios })}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Desplazamiento por días con el pulgar: ‹ semana · (centrar hoy / 7 días) · semana › */}
-            <div
-              role="group"
-              aria-label={t("roles.desplazarDias")}
-              className="pnlq-no-print inline-flex items-stretch overflow-hidden rounded-lg border border-black/10 bg-white/85"
-            >
-              <button
-                type="button"
-                onClick={() => scrollDias(-7)}
-                aria-label={t("roles.semanaAnterior")}
-                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-white"
-              >
-                <Icon name="chevronLeft" size={16} />
-              </button>
-              {diaActual ? (
-                <button
-                  type="button"
-                  onClick={centrarHoy}
-                  className="inline-flex min-h-touch items-center whitespace-nowrap border-x border-black/10 px-2 text-[11px] font-bold text-emerald-900 hover:bg-white"
-                >
-                  {t("roles.centrarHoy")}
-                </button>
-              ) : (
-                <span className="inline-flex min-h-touch items-center whitespace-nowrap border-x border-black/10 px-2 text-[11px] font-bold text-slate-600">
-                  {t("roles.semana7")}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => scrollDias(7)}
-                aria-label={t("roles.semanaSiguiente")}
-                className="inline-flex min-h-touch min-w-touch items-center justify-center px-2 text-slate-700 hover:bg-white"
-              >
-                <Icon name="chevronRight" size={16} />
-              </button>
-            </div>
-            <Badge bordered className="border-white/60 bg-white/80 text-slate-900">
-              {meses[month]} {year}
-            </Badge>
-          </div>
+        <div>
+          <h3 className="text-base font-bold sm:text-lg">{t("roles.vistaMensualLineal")}</h3>
+          <p className="text-[11px] font-semibold opacity-75">
+            {t("roles.resumenFiltro", { n: totalFuncionarios })}
+          </p>
         </div>
       </div>
 
@@ -323,10 +258,23 @@ export default function RolesMensualGrid({
           <thead ref={theadRef}>
             <tr>
               <th
+                rowSpan={2}
                 className={`sticky top-0 left-0 z-40 min-w-[5.5rem] max-w-[5.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
+              {/* Barra delgada de mes: siempre visible sobre el encabezado de
+                  días (congelada junto con el resto del thead) para saber a
+                  qué mes pertenecen las fechas aunque se haya desplazado la
+                  tabla lateralmente. */}
+              <th
+                colSpan={days.length}
+                className="sticky top-0 z-30 h-5 border-b border-slate-300 bg-slate-800 text-center text-[9px] font-bold uppercase tracking-widest text-white sm:h-6 sm:text-[10px]"
+              >
+                {meses[month]} {year}
+              </th>
+            </tr>
+            <tr>
               {days.map((d) => {
                 const dow = new Date(year, month, d).getDay();
                 const isWeekend = dow === 0 || dow === 6;
@@ -337,14 +285,14 @@ export default function RolesMensualGrid({
                     key={d}
                     data-dia={d}
                     aria-current={isToday ? "date" : undefined}
-                    className={`sticky top-0 z-30 border-b border-r border-slate-200 p-0.5 text-center font-semibold sm:p-1 ${
+                    className={`sticky top-5 z-30 border-b p-0.5 text-center font-semibold sm:top-6 sm:p-1 ${
                       isToday
-                        ? "bg-emerald-700 text-white ring-2 ring-inset ring-emerald-300"
+                        ? "border-l-2 border-r-2 border-emerald-500 bg-emerald-700 text-white ring-2 ring-inset ring-emerald-300"
                         : isFocused
-                          ? "bg-amber-100 text-amber-950 ring-2 ring-inset ring-amber-400"
+                          ? "border-r border-slate-200 bg-amber-100 text-amber-950 ring-2 ring-inset ring-amber-400"
                         : isWeekend
-                          ? "bg-slate-100 text-slate-900"
-                          : tone.day
+                          ? "border-r border-slate-200 bg-slate-100 text-slate-900"
+                          : `border-r border-slate-200 ${tone.day}`
                     }`}
                   >
                     <div className="mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg bg-white/80 sm:h-10 sm:w-9">
@@ -389,6 +337,7 @@ export default function RolesMensualGrid({
                 trabajadas={trabajadas}
                 reposicionesDia={reposicionesDia}
                 registerBodyRef={idx === grupos.length - 1 ? lastGroupRef : undefined}
+                diaActual={diaActual}
                 t={t}
               />
             ))
@@ -445,6 +394,7 @@ function RowsGrupo({
   trabajadas,
   reposicionesDia,
   registerBodyRef,
+  diaActual,
   t,
 }) {
   return (
@@ -519,6 +469,7 @@ function RowsGrupo({
                   conflicto={conflicto}
                   repoTrabajada={trabajadas[`${nombre}|${iso}`]}
                   repoReposicion={reposicionesDia[`${nombre}|${iso}`]}
+                  esHoy={d === diaActual}
                   onOpen={() => editing && setMenu({ grupo, persona: nombre, pi: 0, dia: d, valor: val, esInicio: d === inicio })}
                   onConflicto={() => abrirConflicto(grupo, nombre, d, val)}
                 />
@@ -536,10 +487,13 @@ function RowsGrupo({
             (acc, nombre) => (esRolActivo(getCelda(grupo, nombre, d)) ? acc + 1 : acc),
             0,
           );
+          const esHoy = d === diaActual;
           return (
             <td
               key={`${grupo.nombre}-cantidad-${d}`}
-              className="border-b border-r border-slate-200 bg-white p-2 text-center font-semibold text-slate-800"
+              className={`border-b border-b-slate-200 bg-white p-2 text-center font-semibold text-slate-800 ${
+                esHoy ? "border-l-2 border-r-2 border-l-emerald-500 border-r-emerald-500" : "border-r border-r-slate-200"
+              }`}
             >
               {count}
             </td>
