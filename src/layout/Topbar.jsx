@@ -19,7 +19,6 @@ const VISTAS_CON_PERIODO = ["planificacion", "planFuncionario"];
 
 export default function Topbar({ view, setView, month, setMonth, year, setYear, compact, setCompact }) {
   const t = useT();
-  const [accionesOpen, setAccionesOpen] = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [previewHorizontal, setPreviewHorizontal] = useState(false);
   const dentroDePreview = isMobilePreviewLocation();
@@ -46,7 +45,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setYear(hoy.getFullYear());
   };
   return (
-    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${accionesOpen || mobilePreviewOpen ? "z-50" : "z-30"}`}>
+    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-slate-200 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${mobilePreviewOpen ? "z-50" : "z-30"}`}>
       <div className="pnlq-topbar-inner flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -140,26 +139,12 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               <span className="rounded-md bg-surface px-1.5 py-0.5 text-xs text-ink-muted">Temporal</span>
             </button>
           )}
-          {view === "roles" && (
-            <button type="button" onClick={() => setAccionesOpen(true)} aria-label={t("topbar.acciones")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl border border-line bg-surface text-ink md:hidden">
-              <Icon name="menu" size={20} />
-            </button>
-          )}
           {/* En escritorio, estado de respaldo al final de la barra de acciones. */}
           <span className="hidden xl:inline-flex">
             <SyncStatus />
           </span>
         </div>
       </div>
-      <Modal open={accionesOpen} onClose={() => setAccionesOpen(false)} title={t("topbar.acciones")} size="sm">
-        <div className="space-y-3">
-          {view === "roles" && (
-            <button type="button" onClick={() => { setCompact(!compact); setAccionesOpen(false); }} className="min-h-touch w-full rounded-xl border border-line bg-surface-alt px-3 text-left text-sm font-semibold text-ink">
-              {compact ? t("topbar.vistaAmplia") : t("topbar.vistaCompacta")}
-            </button>
-          )}
-        </div>
-      </Modal>
       <Modal
         open={mobilePreviewOpen}
         onClose={() => setMobilePreviewOpen(false)}
