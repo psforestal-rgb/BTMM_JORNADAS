@@ -304,8 +304,8 @@ const dict = {
     leyenda: {
       turno: "T1 Turno",
       libre: "L1 Libre",
-      vacaciones: "V1 Vacaciones",
-      incapacidad: "I1 Incapacidad",
+      vacaciones: "V1 Vacas",
+      incapacidad: "I1 Incapaci",
       otro: "O1 Otro",
     },
     cantidadEnTurno: "EN TURNO",

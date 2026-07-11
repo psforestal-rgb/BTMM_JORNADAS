@@ -232,19 +232,8 @@ export default function RolesMensualGrid({
     setConflictoActivo({ grupo, persona: nombre, pi: 0, dia: d, valor: val, iso, acts, esInicio: d === inicio });
   };
 
-  const totalFuncionarios = grupos.reduce((acc, grupo) => acc + grupo.funcionarios.length, 0);
-
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className={`flex flex-col gap-2 border-b border-slate-200 p-3 ${tone.band}`}>
-        <div>
-          <h3 className="text-base font-bold sm:text-lg">{t("roles.vistaMensualLineal")}</h3>
-          <p className="text-[11px] font-semibold opacity-75">
-            {t("roles.resumenFiltro", { n: totalFuncionarios })}
-          </p>
-        </div>
-      </div>
-
       <div
         ref={scrollRef}
         className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]"
