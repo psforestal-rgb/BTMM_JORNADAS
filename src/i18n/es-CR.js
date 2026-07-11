@@ -292,6 +292,8 @@ const dict = {
     buscarFuncionario: "Buscar funcionario…",
     limpiarBusqueda: "Limpiar búsqueda",
     solo: "Solo",
+    contraerPuesto: "Contraer lista de funcionarios",
+    expandirPuesto: "Expandir lista de funcionarios",
     sinResultadosBusqueda: "Sin coincidencias con la búsqueda.",
     resumenFiltro: "{n} funcionarios visibles",
     desplazarDias: "Desplazar días",
