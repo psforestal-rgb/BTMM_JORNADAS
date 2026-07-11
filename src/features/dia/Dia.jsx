@@ -229,6 +229,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         </button>
       </div>
 
+      {/* Cobertura + actividades: una columna en móvil; desde md, dos
+          columnas lado a lado para aprovechar tablet/escritorio. */}
+      <div className="grid gap-4 md:grid-cols-2 md:items-start">
       {/* Resumen por puesto — siempre visible: es el dato crítico del día,
           no debe quedar oculto detrás de un colapsable. */}
       <Card title={t("dia.porPuesto")} icon="📍">
@@ -267,18 +270,23 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         </div>
       </Card>
 
-      {/* Actividades del día — abierta por defecto: es información accionable. */}
+      {/* Actividades del día — abierta por defecto: es información accionable.
+          Título visual compacto (no se parte en varias líneas a 320 px);
+          el nombre completo queda disponible como aria-label del botón. */}
       <Card
-        title={t("dia.actividadesTitulo", { n: actsDelDia.length })}
+        title={t("dia.actividadesTituloCorto", { n: actsDelDia.length })}
+        ariaLabel={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
         collapsible
         defaultOpen
         action={
           <button
+            id="dia-boton-nueva-actividad"
             onClick={() => setModalActividad(nuevaAct())}
-            className="min-h-touch rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-700 active:scale-95 active:brightness-90"
+            className="inline-flex min-h-touch items-center gap-1 rounded-xl bg-emerald-800 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-emerald-700 active:scale-95 active:brightness-90"
           >
-            {t("dia.nueva")}
+            <Icon name="plus" size={14} />
+            {t("dia.nuevaCorta")}
           </button>
         }
       >
@@ -291,8 +299,14 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
               return (
                 <div
                   key={act.id}
-                  className={`rounded-lg border p-4 ${
-                    conf.length ? "border-red-300 bg-red-50" : act.viatico ? "border-orange-200 bg-orange-50" : "border-emerald-200 bg-emerald-50"
+                  className={`rounded-lg p-4 ${
+                    // Conflicto: acento lateral en vez de borde completo — el rojo
+                    // no debe dominar la lectura cuando hay varias actividades.
+                    conf.length
+                      ? "border-l-4 border-red-600 bg-red-50/70"
+                      : act.viatico
+                      ? "border border-orange-200 bg-orange-50"
+                      : "border border-emerald-200 bg-emerald-50"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -341,6 +355,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           </div>
         )}
       </Card>
+      </div>
 
       {/* En turno con actividad */}
       <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible defaultOpen={false}>

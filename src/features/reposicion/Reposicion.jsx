@@ -119,29 +119,28 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
 
   return (
     <section className="space-y-3">
-      {/* Resumen — grilla visible, sin scroll horizontal */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-lg border border-slate-200 bg-white p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t("reposicion.resumen.total")}</p>
-          <p className="mt-0.5 text-xl font-semibold text-slate-900 sm:text-2xl">{resumen.total}</p>
+      {/* Resumen — franja compacta de una sola fila, sin scroll horizontal;
+          el detalle de saldo pendiente solo aparece cuando aplica. */}
+      <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-lg border border-slate-200 bg-white">
+        <div className="px-2 py-2 text-center">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">{t("reposicion.resumen.total")}</p>
+          <p className="text-lg font-semibold text-slate-900">{resumen.total}</p>
         </div>
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-            {t("reposicion.resumen.pendientes")}
-          </p>
-          <p className="mt-0.5 text-xl font-semibold text-amber-950 sm:text-2xl">{resumen.pendientes}</p>
-          <p className="mt-1 text-[9px] font-semibold leading-tight text-amber-800">
-            {t("reposicion.resumen.saldo", { saldo: saldoTexto(resumen.saldoHoras, hj) })}
-            {resumen.parciales > 0 ? ` · ${t("reposicion.resumen.parciales", { n: resumen.parciales })}` : ""}
-          </p>
+        <div className="px-2 py-2 text-center">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-amber-700">{t("reposicion.resumen.pendientes")}</p>
+          <p className="text-lg font-semibold text-amber-950">{resumen.pendientes}</p>
         </div>
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-            {t("reposicion.resumen.repuestos")}
-          </p>
-          <p className="mt-0.5 text-xl font-semibold text-emerald-950 sm:text-2xl">{resumen.repuestos}</p>
+        <div className="px-2 py-2 text-center">
+          <p className="text-[9px] font-semibold uppercase tracking-wide text-emerald-700">{t("reposicion.resumen.repuestos")}</p>
+          <p className="text-lg font-semibold text-emerald-950">{resumen.repuestos}</p>
         </div>
       </div>
+      {resumen.pendientes > 0 && (
+        <p className="text-xs font-semibold text-amber-800">
+          {t("reposicion.resumen.saldo", { saldo: saldoTexto(resumen.saldoHoras, hj) })}
+          {resumen.parciales > 0 ? ` · ${t("reposicion.resumen.parciales", { n: resumen.parciales })}` : ""}
+        </p>
+      )}
 
       {/* Controles compactos: tabs + acción principal en una fila */}
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -193,7 +192,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             {t("reposicion.filtros")} {filtrosActivos > 0 ? `(${filtrosActivos})` : ""}
           </button>
         </div>
-        <div className="mb-4 flex snap-x gap-2 overflow-x-auto pb-1">
+        <div className="flex snap-x gap-2 overflow-x-auto pb-1">
           {filtros.map(([id, label, n]) => (
             <button
               key={id}

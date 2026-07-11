@@ -120,14 +120,24 @@ export default function Funcionarios({ personas, setPersonas }) {
           </div>
         }
       >
-        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
+        <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-700 xl:max-w-md"
             placeholder={t("funcionarios.buscarPlaceholder")}
           />
-          <div className="flex flex-wrap gap-2">
+          <div className="text-sm font-bold text-slate-500 xl:ml-auto" aria-live="polite">
+            {filtrados.length}/{personas.length}
+          </div>
+        </div>
+        {/* Filtros y orden: colapsados por defecto para que el primer
+            funcionario aparezca antes en el viewport. */}
+        <details className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+          <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600">
+            {t("funcionarios.verFiltros")}{filtro !== "todos" ? ` (${filtros.find(([id]) => id === filtro)?.[1]})` : ""}
+          </summary>
+          <div className="flex flex-wrap gap-2 pb-2 pt-1">
             {filtros.map(([id, label]) => (
               <button
                 key={id}
@@ -140,16 +150,13 @@ export default function Funcionarios({ personas, setPersonas }) {
               </button>
             ))}
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+          <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-slate-600">
             Ordenar
             <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
               <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
             </select>
           </label>
-          <div className="text-sm font-bold text-slate-500 xl:ml-auto" aria-live="polite">
-            {filtrados.length}/{personas.length}
-          </div>
-        </div>
+        </details>
         {filtrados.length === 0 && (
           <EmptyState
             icon="search"

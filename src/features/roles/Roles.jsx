@@ -81,12 +81,6 @@ export default function Roles({
     return sel === total ? "all" : "partial";
   };
 
-  const chipClase = (estado) => {
-    if (estado === "all") return "border-emerald-700 bg-emerald-600 text-white shadow-sm";
-    if (estado === "partial") return "border-emerald-500 bg-emerald-50 text-emerald-900";
-    return "border-slate-300 bg-white text-slate-600";
-  };
-
   // Muestra únicamente este puesto (atajo rápido en teléfono).
   const soloPuesto = (grupo) => {
     setPuestosSeleccionados([grupo.nombre]);
@@ -122,51 +116,17 @@ export default function Roles({
     <section className="space-y-4">
       <Card title={t("roles.titulo")} icon="📊">
         <div className="pnlq-no-print mb-3 space-y-2">
-          {/* Filtro rápido por puesto: un toque muestra/oculta el puesto completo.
-              Desplazamiento horizontal para caber en pantallas de teléfono. */}
-          <div
-            role="group"
-            aria-label={t("roles.filtrarPorPuesto")}
-            className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white p-2"
-          >
-            <button
-              type="button"
-              onClick={seleccionarTodo}
-              aria-pressed={todoSeleccionado}
-              className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${
-                todoSeleccionado
-                  ? "border-emerald-700 bg-emerald-600 text-white shadow-sm"
-                  : "border-slate-300 bg-white text-slate-600"
-              }`}
-            >
-              {t("roles.todos")}
-            </button>
-            {gruposRoles.map((grupo) => {
-              const estado = estadoPuesto(grupo);
-              const sel = grupo.funcionarios.filter((f) => funcionariosSeleccionados.includes(f)).length;
-              return (
-                <button
-                  key={grupo.nombre}
-                  type="button"
-                  onClick={() => togglePuesto(grupo)}
-                  aria-pressed={estado !== "none"}
-                  className={`inline-flex min-h-touch shrink-0 items-center rounded-full border px-3 text-[11px] font-bold whitespace-nowrap ${chipClase(estado)}`}
-                >
-                  {grupo.nombre.replace(/^Puesto\s+/, "")}
-                  <span className="ml-1 tabular-nums opacity-80">
-                    {sel}/{grupo.funcionarios.length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Filtro fino por funcionario: buscar por nombre + selección individual
-              (permite combinar funcionarios de distintos puestos). */}
+          {/* Control único y compacto de puestos/funcionarios: reemplaza el
+              carrusel horizontal (quedaba cortado a 320-390 px) por un
+              resumen de una línea que abre la selección con casillas —
+              ahí la semántica de multiselección es explícita, sin ambigüedad
+              sobre si "Todos" es una categoría más o un atajo. */}
           <details className="rounded-lg border border-slate-200 bg-white p-2">
             <summary className="flex min-h-touch cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-800">
               <Icon name="users" size={14} className="text-slate-500" />
-              {t("roles.filtrosFuncionario")}
+              {todoSeleccionado
+                ? t("roles.resumenPuestosTodos", { n: funcionariosDisponibles.length })
+                : t("roles.resumenPuestosParcial", { n: funcionariosSeleccionados.length, total: funcionariosDisponibles.length })}
             </summary>
 
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-2">
