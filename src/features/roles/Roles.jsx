@@ -114,7 +114,7 @@ export default function Roles({
 
   return (
     <section className="space-y-4">
-      <Card title={t("roles.titulo")} icon="📊">
+      <Card>
         <div className="pnlq-no-print mb-3 space-y-2">
           {/* Control único y compacto de puestos/funcionarios: reemplaza el
               carrusel horizontal (quedaba cortado a 320-390 px) por un
@@ -221,14 +221,6 @@ export default function Roles({
           </details>
         </div>
 
-        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap">
-          <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
-          <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
-          <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
-          <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
-          <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
-        </div>
-
         <div className="pnlq-print-page">
           <RolesPrintHeader mes={meses[month]} anio={year} puesto={t("roles.todosLosPuestos")} />
           <RolesMensualGrid
@@ -246,6 +238,14 @@ export default function Roles({
             hj={hj}
           />
           <RolesPrintFooter />
+        </div>
+
+        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap">
+          <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
+          <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
+          <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
+          <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
+          <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
         </div>
       </Card>
     </section>
