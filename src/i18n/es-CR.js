@@ -308,7 +308,7 @@ const dict = {
       incapacidad: "I1 Incapacidad",
       otro: "O1 Otro",
     },
-    cantidadEnTurno: "CANTIDAD EN TURNO",
+    cantidadEnTurno: "EN TURNO",
     editarTipoRol: "Tipo de rol desde 1er día laboral",
     aplicar: "Aplicar",
     titleConflicto: "Clic para resolver: rol vs actividad planificada",
