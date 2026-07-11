@@ -120,7 +120,7 @@ export default function Roles({
 
   return (
     <section className="space-y-4">
-      <Card title={t("roles.titulo")} icon="📊">
+      <Card title={t("roles.titulo")} icon="📊" bordered={false}>
         <div className="pnlq-no-print mb-4 space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
           {/* Filtro rápido por puesto: un toque muestra/oculta el puesto completo.
               Desplazamiento horizontal para caber en pantallas de teléfono. */}
