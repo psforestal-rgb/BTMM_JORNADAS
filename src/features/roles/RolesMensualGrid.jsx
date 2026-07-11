@@ -266,12 +266,19 @@ export default function RolesMensualGrid({
               {/* Barra delgada de mes: siempre visible sobre el encabezado de
                   días (congelada junto con el resto del thead) para saber a
                   qué mes pertenecen las fechas aunque se haya desplazado la
-                  tabla lateralmente. */}
+                  tabla lateralmente. La celda en sí ocupa todo el ancho del
+                  mes (colSpan), pero el texto va en un span sticky con su
+                  propio `left` (alineado justo después de la columna
+                  congelada de nombre) para que se mantenga dentro del
+                  viewport aunque se haga scroll horizontal hacia el
+                  principio o el final del mes. */}
               <th
                 colSpan={days.length}
-                className="sticky top-0 z-30 h-5 border-b border-slate-300 bg-slate-800 text-center text-[9px] font-bold uppercase tracking-widest text-white sm:h-6 sm:text-[10px]"
+                className="sticky top-0 z-30 h-5 border-b border-slate-300 bg-slate-800 p-0 text-white sm:h-6"
               >
-                {meses[month]} {year}
+                <span className="sticky left-[5.5rem] flex h-5 w-fit items-center px-2 text-[9px] font-bold uppercase tracking-widest sm:left-[10rem] sm:h-6 sm:text-[10px] lg:left-[13rem]">
+                  {meses[month]} {year}
+                </span>
               </th>
             </tr>
             <tr>
