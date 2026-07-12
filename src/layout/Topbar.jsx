@@ -43,8 +43,17 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
     setMonth(hoy.getMonth());
     setYear(hoy.getFullYear());
   };
+  // En móvil, el topbar ya no tiene nada que mostrar salvo en las vistas
+  // con navegación de periodo (título/breadcrumb y hora se retiraron por
+  // pedido explícito). Sin este condicional queda una franja vacía con
+  // fondo/borde/sombra propios flotando arriba de la primera tarjeta.
+  const contenidoMovilVisible = VISTAS_CON_PERIODO.includes(view);
   return (
-    <header className={`pnlq-topbar pnlq-no-print sticky top-0 border-b border-line bg-surface/95 px-4 py-2 shadow-sm backdrop-blur lg:px-6 lg:py-3 ${mobilePreviewOpen ? "z-50" : "z-30"}`}>
+    <header
+      className={`pnlq-topbar pnlq-no-print sticky top-0 border-line bg-surface/95 shadow-sm backdrop-blur lg:block lg:border-b lg:px-6 lg:py-3 ${
+        contenidoMovilVisible ? "block border-b px-4 py-2" : "hidden"
+      } ${mobilePreviewOpen ? "z-50" : "z-30"}`}
+    >
       <div className="pnlq-topbar-inner flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
