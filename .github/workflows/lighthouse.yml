@@ -46,12 +46,14 @@ jobs:
         run: npm run build
 
       - name: Lighthouse CI
+        # Sin continue-on-error: los umbrales de `lighthouserc.json` ahora
+        # son un check real (auditoría móvil, contraste activado). Antes
+        # este step siempre reportaba éxito sin importar el resultado.
         uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-        continue-on-error: true
 
       - name: Resumen del audit
         if: always()

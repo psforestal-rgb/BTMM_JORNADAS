@@ -30,7 +30,7 @@ export default function MarcaReposicionCelda({ trabajada, reposicion }) {
               ? "bg-emerald-700"
               : trabajada.estadoCalc === "Parcial"
               ? "bg-indigo-600"
-              : "bg-amber-600"
+              : "bg-amber-700"
           }`}
         >
           <span aria-hidden="true">⚑</span>

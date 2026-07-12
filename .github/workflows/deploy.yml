@@ -33,6 +33,13 @@ jobs:
         # evita ejecutar código de terceros con los permisos del runner.
         run: npm ci --ignore-scripts
 
+      - name: Correr tests
+        # Este workflow se dispara directo con cada push a main, en paralelo
+        # a ci.yml (no encadenado — ver nota del trigger arriba). Sin este
+        # paso, un push con tests rotos podía publicarse en producción antes
+        # de que alguien viera el CI en rojo. Bloquea el deploy si falla.
+        run: npm test
+
       - name: Compilar
         env:
           # SHA real del commit para version.json (anti-cache de Fase 1).
