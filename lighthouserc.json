@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./dist",
+      "staticDistDir": "./lhci-root",
       "url": ["http://localhost/BTMM_JORNADAS/index.html"],
       "numberOfRuns": 1,
       "settings": {
