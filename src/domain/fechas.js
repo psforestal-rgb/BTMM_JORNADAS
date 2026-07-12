@@ -2,6 +2,12 @@ export function dim(y, m) {
   return new Date(y, m + 1, 0).getDate();
 }
 
+/** Suma `n` meses a (year, month) (month 0-indexado), con acarreo de año. */
+export function addMonths(year, month, n) {
+  const total = year * 12 + month + n;
+  return { year: Math.floor(total / 12), month: ((total % 12) + 12) % 12 };
+}
+
 export function pad2(n) {
   return String(n).padStart(2, "0");
 }
