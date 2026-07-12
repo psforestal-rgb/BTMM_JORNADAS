@@ -7,6 +7,7 @@ import Topbar from "./layout/Topbar.jsx";
 import BottomNav from "./layout/BottomNav.jsx";
 import { useAppNavigation } from "./lib/useAppNavigation.js";
 import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
+import ErrorBoundary from "./ui/ErrorBoundary.jsx";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
@@ -169,8 +170,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppShell />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <AppShell />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
