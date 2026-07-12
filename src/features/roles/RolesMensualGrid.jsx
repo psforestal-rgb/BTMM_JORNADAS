@@ -273,38 +273,47 @@ export default function RolesMensualGrid({
     roleData[rolKey(y, m, grupo.nombre, persona, dia)] ??
     generarValorPatron(getCfg(grupo, persona, y, m), dia, inicioDeMes(y, m), y, m);
 
+  // "Aplicar" solo llena el mes inicial (igual que antes de soportar varios
+  // meses en la misma tabla): un solo click nunca debe sobrescribir de golpe
+  // datos reales importados de otros meses ya cargados (10 años de rango).
+  // Los meses fuera del inicial siguen mostrando el patrón generado
+  // dinámicamente vía `getCelda` hasta que el usuario los edite ahí mismo.
   const aplicarPatron = (grupo, persona) => {
     const modalidad = getCfg(grupo, persona, year, month);
+    const inicioMes = inicioDeMes(year, month);
     const cambios = {};
-    columnas.forEach(({ year: y, month: m, dia }) => {
-      cambios[rolKey(y, m, grupo.nombre, persona, dia)] = generarValorPatron(modalidad, dia, inicioDeMes(y, m), y, m);
-    });
+    for (let dia = 1; dia <= dim(year, month); dia += 1) {
+      cambios[rolKey(year, month, grupo.nombre, persona, dia)] = generarValorPatron(modalidad, dia, inicioMes, year, month);
+    }
     setRoleData((prev) => ({ ...prev, ...cambios }));
   };
 
-  // `diaEditadoIso` es la fecha ISO del día que disparó el cambio (antes
-  // era solo el número de día: con varios meses cargados, dos meses pueden
-  // compartir el mismo número de día, así que hace falta la fecha completa).
-  const renumerarFila = (grupo, persona, diaEditadoIso, categoria) => {
-    const modalidad = getCfg(grupo, persona, year, month);
+  // Renumera solo dentro del mes (y, m) del día editado — nunca a través de
+  // varios meses. Antes de este límite explícito, editar una sola celda
+  // recorría TODO el rango cargado (hasta 10 años) y reescribía cada mes ya
+  // cargado, convirtiendo códigos especiales importados (p. ej. "O-F",
+  // "LA") en categorías renumeradas fuera del mes que el usuario realmente
+  // quiso tocar.
+  const renumerarFila = (grupo, persona, y, m, diaEditado, categoria) => {
+    const modalidad = getCfg(grupo, persona, y, m);
+    const inicioMes = inicioDeMes(y, m);
+    const diasDelMes = dim(y, m);
     const categorias = {};
-    columnas.forEach((col) => {
-      const iso = isoFecha(col.year, col.month, col.dia);
-      categorias[iso] = categoriaDe(getCelda(grupo, persona, col.year, col.month, col.dia));
-    });
-    categorias[diaEditadoIso] = categoria;
+    for (let d = 1; d <= diasDelMes; d += 1) {
+      categorias[d] = categoriaDe(getCelda(grupo, persona, y, m, d));
+    }
+    categorias[diaEditado] = categoria;
     const cambios = {};
     let categoriaAnterior = null;
     let consecutivo = 0;
-    columnas.forEach((col) => {
-      const iso = isoFecha(col.year, col.month, col.dia);
-      const cat = categorias[iso] || "";
-      const key = rolKey(col.year, col.month, grupo.nombre, persona, col.dia);
+    for (let d = 1; d <= diasDelMes; d += 1) {
+      const cat = categorias[d] || "";
+      const key = rolKey(y, m, grupo.nombre, persona, d);
       if (!cat) {
         categoriaAnterior = null;
         consecutivo = 0;
         cambios[key] = "";
-        return;
+        continue;
       }
       if (cat !== categoriaAnterior) {
         categoriaAnterior = cat;
@@ -313,14 +322,13 @@ export default function RolesMensualGrid({
         consecutivo += 1;
       }
       cambios[key] = formatearCategoria(cat, consecutivo, modalidad);
-    });
+    }
     setRoleData((prev) => ({ ...prev, ...cambios }));
   };
 
   const seleccionarMenu = (valor) => {
     if (!menu) return;
-    const iso = isoFecha(menu.year, menu.month, menu.dia);
-    renumerarFila(menu.grupo, menu.persona, iso, valor);
+    renumerarFila(menu.grupo, menu.persona, menu.year, menu.month, menu.dia, valor);
     setMenu(null);
   };
 
