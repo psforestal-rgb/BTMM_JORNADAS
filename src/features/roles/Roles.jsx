@@ -125,7 +125,7 @@ export default function Roles({
               resumen de una línea que abre la selección con casillas —
               ahí la semántica de multiselección es explícita, sin ambigüedad
               sobre si "Todos" es una categoría más o un atajo. */}
-          <details className="rounded-lg border border-slate-200 bg-white p-2">
+          <details className="rounded-lg bg-white p-2">
             <summary className="flex min-h-touch cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-800">
               <Icon name="users" size={14} className="text-slate-500" />
               {todoSeleccionado

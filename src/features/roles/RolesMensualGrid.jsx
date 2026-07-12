@@ -362,7 +362,7 @@ export default function RolesMensualGrid({
   const totalDias = columnas.length;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-lg bg-white">
       {aniosSinCoberturaFeriados.length > 0 && (
         <div
           role="status"
