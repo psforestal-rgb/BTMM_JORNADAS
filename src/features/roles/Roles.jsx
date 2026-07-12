@@ -118,7 +118,10 @@ export default function Roles({
 
   return (
     <section className="space-y-4">
-      <Card>
+      {/* Sin fondo propio: la tarjeta principal de Roles no debe "flotar"
+          como una caja blanca sobre el fondo de la página (a diferencia
+          del resto de vistas, donde ese contraste sí se usa a propósito). */}
+      <Card className="!bg-transparent">
         <div className="pnlq-no-print mb-3 space-y-2">
           {/* Control único y compacto de puestos/funcionarios: reemplaza el
               carrusel horizontal (quedaba cortado a 320-390 px) por un
