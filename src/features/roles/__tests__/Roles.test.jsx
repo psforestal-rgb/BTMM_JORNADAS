@@ -69,3 +69,16 @@ describe("Roles — control compacto de puestos/funcionarios", () => {
     expect(screen.getByText(/Puestos y funcionarios: 1 de 2/i)).toBeDefined();
   });
 });
+
+describe("Roles — advertencia de cobertura de feriados", () => {
+  it("no muestra advertencia para un año con calendario oficial cargado (2026)", () => {
+    renderRoles({ year: 2026 });
+    expect(screen.queryByText(/sin validar oficialmente/i)).toBeNull();
+  });
+
+  it("muestra una advertencia no intrusiva cuando el año visible no tiene feriados oficiales cargados (2028)", () => {
+    renderRoles({ year: 2028, month: 0 });
+    const aviso = screen.getByText(/sin validar oficialmente/i);
+    expect(aviso.textContent).toMatch(/2028/);
+  });
+});

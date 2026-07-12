@@ -14,6 +14,7 @@ import {
 import { actividadesEnDia } from "../../domain/actividades.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { buildFeriadosSet } from "../../domain/feriados.js";
+import { tieneCoberturaOficial } from "../../data/feriadosCR.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { useT } from "../../i18n/useT.js";
 import RoleCell from "./RoleCell.jsx";
@@ -108,6 +109,15 @@ export default function RolesMensualGrid({
     anios.forEach((y) => mapa.set(y, buildFeriadosSet(y, reglas)));
     return mapa;
   }, [rangoMeses, reglas]);
+
+  // Años dentro del rango cargado que SÍ están afectando el cálculo de
+  // primer día laboral/patrones (regla activa) pero NO tienen calendario
+  // oficial de feriados cargado todavía. No se trata como "sin feriados":
+  // se avisa para que no se asuma silenciosamente que el año no tiene.
+  const aniosSinCoberturaFeriados = useMemo(() => {
+    if (!reglas?.aplicarFeriadosEnPrimerDiaLaboral) return [];
+    return [...feriadosPorAnio.keys()].filter((y) => !tieneCoberturaOficial(y)).sort((a, b) => a - b);
+  }, [feriadosPorAnio, reglas]);
 
   const inicioPorMes = useMemo(() => {
     const mapa = new Map();
@@ -353,6 +363,19 @@ export default function RolesMensualGrid({
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {aniosSinCoberturaFeriados.length > 0 && (
+        <div
+          role="status"
+          className="flex items-start gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900"
+        >
+          <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
+          <p>
+            Calendario de feriados sin validar oficialmente para {aniosSinCoberturaFeriados.join(", ")}.
+            El primer día laboral y los patrones de esos años se calculan sin feriados hasta cargar el
+            comunicado MTSS correspondiente.
+          </p>
+        </div>
+      )}
       <div
         ref={scrollRef}
         className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]"
