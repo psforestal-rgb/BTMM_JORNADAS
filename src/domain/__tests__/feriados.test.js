@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { feriadosDelAno, nombreFeriado, FERIADOS_CR } from "../../data/feriadosCR.js";
-import { buildFeriadosSet } from "../feriados.js";
+import {
+  feriadosDelAno,
+  nombreFeriado,
+  FERIADOS_CR,
+  tieneCoberturaOficial,
+  aniosConCobertura,
+  ultimoAnioConCobertura,
+} from "../../data/feriadosCR.js";
+import { buildFeriadosSet, buildFeriadosSetConCobertura } from "../feriados.js";
 import { primerDiaLaboral } from "../fechas.js";
 
 describe("data.feriadosCR", () => {
@@ -26,6 +33,39 @@ describe("data.feriadosCR", () => {
   it("nombreFeriado devuelve el nombre o null", () => {
     expect(nombreFeriado(2026, "2026-12-25")).toMatch(/Navidad/);
     expect(nombreFeriado(2026, "2026-02-15")).toBeNull();
+  });
+});
+
+describe("data.feriadosCR — cobertura oficial (distinguir 'sin validar' de 'sin feriados')", () => {
+  it("tieneCoberturaOficial es true para años cargados y false para años no cargados", () => {
+    expect(tieneCoberturaOficial(2026)).toBe(true);
+    expect(tieneCoberturaOficial(2028)).toBe(false);
+    expect(tieneCoberturaOficial(2099)).toBe(false);
+  });
+
+  it("un año sin cobertura devuelve un Set VACÍO (no null) — la distinción vive en tieneCoberturaOficial, no en el Set", () => {
+    const s = feriadosDelAno(2028);
+    expect(s instanceof Set).toBe(true);
+    expect(s.size).toBe(0);
+    expect(tieneCoberturaOficial(2028)).toBe(false);
+  });
+
+  it("aniosConCobertura incluye exactamente 2025, 2026, 2027 (ascendente)", () => {
+    expect(aniosConCobertura()).toEqual([2025, 2026, 2027]);
+  });
+
+  it("ultimoAnioConCobertura devuelve el año más alto cargado", () => {
+    expect(ultimoAnioConCobertura()).toBe(2027);
+  });
+
+  it("buildFeriadosSetConCobertura expone cobertura=false para un año no validado sin fingir 'sin feriados'", () => {
+    const r2028 = buildFeriadosSetConCobertura(2028, { aplicarFeriadosEnPrimerDiaLaboral: true });
+    expect(r2028.cobertura).toBe(false);
+    expect(r2028.set.size).toBe(0);
+
+    const r2026 = buildFeriadosSetConCobertura(2026, { aplicarFeriadosEnPrimerDiaLaboral: true });
+    expect(r2026.cobertura).toBe(true);
+    expect(r2026.set.size).toBeGreaterThan(0);
   });
 });
 

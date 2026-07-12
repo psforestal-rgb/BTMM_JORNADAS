@@ -14,7 +14,7 @@ import { useT } from "../i18n/useT.js";
  * el detalle completo vive en la vista «Datos · respaldo».
  */
 export default function SyncStatus() {
-  const { lastSavedAt, pendingChanges } = useApp();
+  const { lastSavedAt, pendingChanges, durableSaveFailed } = useApp();
   const t = useT();
   const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
 
@@ -33,8 +33,12 @@ export default function SyncStatus() {
     ? new Date(lastSavedAt).toLocaleTimeString("es-CR", { hour: "2-digit", minute: "2-digit" })
     : null;
 
+  const guardadoParcial = durableSaveFailed && pendingChanges === 0;
+
   const label = pendingChanges > 0
     ? t("sync.guardando")
+    : guardadoParcial
+    ? t("sync.guardadoParcial", { hora: hora ?? "" })
     : hora
     ? t("sync.guardado", { hora })
     : t("sync.sinRespaldo");
@@ -47,7 +51,9 @@ export default function SyncStatus() {
       aria-label={ariaLabel}
       title={ariaLabel}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-        online
+        guardadoParcial
+          ? "border-amber-300 bg-amber-50 text-amber-800"
+          : online
           ? "border-slate-200 bg-white text-slate-500"
           : "border-amber-300 bg-amber-50 text-amber-800"
       }`}
@@ -55,7 +61,13 @@ export default function SyncStatus() {
       <span
         aria-hidden="true"
         className={`h-2 w-2 shrink-0 rounded-full ${
-          pendingChanges > 0 ? "animate-pulse bg-sky-500" : online ? "bg-emerald-500" : "bg-amber-500"
+          pendingChanges > 0
+            ? "animate-pulse bg-sky-500"
+            : guardadoParcial
+            ? "bg-amber-500"
+            : online
+            ? "bg-emerald-500"
+            : "bg-amber-500"
         }`}
       />
       <span className="hidden sm:inline">{label}</span>

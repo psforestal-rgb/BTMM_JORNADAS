@@ -1,4 +1,4 @@
-import { feriadosDelAno } from "../data/feriadosCR.js";
+import { feriadosDelAno, tieneCoberturaOficial } from "../data/feriadosCR.js";
 
 /**
  * Construye el `Set<string>` de fechas ISO de feriados aplicables al año,
@@ -9,4 +9,15 @@ import { feriadosDelAno } from "../data/feriadosCR.js";
 export function buildFeriadosSet(year, reglas) {
   if (!reglas?.aplicarFeriadosEnPrimerDiaLaboral) return null;
   return feriadosDelAno(year, false);
+}
+
+/**
+ * Igual que `buildFeriadosSet`, pero además indica si el año tiene
+ * cobertura oficial cargada. `cobertura: false` significa "no validado
+ * todavía" — NO "sin feriados" — así el llamador puede mostrar una
+ * advertencia en vez de asumir silenciosamente cero feriados.
+ */
+export function buildFeriadosSetConCobertura(year, reglas) {
+  const set = buildFeriadosSet(year, reglas);
+  return { set, cobertura: tieneCoberturaOficial(year) };
 }

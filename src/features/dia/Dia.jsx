@@ -209,7 +209,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           <Icon name="chevronLeft" size={20} />
         </button>
         <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
-          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:text-xs">
+          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500 sm:text-xs">
             {dowLabel} · {meses[monthIdx]} {yearD}
           </span>
           <input
@@ -312,7 +312,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="break-words font-semibold text-slate-950">{act.titulo}</div>
-                      {act.lugar && <div className="mt-0.5 text-xs text-slate-500">📍 {act.lugar}</div>}
+                      {act.lugar && <div className="mt-0.5 text-xs text-slate-600">📍 {act.lugar}</div>}
                       {act.inicio !== (act.fin || act.inicio) && (
                         <div className="mt-0.5 text-xs text-slate-400">
                           {fecha(act.inicio)} → {fecha(act.fin)}
@@ -417,7 +417,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       </div>
                       <button
                         onClick={() => setModalActividad(nuevaAct([p.nombre], p.puestoOperativo || ""))}
-                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-700 active:scale-95 active:brightness-90 sm:w-auto"
+                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-700 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-800 active:scale-95 active:brightness-90 sm:w-auto"
                       >
                         {t("dia.asignar")}
                       </button>

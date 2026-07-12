@@ -35,6 +35,21 @@ const LS_LAST_SAVED_KEY = "pnlq:lastSavedAt";
 let dbInstance = null;
 let dbLoadPromise = null;
 
+// Cola de escrituras: encadena cada saveToDexie/clearDexie sobre la promesa
+// de la escritura anterior, para que dos guardados disparados en rápida
+// sucesión (fire-and-forget) no puedan completarse fuera de orden y dejar
+// en IndexedDB el payload MÁS VIEJO por encima del más nuevo. getDb() ya
+// memoiza la carga de Dexie, pero sin esta cola dos llamadas casi
+// simultáneas podrían encolar sus transacciones en cualquier orden.
+let writeQueue = Promise.resolve();
+function encolarEscritura(tarea) {
+  const siguiente = writeQueue.then(tarea, tarea);
+  // Si `tarea` rechaza, no queremos que la cola quede rota para las
+  // siguientes escrituras — solo propagamos el resultado a quien llamó.
+  writeQueue = siguiente.catch(() => {});
+  return siguiente;
+}
+
 /**
  * Devuelve la instancia singleton de Dexie. La primera invocación carga
  * el módulo de forma dinámica (lazy) para mantener el bundle inicial
@@ -65,54 +80,74 @@ export async function getDb() {
 }
 
 /**
- * Lee el snapshot desde IndexedDB. Devuelve null si:
- *  - IndexedDB no está disponible (modo privado estricto, SSR),
- *  - el snapshot no existe todavía,
- *  - la schemaVersion guardada no coincide con la actual.
+ * Lee el snapshot completo (payload + metadatos de recencia) desde
+ * IndexedDB. Devuelve null si IndexedDB no está disponible, el snapshot
+ * no existe todavía, o la schemaVersion guardada no coincide con la
+ * actual. `revision` es el contador monotónico usado para decidir qué
+ * backend (LS o IDB) tiene el dato más reciente sin depender solo del
+ * reloj del dispositivo (ver storage.js).
  */
-export async function loadFromDexie() {
+export async function loadFromDexieWithMeta() {
   const db = await getDb();
   if (!db) return null;
   try {
     const row = await db.state.get(SNAPSHOT_ID);
     if (!row) return null;
     if (row.schemaVersion !== SCHEMA_VERSION) return null;
-    return row.payload ?? null;
+    return { state: row.payload ?? null, revision: row.revision ?? 0, savedAt: row.savedAt ?? null };
   } catch {
     return null;
   }
 }
 
-/**
- * Persiste el snapshot en IndexedDB. Retorna `true` si el guardado
- * fue exitoso, `false` si falló (no propaga excepciones).
- */
-export async function saveToDexie(payload) {
-  const db = await getDb();
-  if (!db) return false;
-  try {
-    await db.state.put({
-      id: SNAPSHOT_ID,
-      schemaVersion: SCHEMA_VERSION,
-      savedAt: new Date().toISOString(),
-      payload,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+/** Compatibilidad: devuelve solo el payload (sin metadatos de recencia). */
+export async function loadFromDexie() {
+  const meta = await loadFromDexieWithMeta();
+  return meta ? meta.state : null;
 }
 
-/** Borra el snapshot. */
+/**
+ * Persiste el snapshot en IndexedDB. Retorna `true` si el guardado fue
+ * exitoso, `false` si falló (no propaga excepciones). `revision` debe ser
+ * el mismo contador monotónico escrito en localStorage para ese guardado,
+ * así ambos backends quedan comparables sin ambigüedad de reloj.
+ *
+ * Encolada (ver `encolarEscritura`): si dos guardados se disparan en
+ * rápida sucesión, esta escritura espera a que la anterior termine antes
+ * de correr, para que nunca complete fuera de orden y deje un payload
+ * viejo por encima de uno nuevo.
+ */
+export async function saveToDexie(payload, revision = 0) {
+  const db = await getDb();
+  if (!db) return false;
+  return encolarEscritura(async () => {
+    try {
+      await db.state.put({
+        id: SNAPSHOT_ID,
+        schemaVersion: SCHEMA_VERSION,
+        savedAt: new Date().toISOString(),
+        revision,
+        payload,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** Borra el snapshot. Encolada junto con saveToDexie (ver arriba). */
 export async function clearDexie() {
   const db = await getDb();
   if (!db) return false;
-  try {
-    await db.state.delete(SNAPSHOT_ID);
-    return true;
-  } catch {
-    return false;
-  }
+  return encolarEscritura(async () => {
+    try {
+      await db.state.delete(SNAPSHOT_ID);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }
 
 /**
@@ -148,6 +183,7 @@ export async function migrateFromLocalStorageIfNeeded() {
       id: SNAPSHOT_ID,
       schemaVersion: SCHEMA_VERSION,
       savedAt: parsed.savedAt || new Date().toISOString(),
+      revision: parsed.revision ?? 0,
       payload: parsed.state,
       migradoDeLocalStorage: true,
     });
@@ -202,16 +238,18 @@ export async function contarPendientes() {
 export async function wipeDexie() {
   const db = await getDb();
   if (!db) return false;
-  try {
-    await Promise.all([
-      db.state.clear(),
-      db.pendientes.clear(),
-      db.auditoria.clear(),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
+  return encolarEscritura(async () => {
+    try {
+      await Promise.all([
+        db.state.clear(),
+        db.pendientes.clear(),
+        db.auditoria.clear(),
+      ]);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 }
 
 // Exports auxiliares usados por tests (no romper si Dexie no inicia).
@@ -219,4 +257,5 @@ export const __INTERNALS__ = {
   LS_STATE_KEY,
   LS_LAST_SAVED_KEY,
   resetSingleton() { dbInstance = null; },
+  resetWriteQueue() { writeQueue = Promise.resolve(); },
 };

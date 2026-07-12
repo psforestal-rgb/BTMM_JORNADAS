@@ -734,6 +734,7 @@ const dict = {
     guardando: "Guardando…",
     guardado: "Guardado localmente {hora}",
     sinRespaldo: "Pendiente de primer guardado local",
+    guardadoParcial: "Guardado temporal — respaldo durable falló ({hora})",
   },
   print: {
     imprimir: "Imprimir / Guardar PDF",

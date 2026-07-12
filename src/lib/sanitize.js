@@ -16,8 +16,20 @@
 
 import { baseFuncionarios } from "../data/seedFuncionarios.js";
 import { mergeReglas } from "../config/reglas.js";
+import { TIPOS_DIA, MOTIVOS, MAGNITUDES } from "../domain/reposicion.js";
 
 const ESTADOS_VALIDOS = ["Activo", "Incapacitado", "De vacaciones", "Inactivo"];
+
+// Límites de tamaño/cantidad. Un archivo importado manipulado o corrupto
+// (fechas patológicas, arreglos gigantes) no debe poder crear millones de
+// objetos en memoria ni una línea temporal desproporcionada — ver
+// `RolesMensualGrid.jsx` (MAX_MESES) y `indexarReposiciones()`, que
+// recorren estos arreglos en cada render.
+const MAX_PERSONAS = 1000;
+const MAX_ACTIVIDADES = 20000;
+const MAX_REPOSICIONES = 20000;
+const MAX_ROLEDATA_KEYS = 300000;
+const MAX_ROLEDATA_KEY_LEN = 200;
 
 const seedById = new Map(baseFuncionarios.map((f) => [f.id, f]));
 
@@ -44,6 +56,28 @@ function sanitizeStructured(value, max, pattern, fallback) {
 
 function sanitizeBoolean(value, fallback) {
   return typeof value === "boolean" ? value : fallback;
+}
+
+/** Número finito dentro de un rango razonable; si no, usa el fallback. */
+function sanitizeNumeroFinito(value, fallback, { min = 0, max = 10000 } = {}) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/** Fecha ISO simple (YYYY-MM-DD) con año dentro de un rango razonable de
+ * calendario (protege contra fechas patológicas tipo año 9999 o negativo
+ * que inflarían cualquier línea temporal derivada). */
+function sanitizeFechaIso(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const m = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return fallback;
+  const anio = Number(m[1]);
+  if (anio < 2000 || anio > 2100) return fallback;
+  const mes = Number(m[2]);
+  const dia = Number(m[3]);
+  if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return fallback;
+  return m[0];
 }
 
 function sanitizePersona(persona) {
@@ -74,21 +108,92 @@ function sanitizePersona(persona) {
   return out;
 }
 
+/**
+ * `actividadesEnDia()` (domain/actividades.js) compara
+ * `iso >= a.inicio && iso <= (a.fin || a.inicio)` — un `inicio` corrupto
+ * (ej. "0000-01-01") o ausente hace que la actividad "cubra" prácticamente
+ * cualquier día renderizado, y no es reparable con un default seguro (a
+ * diferencia de una persona, una actividad importada no tiene un registro
+ * semilla equivalente al que volver). Se descarta la actividad entera si
+ * `inicio` no es una fecha ISO válida, igual que `sanitizeReposicion()`
+ * descarta un registro sin `funcionario`/`fecha`. Un `fin` inválido, en
+ * cambio, colapsa a `inicio` (evento de un día) en vez de descartar todo
+ * el registro.
+ */
 function sanitizeActividad(actividad) {
-  if (!isPlainObject(actividad)) return actividad;
+  if (!isPlainObject(actividad)) return null;
   const out = { ...actividad };
   if ("id" in out) out.id = sanitizeFreeText(out.id, 40, "");
   for (const [campo, valor] of Object.entries(out)) {
-    if (campo === "id") continue;
+    if (campo === "id" || campo === "inicio" || campo === "fin") continue;
     if (typeof valor === "string") out[campo] = sanitizeFreeText(valor, 200, "");
+  }
+  if (typeof out.inicio !== "string") return null;
+  const inicio = sanitizeFechaIso(out.inicio, "");
+  if (!inicio) return null;
+  out.inicio = inicio;
+  if ("fin" in out) out.fin = sanitizeFechaIso(out.fin, inicio);
+  return out;
+}
+
+/**
+ * Cuota individual de reposición (ver `domain/reposicion.js`). Se aplica
+ * la misma filosofía: campo inválido se reemplaza, no se rechaza la cuota
+ * completa salvo que no tenga forma de objeto.
+ */
+function sanitizeCuota(cuota) {
+  if (!isPlainObject(cuota)) return null;
+  const out = { ...cuota };
+  if ("id" in out) out.id = sanitizeFreeText(out.id, 40, "");
+  if ("fecha" in out) out.fecha = sanitizeFechaIso(out.fecha, "");
+  if ("magnitud" in out) {
+    out.magnitud = MAGNITUDES.includes(out.magnitud) ? out.magnitud : "diaEntero";
+  }
+  if ("horas" in out) out.horas = sanitizeNumeroFinito(out.horas, 0, { min: 0, max: 24 });
+  return out;
+}
+
+/**
+ * Registro de reposición. `funcionario` y `fecha` son las claves que
+ * `indexarReposiciones()` usa para indexar por celda — si faltan o no son
+ * string, el registro entero se descarta en `sanitizeImportedState` (a
+ * diferencia de otros campos, aquí SÍ hace falta rechazar el registro:
+ * un registro sin identidad no es reparable y `indexarReposiciones()`
+ * revienta con `null`/`undefined` en ese campo).
+ */
+function sanitizeReposicion(reposicion) {
+  if (!isPlainObject(reposicion)) return null;
+  const out = { ...reposicion };
+  if (typeof out.funcionario !== "string" || !out.funcionario.trim()) return null;
+  out.funcionario = sanitizeFreeText(out.funcionario, 120, "");
+  if (typeof out.fecha !== "string") return null;
+  const fecha = sanitizeFechaIso(out.fecha, "");
+  if (!fecha) return null;
+  out.fecha = fecha;
+
+  if ("id" in out) out.id = sanitizeFreeText(out.id, 40, "");
+  if ("folio" in out) out.folio = sanitizeFreeText(out.folio, 20, "");
+  if ("tipoDia" in out) out.tipoDia = TIPOS_DIA.includes(out.tipoDia) ? out.tipoDia : TIPOS_DIA[TIPOS_DIA.length - 1];
+  if ("motivo" in out) out.motivo = MOTIVOS.includes(out.motivo) ? out.motivo : MOTIVOS[MOTIVOS.length - 1];
+  if ("motivoDetalle" in out) out.motivoDetalle = sanitizeFreeText(out.motivoDetalle, 300, "");
+  if ("observaciones" in out) out.observaciones = sanitizeFreeText(out.observaciones, 300, "");
+  if ("magnitud" in out) out.magnitud = MAGNITUDES.includes(out.magnitud) ? out.magnitud : "diaEntero";
+  if ("horas" in out) out.horas = sanitizeNumeroFinito(out.horas, 0, { min: 0, max: 24 });
+  if ("fechaReposicion" in out) out.fechaReposicion = sanitizeFechaIso(out.fechaReposicion, "");
+  if (Array.isArray(out.cuotas)) {
+    out.cuotas = out.cuotas.map(sanitizeCuota).filter(Boolean).slice(0, 500);
   }
   return out;
 }
 
 function sanitizeRoleData(roleData) {
   const out = {};
+  let count = 0;
   for (const [key, valor] of Object.entries(roleData)) {
+    if (count >= MAX_ROLEDATA_KEYS) break;
+    if (typeof key !== "string" || key.length === 0 || key.length > MAX_ROLEDATA_KEY_LEN) continue;
     out[key] = typeof valor === "string" && valor.length <= 10 ? valor : "";
+    count += 1;
   }
   return out;
 }
@@ -106,23 +211,51 @@ export function sanitizeImportedState(state) {
     const out = { ...state };
 
     if (Array.isArray(out.personas)) {
-      out.personas = out.personas.map((p) => {
-        try {
-          return sanitizePersona(p);
-        } catch {
-          return p;
-        }
-      });
+      // Las entradas que no son objetos (null, strings sueltos, etc.) se
+      // descartan: AppContext.jsx/reducer asumen que cada elemento tiene
+      // forma de ficha (persona.nombre, persona.id) y un `null` en el
+      // arreglo rompería esa asunción más adelante.
+      out.personas = out.personas
+        .filter(isPlainObject)
+        .map((p) => {
+          try {
+            return sanitizePersona(p);
+          } catch {
+            return p;
+          }
+        })
+        .slice(0, MAX_PERSONAS);
     }
 
     if (Array.isArray(out.actividadesPlan)) {
-      out.actividadesPlan = out.actividadesPlan.map((a) => {
-        try {
-          return sanitizeActividad(a);
-        } catch {
-          return a;
-        }
-      });
+      out.actividadesPlan = out.actividadesPlan
+        .filter(isPlainObject)
+        .map((a) => {
+          try {
+            return sanitizeActividad(a);
+          } catch {
+            return a;
+          }
+        })
+        .filter(Boolean)
+        .slice(0, MAX_ACTIVIDADES);
+    }
+
+    if (Array.isArray(out.reposiciones)) {
+      // A diferencia de personas/actividades, un registro de reposición
+      // sin `funcionario`/`fecha` válidos no es reparable: indexarReposiciones()
+      // indexa por esa clave y revienta con un valor `null`/`undefined`.
+      // sanitizeReposicion() ya descarta esos casos devolviendo `null`.
+      out.reposiciones = out.reposiciones
+        .map((r) => {
+          try {
+            return sanitizeReposicion(r);
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+        .slice(0, MAX_REPOSICIONES);
     }
 
     if (isPlainObject(out.roleData)) {

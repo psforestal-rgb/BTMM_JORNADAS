@@ -45,13 +45,28 @@ jobs:
           GIT_SHA: ${{ github.sha }}
         run: npm run build
 
+      - name: Preparar raíz estática con el base path de producción
+        # `vite base` es /BTMM_JORNADAS/ (GitHub Pages sirve el sitio bajo
+        # ese subpath), así que index.html referencia sus assets como
+        # /BTMM_JORNADAS/assets/... El servidor estático de LHCI sirve
+        # `staticDistDir` en la RAÍZ — sin este paso, la URL configurada en
+        # lighthouserc.json (.../BTMM_JORNADAS/index.html) siempre da 404.
+        # Verificado localmente: sin este paso, Lighthouse nunca llegaba a
+        # auditar nada (fallaba con "Status code: 404") pese a que
+        # continue-on-error lo ocultaba.
+        run: |
+          mkdir -p lhci-root/BTMM_JORNADAS
+          cp -r dist/. lhci-root/BTMM_JORNADAS/
+
       - name: Lighthouse CI
+        # Sin continue-on-error: los umbrales de `lighthouserc.json` ahora
+        # son un check real (auditoría móvil, contraste activado). Antes
+        # este step siempre reportaba éxito sin importar el resultado.
         uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-        continue-on-error: true
 
       - name: Resumen del audit
         if: always()

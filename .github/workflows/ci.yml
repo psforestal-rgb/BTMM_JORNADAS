@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   test:
-    name: Vitest · 126 tests
+    name: Vitest · suite completa
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

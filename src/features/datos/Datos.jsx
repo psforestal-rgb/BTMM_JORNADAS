@@ -10,6 +10,12 @@ import { plural } from "../../i18n/es-CR.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import Modal from "../../ui/Modal.jsx";
 
+// Límite defensivo antes de leer/parsear el archivo importado. El snapshot
+// real de producción ronda los 330 KB; 20 MB da margen generoso para
+// crecimiento (10-50x) sin permitir que un archivo manipulado o corrupto
+// fuerce un JSON.parse desproporcionado en el hilo principal.
+const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+
 function descargarArchivo(nombre, contenido) {
   try {
     const blob = new Blob([contenido], { type: "application/json" });
@@ -47,6 +53,8 @@ export default function Datos() {
       actividadesPlan: ctx.actividadesPlan,
       reposiciones: ctx.reposiciones,
       roleData: ctx.roleData,
+      reglas: ctx.reglas,
+      migraciones: ctx.migraciones,
     });
     return { snapshot, name: `pnlq-snapshot-${toLocalFileTimestamp()}.json`, text: JSON.stringify(snapshot, null, 2) };
   };
@@ -69,6 +77,11 @@ export default function Datos() {
     setImportOk(null);
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_IMPORT_BYTES) {
+      setImportError(`El archivo pesa ${(file.size / (1024 * 1024)).toFixed(1)} MB, más del máximo permitido (${MAX_IMPORT_BYTES / (1024 * 1024)} MB).`);
+      e.target.value = "";
+      return;
+    }
     try {
       const text = await file.text();
       const parsed = parseSnapshot(text);
@@ -94,6 +107,8 @@ export default function Datos() {
       actividadesPlan: parsed.state.actividadesPlan ?? ctx.actividadesPlan,
       reposiciones: parsed.state.reposiciones ?? ctx.reposiciones,
       roleData: parsed.state.roleData ?? ctx.roleData,
+      reglas: parsed.state.reglas ?? ctx.reglas,
+      migraciones: parsed.state.migraciones ?? ctx.migraciones,
     });
     setImportOk({ exportadoEn: parsed.exportadoEn, archivo });
     setPendingImport(null);
@@ -235,7 +250,7 @@ export default function Datos() {
 
         <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title={t("datos.reiniciarTitulo")} description={t("datos.reiniciarSub")} size="sm" actions={<><button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">{t("acciones.cancelar")}</button><button type="button" onClick={onReset} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">{t("datos.confirmarReiniciar")}</button></>}><div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{t("datos.reiniciarRec")}</div></Modal>
         <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
-          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
+          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
         </Modal>
       </Card>
 

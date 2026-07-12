@@ -22,14 +22,18 @@ const APP_COMMIT_FULL = (() => {
     return 'dev'
   }
 })()
-// En producción se publica solo un prefijo corto del commit: el hash completo
-// facilita correlacionar el despliegue con el historial público del repo
-// para buscar vulnerabilidades conocidas de esa versión exacta. En
-// development/local se mantiene el hash de 7 chars para depurar. Se usa el
-// MISMO valor (truncado o no) tanto en version.json como en el bundle
-// (__APP_COMMIT__) para que versionCheck.js siga comparando ambos lados
-// consistentemente.
-const APP_COMMIT = process.env.NODE_ENV === 'production' ? APP_COMMIT_FULL.slice(0, 4) : APP_COMMIT_FULL
+// Se usa el hash corto completo (7 chars, ~268 millones de combinaciones)
+// tanto en desarrollo como en producción — un intento anterior de truncar
+// a 4 chars en producción (~65 mil combinaciones) para "ofuscar" el commit
+// resultó contraproducente: con el volumen de commits de este repo la
+// probabilidad de colisión ya no es despreciable, y una colisión hace que
+// `versionCheck.js` compare dos builds DISTINTOS como si fueran el mismo
+// (falso negativo: el usuario se queda en una versión vieja sin que se le
+// avise). El repo ya es público en GitHub, así que el hash completo no
+// expone nada que el historial del repo no exponga ya. Se usa el MISMO
+// valor tanto en version.json como en el bundle (__APP_COMMIT__) para que
+// versionCheck.js compare ambos lados de forma consistente.
+const APP_COMMIT = APP_COMMIT_FULL
 
 const versionJsonPlugin = () => ({
   name: 'pnlq-version-json',
