@@ -110,4 +110,40 @@ describe("AppContext — hidratación async desde Dexie", () => {
     expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("");
     expect(observedRoleData["2026-8-Puesto Orosi-Enzo Martini-1"]).toBeUndefined();
   });
+
+  it("una vez aplicada la migración de limpieza, NO vuelve a borrar ediciones de setiembre-diciembre 2026", async () => {
+    // Simula un snapshot que YA pasó por la migración una vez (tiene la
+    // marca) y que además tiene una edición real del usuario en un día de
+    // setiembre 2026 — el escenario que el bug original destruía en cada
+    // carga.
+    await saveToDexie({
+      personas: [{ id: "f1", nombre: "Errol Salazar" }],
+      actividadesPlan: [],
+      roleData: {
+        "2026-9-Puesto Orosi-Errol Salazar-15": "V3",
+      },
+      reglas: {},
+      migraciones: { limpiezaEnzoYSetDic2026: true },
+    });
+
+    let observedRoleData = null;
+    function Probe() {
+      const ctx = useApp();
+      observedRoleData = ctx.roleData;
+      return null;
+    }
+
+    await act(async () => {
+      render(
+        <AppProvider>
+          <Probe />
+        </AppProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(observedRoleData).toBeTruthy();
+      expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("V3");
+    });
+  });
 });
