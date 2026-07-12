@@ -440,9 +440,23 @@ export default function RolesMensualGrid({
                           : `border-r border-slate-200 ${tone.day}`
                     }`}
                   >
-                    <div className="mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg bg-white/80 sm:h-10 sm:w-9">
-                      <span className="text-[9px] uppercase leading-none text-slate-500">{dias[dow]}</span>
-                      <span className="mt-0.5 text-[12px] leading-none font-semibold text-slate-950">{d}</span>
+                    {/* El fondo emerald-700/ring del <th> quedaba tapado por
+                        esta insignia interna, que antes era blanca siempre
+                        (también para "hoy") — de ahí que la señalización de
+                        "hoy" casi no se notara. Ahora la insignia misma se
+                        rellena de verde sólido para "hoy", como un calendario
+                        estándar. */}
+                    <div
+                      className={`mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg sm:h-10 sm:w-9 ${
+                        isToday ? "bg-emerald-600 shadow-sm" : "bg-white/80"
+                      }`}
+                    >
+                      <span className={`text-[9px] uppercase leading-none ${isToday ? "text-emerald-50" : "text-slate-500"}`}>
+                        {dias[dow]}
+                      </span>
+                      <span className={`mt-0.5 text-[12px] leading-none font-semibold ${isToday ? "text-white" : "text-slate-950"}`}>
+                        {d}
+                      </span>
                     </div>
                   </th>
                 );
@@ -657,7 +671,7 @@ function RowsGrupo({
             <td
               key={`${grupo.nombre}-cantidad-${iso}`}
               className={`border-b border-b-slate-200 bg-white p-2 text-center font-semibold text-slate-800 ${
-                esHoy ? "border-l-2 border-r-2 border-l-emerald-500 border-r-emerald-500" : "border-r border-r-slate-200"
+                esHoy ? "border-l-2 border-r-2 border-l-emerald-600 border-r-emerald-600" : "border-r border-r-slate-200"
               }`}
             >
               {count}
