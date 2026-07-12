@@ -22,7 +22,6 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [previewHorizontal, setPreviewHorizontal] = useState(false);
   const dentroDePreview = isMobilePreviewLocation();
-  const titulo = t(`view.${view}`);
   const anioActual = new Date().getFullYear();
   const opcionesAnio = Array.from({ length: 11 }, (_, i) => anioActual - 5 + i);
   const moverMes = (paso) => {
@@ -49,21 +48,12 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
       <div className="pnlq-topbar-inner flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            {/* Marca y módulo como elementos separados: PNLQ nunca se trunca,
-                solo el nombre del módulo cede espacio cuando hace falta. */}
-            <div className="flex min-w-0 items-baseline gap-1.5 text-xs font-semibold uppercase tracking-widest text-ink-muted">
-              <span className="shrink-0">{t("app.short")}</span>
-              <span className="shrink-0 text-ink-subtle">/</span>
-              <span className="truncate text-ink" title={titulo}>{titulo}</span>
-            </div>
-            {/* El título largo solo aporta en escritorio; en móvil/tablet
-                el breadcrumb superior ya da contexto y el h1 ocupaba
-                demasiada altura por encima de la primera tarjeta. */}
+            {/* El breadcrumb "PNLQ / <vista>" y el indicador de hora en
+                móvil se retiraron por pedido explícito: la BottomNav ya
+                marca la vista activa, y ese primer renglón quedaba
+                redundante y con demasiado peso visual arriba de la
+                primera tarjeta. */}
             <h1 className="hidden text-xl font-semibold tracking-tight text-ink lg:block">{t("app.titulo")}</h1>
-          </div>
-          {/* En móvil, estado de respaldo junto al breadcrumb para no crecer en alto. */}
-          <div className="flex shrink-0 items-center gap-2 xl:hidden">
-            <SyncStatus />
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
