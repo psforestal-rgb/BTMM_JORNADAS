@@ -133,8 +133,11 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
               <span className="rounded-md bg-surface px-1.5 py-0.5 text-xs text-ink-muted">Temporal</span>
             </button>
           )}
-          {/* En escritorio, estado de respaldo al final de la barra de acciones. */}
-          <span className="hidden xl:inline-flex">
+          {/* Visible desde `lg` (donde la BottomNav de móvil ya desaparece,
+              ver BottomNav.jsx) para no dejar un rango 1024-1279px sin
+              ningún indicador de guardado/offline — antes empezaba en
+              `xl` y ese hueco quedaba sin cobertura. */}
+          <span className="hidden lg:inline-flex">
             <SyncStatus />
           </span>
         </div>
