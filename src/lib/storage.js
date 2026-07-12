@@ -246,8 +246,17 @@ export async function clearState() {
   }
   const okIdb = await clearDexie().catch(() => false);
   const okWipe = await wipeDexie().catch(() => false);
-  revisionConocida = null;
-  return { ok: okLs && (okIdb || okWipe), ls: okLs, idb: okIdb || okWipe };
+  const idbCleared = okIdb || okWipe;
+  // Solo se reinicia el contador de revisión si AMBOS backends quedaron
+  // realmente vacíos. Si el borrado durable falla, `revisionConocida` ya
+  // conoce la revisión más alta jamás vista (incluida la de IndexedDB) —
+  // reiniciarla igual haría que el próximo guardado (el estado semilla)
+  // arrancara otra vez desde 1, y ese snapshot nuevo perdería la
+  // comparación en loadStateAsync() contra el snapshot viejo que quedó
+  // atascado en IndexedDB con una revisión más alta, resucitando en la
+  // próxima carga los datos que el usuario acaba de reiniciar.
+  if (okLs && idbCleared) revisionConocida = null;
+  return { ok: okLs && idbCleared, ls: okLs, idb: idbCleared };
 }
 
 export function getLastSavedAt() {

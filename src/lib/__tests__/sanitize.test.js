@@ -25,7 +25,7 @@ describe("sanitizeImportedState — import válido", () => {
         },
       ],
       actividadesPlan: [
-        { id: "act1", titulo: "Gira de mantenimiento", lugar: "Puesto Esperanza", viatico: true },
+        { id: "act1", titulo: "Gira de mantenimiento", lugar: "Puesto Esperanza", viatico: true, inicio: "2026-05-06", fin: "2026-05-06" },
       ],
       roleData: { "2026-5-Puesto Orosi-z1-1": "T1" },
       reglas: { diaCorteViaticos: 15 },
@@ -109,7 +109,7 @@ describe("sanitizeImportedState — booleanos", () => {
 describe("sanitizeImportedState — actividadesPlan", () => {
   it("strip HTML y trunca campos de texto de una actividad", () => {
     const out = sanitizeImportedState({
-      actividadesPlan: [{ id: "a1", titulo: "<img src=x onerror=alert(1)>Gira" }],
+      actividadesPlan: [{ id: "a1", titulo: "<img src=x onerror=alert(1)>Gira", inicio: "2026-05-06" }],
     });
     expect(out.actividadesPlan[0].titulo).toBe("Gira");
   });
@@ -145,8 +145,10 @@ describe("sanitizeImportedState — descarta entradas no-objeto en arreglos", ()
   });
 
   it("actividadesPlan: entradas null no llegan al arreglo final (evita romper indexarReposiciones/listados aguas abajo)", () => {
-    const out = sanitizeImportedState({ actividadesPlan: [null, { id: "act1", titulo: "Gira" }] });
-    expect(out.actividadesPlan).toEqual([{ id: "act1", titulo: "Gira" }]);
+    const out = sanitizeImportedState({
+      actividadesPlan: [null, { id: "act1", titulo: "Gira", inicio: "2026-05-06" }],
+    });
+    expect(out.actividadesPlan).toEqual([{ id: "act1", titulo: "Gira", inicio: "2026-05-06" }]);
   });
 });
 
@@ -180,9 +182,38 @@ describe("sanitizeImportedState — reposiciones", () => {
     expect(out.reposiciones[0].magnitud).toBe("diaEntero");
   });
 
-  it("fecha patológica (año fuera de rango) en actividad se descarta a cadena vacía", () => {
-    const out = sanitizeImportedState({ actividadesPlan: [{ id: "a1", fecha: "9999-99-99" }] });
-    expect(out.actividadesPlan[0].fecha).toBe("");
+  it("actividad con inicio/fin patológicos (año fuera de rango) se descarta entera, no deja pasar un rango que 'cubra' todos los días", () => {
+    // Los campos reales que usa actividadesEnDia() son inicio/fin, no
+    // fecha/fechaInicio/fechaFin — con inicio="0000-01-01" y fin="9999-12-31"
+    // sin sanear, la actividad coincidiría con prácticamente cualquier día
+    // renderizado en el calendario.
+    const out = sanitizeImportedState({
+      actividadesPlan: [{ id: "a1", titulo: "Maliciosa", inicio: "0000-01-01", fin: "9999-12-31" }],
+    });
+    expect(out.actividadesPlan).toHaveLength(0);
+  });
+
+  it("actividad sin inicio se descarta entera (no es reparable)", () => {
+    const out = sanitizeImportedState({ actividadesPlan: [{ id: "a1", titulo: "Sin fecha" }] });
+    expect(out.actividadesPlan).toHaveLength(0);
+  });
+
+  it("actividad con inicio válido pero fin inválido: fin colapsa a inicio en vez de descartar el registro", () => {
+    const out = sanitizeImportedState({
+      actividadesPlan: [{ id: "a1", titulo: "Gira", inicio: "2026-05-06", fin: "9999-99-99" }],
+    });
+    expect(out.actividadesPlan).toHaveLength(1);
+    expect(out.actividadesPlan[0].inicio).toBe("2026-05-06");
+    expect(out.actividadesPlan[0].fin).toBe("2026-05-06");
+  });
+
+  it("actividad válida con inicio/fin normales se conserva intacta", () => {
+    const out = sanitizeImportedState({
+      actividadesPlan: [{ id: "a1", titulo: "Gira", inicio: "2026-05-06", fin: "2026-05-07", unDia: false }],
+    });
+    expect(out.actividadesPlan).toHaveLength(1);
+    expect(out.actividadesPlan[0].inicio).toBe("2026-05-06");
+    expect(out.actividadesPlan[0].fin).toBe("2026-05-07");
   });
 });
 

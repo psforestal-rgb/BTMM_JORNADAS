@@ -314,4 +314,36 @@ describe('storage — Fase 5 paso 2: revisión monotónica y coordinación LS/ID
     expect(r.state).toBeNull()
     expect(r.source).toBeNull()
   })
+
+  it('si el borrado durable de IndexedDB falla, clearState() NO reinicia la revisión — el snapshot semilla posterior debe seguir ganando sobre el snapshot viejo atascado en IndexedDB', async () => {
+    const dbModule = await import('../db.js')
+    // Varios guardados dejan una revisión alta conocida en ambos backends.
+    const { saveState, clearState, loadStateAsync } = await import('../storage.js')
+    await saveState({ marca: 'v1' })
+    await saveState({ marca: 'v2' })
+    await saveState({ marca: 'v3-la-que-quedará-atascada-en-idb' })
+
+    // Simular que el borrado durable falla (p. ej. IndexedDB bloqueada),
+    // pero localStorage sí se limpia.
+    const spyClear = vi.spyOn(dbModule, 'clearDexie').mockResolvedValue(false)
+    const spyWipe = vi.spyOn(dbModule, 'wipeDexie').mockResolvedValue(false)
+    try {
+      const resultado = await clearState()
+      expect(resultado.ls).toBe(true)
+      expect(resultado.idb).toBe(false)
+      expect(resultado.ok).toBe(false)
+    } finally {
+      spyClear.mockRestore()
+      spyWipe.mockRestore()
+    }
+
+    // El siguiente guardado (el estado semilla que reemplaza al reset) debe
+    // obtener una revisión MAYOR que la que quedó atascada en IndexedDB —
+    // si clearState() hubiera reiniciado la revisión a 0/null, este guardado
+    // volvería a empezar en 1 y perdería contra el "v3" atascado.
+    const resultadoSemilla = await saveState({ marca: 'semilla-tras-reset' })
+    const final = await loadStateAsync()
+    expect(final.state.marca).toBe('semilla-tras-reset')
+    expect(resultadoSemilla.revision).toBeGreaterThan(3)
+  })
 })

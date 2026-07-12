@@ -108,20 +108,31 @@ function sanitizePersona(persona) {
   return out;
 }
 
+/**
+ * `actividadesEnDia()` (domain/actividades.js) compara
+ * `iso >= a.inicio && iso <= (a.fin || a.inicio)` — un `inicio` corrupto
+ * (ej. "0000-01-01") o ausente hace que la actividad "cubra" prácticamente
+ * cualquier día renderizado, y no es reparable con un default seguro (a
+ * diferencia de una persona, una actividad importada no tiene un registro
+ * semilla equivalente al que volver). Se descarta la actividad entera si
+ * `inicio` no es una fecha ISO válida, igual que `sanitizeReposicion()`
+ * descarta un registro sin `funcionario`/`fecha`. Un `fin` inválido, en
+ * cambio, colapsa a `inicio` (evento de un día) en vez de descartar todo
+ * el registro.
+ */
 function sanitizeActividad(actividad) {
-  if (!isPlainObject(actividad)) return actividad;
+  if (!isPlainObject(actividad)) return null;
   const out = { ...actividad };
   if ("id" in out) out.id = sanitizeFreeText(out.id, 40, "");
   for (const [campo, valor] of Object.entries(out)) {
-    if (campo === "id") continue;
+    if (campo === "id" || campo === "inicio" || campo === "fin") continue;
     if (typeof valor === "string") out[campo] = sanitizeFreeText(valor, 200, "");
   }
-  // Fechas de actividad: si son patológicas (año fuera de rango, formato
-  // inválido), se descartan en vez de dejar pasar un valor que infle la
-  // línea temporal o rompa el parseo de fechas del dominio.
-  for (const campo of ["fecha", "fechaInicio", "fechaFin"]) {
-    if (campo in out) out[campo] = sanitizeFechaIso(out[campo], "");
-  }
+  if (typeof out.inicio !== "string") return null;
+  const inicio = sanitizeFechaIso(out.inicio, "");
+  if (!inicio) return null;
+  out.inicio = inicio;
+  if ("fin" in out) out.fin = sanitizeFechaIso(out.fin, inicio);
   return out;
 }
 
@@ -226,6 +237,7 @@ export function sanitizeImportedState(state) {
             return a;
           }
         })
+        .filter(Boolean)
         .slice(0, MAX_ACTIVIDADES);
     }
 
