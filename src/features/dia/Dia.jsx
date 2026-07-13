@@ -291,7 +291,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         }
       >
         {actsDelDia.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-400">{t("dia.sinActividades")}</div>
+          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">{t("dia.sinActividades")}</div>
         ) : (
           <div className="space-y-3">
             {actsDelDia.map((act) => {
@@ -314,7 +314,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       <div className="break-words font-semibold text-slate-950">{act.titulo}</div>
                       {act.lugar && <div className="mt-0.5 text-xs text-slate-600">📍 {act.lugar}</div>}
                       {act.inicio !== (act.fin || act.inicio) && (
-                        <div className="mt-0.5 text-xs text-slate-400">
+                        <div className="mt-0.5 text-xs text-slate-500">
                           {fecha(act.inicio)} → {fecha(act.fin)}
                         </div>
                       )}
@@ -360,7 +360,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* En turno con actividad */}
       <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible defaultOpen={false}>
         {enTurnoConAct.length === 0 ? (
-          <p className="text-sm text-slate-400">{t("dia.enTurnoConActVacio")}</p>
+          <p className="text-sm text-slate-500">{t("dia.enTurnoConActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoConAct).map((g) => (
@@ -396,7 +396,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* En turno sin actividad — abierta por defecto: requiere asignar. */}
       <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen>
         {enTurnoSinAct.length === 0 ? (
-          <p className="text-sm text-slate-400">{t("dia.enTurnoSinActVacio")}</p>
+          <p className="text-sm text-slate-500">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoSinAct).map((g) => (
@@ -433,7 +433,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* Fuera de turno */}
       <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴" collapsible defaultOpen={false}>
         {fueraDeTurno.length === 0 ? (
-          <p className="text-sm text-slate-400">{t("dia.fueraDeTurnoVacio")}</p>
+          <p className="text-sm text-slate-500">{t("dia.fueraDeTurnoVacio")}</p>
         ) : (
           <div className="space-y-4">
             {Object.entries(fueraPorCat)
@@ -442,7 +442,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                 <div key={cat}>
                   <div className="mb-2 flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${catCls[cat]}`}>{catLabel[cat] || "Sin marcar"}</span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {t("dia.nFuncionarios", { n: list.length, plural: plural(list.length) })}
                     </span>
                   </div>
@@ -452,7 +452,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                         <Avatar name={p.nombre} />
                         <div>
                           <div className="text-sm font-semibold text-slate-900">{p.nombre}</div>
-                          <div className="text-[10px] text-slate-400">{(p.puestoOperativo || "").replace("Puesto ", "")}</div>
+                          <div className="text-[10px] text-slate-500">{(p.puestoOperativo || "").replace("Puesto ", "")}</div>
                           <div className="mt-1 flex flex-wrap gap-1">
                             <MarcasDia {...marcaDe(p.nombre)} t={t} />
                           </div>
