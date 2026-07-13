@@ -82,7 +82,7 @@ alineado con el breakpoint `lg` de Tailwind).
 | Vista | Escritorio | Móvil (auto) |
 |---|---|---|
 | Funcionarios | Tabla (overflow-x) | Tarjetas |
-| Roles | Tabla mensual (overflow-x) | Tarjetas por semana |
+| Roles | Calendario lineal continuo (una tabla con meses encadenados, carga progresiva por IntersectionObserver, hasta 120 meses). Divisores con el nombre de cada puesto, columna de "hoy" resaltada (cabecera negra + píldora amarilla + rieles ámbar) y botón "Ir a fecha". Overflow-x con esquina y nombres congelados. | Misma tabla lineal continua (celdas compactas) |
 | Planificación | Cuadrícula 7 col (toggle a Agenda) | Agenda vertical por día + alta rápida `+` (toggle a cuadrícula con scroll-x) |
 | Día | Indicadores y cobertura por puesto | Centro operativo con indicadores horizontales, acciones directas y swipe entre fechas |
 | Detalle del día | Botones | Botones + swipe (`lib/useSwipe.js`) |

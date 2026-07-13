@@ -76,7 +76,7 @@ function AppShell() {
   const keyboardOpen = useVirtualKeyboard();
 
   return (
-    <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-slate-100 text-slate-950 ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
+    <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-surface-alt text-ink ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
       <div className="flex min-h-screen">
         <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
         {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho

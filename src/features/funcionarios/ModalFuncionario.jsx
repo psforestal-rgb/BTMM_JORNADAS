@@ -85,8 +85,8 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
           <Seccion id="sec-contratacion" titulo={t("modalFuncionario.sec.contratacion")}>
             <Field label={t("modalFuncionario.resolucion")}><input className={cls} value={f.resolucion} onChange={(e) => set("resolucion", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.contrato")}><input className={cls} value={f.contrato} onChange={(e) => set("contrato", e.target.value)} /></Field>
-            <Field label={t("modalFuncionario.vencimiento")}><input type="date" className={cls} value={f.vencimiento} onChange={(e) => set("vencimiento", e.target.value)} /></Field>
-            <Field label={t("modalFuncionario.ingreso")}><input type="date" className={cls} value={f.ingreso} onChange={(e) => set("ingreso", e.target.value)} /></Field>
+            <Field label={t("modalFuncionario.vencimiento")}><input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={f.vencimiento} onChange={(e) => set("vencimiento", e.target.value)} /></Field>
+            <Field label={t("modalFuncionario.ingreso")}><input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={f.ingreso} onChange={(e) => set("ingreso", e.target.value)} /></Field>
           </Seccion>
           <Seccion id="sec-atributos" titulo={t("modalFuncionario.sec.atributos")} cols="sm:grid-cols-2 md:grid-cols-4">
             {[

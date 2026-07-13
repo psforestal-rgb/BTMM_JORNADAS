@@ -370,7 +370,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
         actions={(
           <div className="ml-auto flex gap-2">
             <button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">{t("acciones.cancelar")}</button>
-            <button onClick={() => { setReposiciones((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-white">{t("acciones.eliminar")}</button>
+            <button onClick={() => { setReposiciones((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-ink-inverse">{t("acciones.eliminar")}</button>
           </div>
         )}
       >

@@ -149,30 +149,30 @@ export default function Roles({
               resumen de una línea que abre la selección con casillas —
               ahí la semántica de multiselección es explícita, sin ambigüedad
               sobre si "Todos" es una categoría más o un atajo. */}
-          <details className="rounded-lg bg-white p-2">
-            <summary className="flex min-h-touch cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-800">
-              <Icon name="users" size={14} className="text-slate-500" />
+          <details className="rounded-lg bg-surface p-2">
+            <summary className="flex min-h-touch cursor-pointer list-none items-center gap-2 text-xs font-bold text-ink">
+              <Icon name="users" size={14} className="text-ink-muted" />
               {todoSeleccionado
                 ? t("roles.resumenPuestosTodos", { n: funcionariosDisponibles.length })
                 : t("roles.resumenPuestosParcial", { n: funcionariosSeleccionados.length, total: funcionariosDisponibles.length })}
             </summary>
 
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-2">
-              <Icon name="search" size={14} className="shrink-0 text-slate-400" />
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface px-2">
+              <Icon name="search" size={14} className="shrink-0 text-ink-subtle" />
               <input
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder={t("roles.buscarFuncionario")}
                 aria-label={t("roles.buscarFuncionario")}
-                className="min-h-touch w-full bg-transparent py-2 text-xs font-semibold text-slate-700 outline-none"
+                className="min-h-touch w-full bg-transparent py-2 text-xs font-semibold text-ink outline-none"
               />
               {busqueda && (
                 <button
                   type="button"
                   onClick={() => setBusqueda("")}
                   aria-label={t("roles.limpiarBusqueda")}
-                  className="shrink-0 text-slate-400 hover:text-slate-700"
+                  className="shrink-0 text-ink-subtle hover:text-ink"
                 >
                   <Icon name="x" size={14} />
                 </button>
@@ -183,21 +183,21 @@ export default function Roles({
               <button
                 type="button"
                 onClick={seleccionarTodo}
-                className="inline-flex min-h-touch items-center rounded-lg border border-emerald-700 bg-emerald-50 px-3 text-[11px] font-bold text-emerald-900"
+                className="inline-flex min-h-touch items-center rounded-lg border border-brand bg-brand-soft px-3 text-[11px] font-bold text-ink"
               >
                 {t("roles.verTodos")}
               </button>
               <button
                 type="button"
                 onClick={limpiarFiltros}
-                className="inline-flex min-h-touch items-center rounded-lg border border-slate-300 bg-white px-3 text-[11px] font-bold text-slate-700"
+                className="inline-flex min-h-touch items-center rounded-lg border border-line bg-surface px-3 text-[11px] font-bold text-ink"
               >
                 {t("roles.limpiarFiltros")}
               </button>
             </div>
 
             {gruposBusqueda.length === 0 ? (
-              <p className="mt-3 text-[11px] font-semibold text-slate-500">{t("roles.sinResultadosBusqueda")}</p>
+              <p className="mt-3 text-[11px] font-semibold text-ink-muted">{t("roles.sinResultadosBusqueda")}</p>
             ) : (
               <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {gruposBusqueda.map((grupo) => {
@@ -207,9 +207,9 @@ export default function Roles({
                   // respeta el contraído/expandido manual de cada puesto.
                   const abierto = busqueda.trim() !== "" || !!puestosAbiertos[grupo.nombre];
                   return (
-                    <fieldset key={grupo.nombre} className="rounded-xl border border-slate-200 p-2">
+                    <fieldset key={grupo.nombre} className="rounded-xl border border-line p-2">
                       <div className="flex items-center justify-between gap-2">
-                        <label className="flex min-h-touch flex-1 items-center gap-2 text-xs font-bold text-slate-900">
+                        <label className="flex min-h-touch flex-1 items-center gap-2 text-xs font-bold text-ink">
                           <input
                             type="checkbox"
                             checked={estado === "all"}
@@ -224,7 +224,7 @@ export default function Roles({
                         <button
                           type="button"
                           onClick={() => soloPuesto(grupo)}
-                          className="inline-flex min-h-touch shrink-0 items-center rounded-lg border border-slate-300 bg-white px-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
+                          className="inline-flex min-h-touch shrink-0 items-center rounded-lg border border-line bg-surface px-2 text-[10px] font-bold text-ink-muted hover:bg-surface-alt"
                         >
                           {t("roles.solo")}
                         </button>
@@ -233,7 +233,7 @@ export default function Roles({
                           onClick={() => togglePuestoAbierto(grupo.nombre)}
                           aria-expanded={abierto}
                           aria-label={abierto ? t("roles.contraerPuesto") : t("roles.expandirPuesto")}
-                          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-surface-alt"
                         >
                           <Icon name={abierto ? "chevronDown" : "chevronRight"} size={16} />
                         </button>
@@ -243,7 +243,7 @@ export default function Roles({
                         {grupo.funcionarios.map((nombre) => (
                           <label
                             key={nombre}
-                            className="flex min-h-touch items-center gap-2 rounded-lg px-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                            className="flex min-h-touch items-center gap-2 rounded-lg px-1 text-[11px] font-semibold text-ink hover:bg-surface-alt"
                           >
                             <input
                               type="checkbox"
@@ -269,22 +269,22 @@ export default function Roles({
               e.preventDefault();
               irAFecha();
             }}
-            className="flex items-center gap-2 rounded-lg bg-white p-2"
+            className="flex items-center gap-2 rounded-lg bg-surface p-2"
           >
-            <label className="flex min-h-touch min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-300 bg-white px-2 sm:max-w-xs">
-              <Icon name="calendar" size={14} className="shrink-0 text-slate-500" />
+            <label className="flex min-h-touch min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-surface px-2 sm:max-w-xs">
+              <Icon name="calendar" size={14} className="shrink-0 text-ink-muted" />
               <span className="sr-only">{t("roles.irAFechaLabel")}</span>
               <input
                 type="date"
                 value={fechaInput}
                 onChange={(e) => setFechaInput(e.target.value)}
-                className="min-h-touch w-full bg-transparent text-xs font-semibold text-slate-700 outline-none [color-scheme:light]"
+                className="min-h-touch w-full bg-transparent text-xs font-semibold text-ink outline-none [color-scheme:light] dark:[color-scheme:dark]"
               />
             </label>
             <button
               type="submit"
               disabled={!fechaInput}
-              className="inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-lg bg-emerald-800 px-3 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+              className="inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-lg bg-brand px-3 text-xs font-semibold text-brand-fg hover:opacity-90 disabled:opacity-50"
             >
               <Icon name="search" size={14} />
               {t("roles.irAFecha")}
@@ -311,7 +311,7 @@ export default function Roles({
           <RolesPrintFooter />
         </div>
 
-        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap">
+        <div className="pnlq-no-print mt-3 flex items-center gap-1.5 overflow-x-auto rounded-lg border border-line bg-surface px-2 py-1.5 text-[11px] font-semibold whitespace-nowrap">
           <span className="rounded-lg border border-emerald-300 bg-emerald-200 px-2 py-1 text-emerald-950">{t("roles.leyenda.turno")}</span>
           <span className="rounded-lg border border-amber-300 bg-amber-200 px-2 py-1 text-amber-950">{t("roles.leyenda.libre")}</span>
           <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>

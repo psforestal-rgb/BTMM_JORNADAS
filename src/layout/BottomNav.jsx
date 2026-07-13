@@ -59,7 +59,7 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
             <Icon name="menu" size={22} />
             {t("bottomNav.mas")}
             {nAlertas > 0 && (
-              <span className="absolute right-[22%] top-1 min-w-5 rounded-full bg-critical px-1 text-center text-[11px] font-bold leading-5 text-white" aria-label={t("bottomNav.alertasAria", { n: nAlertas })}>
+              <span className="absolute right-[22%] top-1 min-w-5 rounded-full bg-critical px-1 text-center text-[11px] font-bold leading-5 text-ink-inverse" aria-label={t("bottomNav.alertasAria", { n: nAlertas })}>
                 {badgeText(nAlertas)}
               </span>
             )}
@@ -79,7 +79,7 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
             >
               <Icon name={icon} size={20} />
               <span>{label}</span>
-              {id === "alertas" && nAlertas > 0 && <span className="ml-auto rounded-full bg-critical px-2 py-0.5 text-xs font-bold text-white">{badgeText(nAlertas)}</span>}
+              {id === "alertas" && nAlertas > 0 && <span className="ml-auto rounded-full bg-critical px-2 py-0.5 text-xs font-bold text-ink-inverse">{badgeText(nAlertas)}</span>}
             </button>
           ))}
         </div>

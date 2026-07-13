@@ -366,11 +366,11 @@ export default function RolesMensualGrid({
   const totalDias = columnas.length;
 
   return (
-    <div className="overflow-hidden rounded-lg bg-white">
+    <div className="overflow-hidden rounded-lg bg-surface">
       {aniosSinCoberturaFeriados.length > 0 && (
         <div
           role="status"
-          className="flex items-start gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-900"
+          className="flex items-start gap-2 border-b border-warning/40 bg-warning-soft px-3 py-2 text-[11px] leading-snug text-warning-fg"
         >
           <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
           <p>
@@ -382,7 +382,7 @@ export default function RolesMensualGrid({
       )}
       <div
         ref={scrollRef}
-        className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-white sm:max-h-[68vh]"
+        className="pnlq-roles-scroll max-h-[62vh] overflow-auto bg-surface sm:max-h-[68vh]"
         style={{ paddingBottom: Math.max(0, bodyHeight - theadHeight - lastGroupHeight) }}
       >
         <table
@@ -394,7 +394,7 @@ export default function RolesMensualGrid({
             <tr>
               <th
                 rowSpan={2}
-                className={`sticky top-0 left-0 z-40 min-w-[5.5rem] max-w-[5.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem] ${grupoActivo ? grupoActivo.color : "bg-white text-slate-700"}`}
+                className={`sticky top-0 left-0 z-40 min-w-[5.5rem] max-w-[5.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem] ${grupoActivo ? grupoActivo.color : "bg-surface text-ink-muted"}`}
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
               </th>
@@ -473,7 +473,7 @@ export default function RolesMensualGrid({
             <tbody>
               <tr>
                 <td
-                  className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-slate-200 bg-white p-2 text-xs font-bold text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] lg:min-w-[13rem] lg:max-w-[13rem]"
+                  className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-line bg-surface p-2 text-xs font-bold text-ink-muted shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] lg:min-w-[13rem] lg:max-w-[13rem]"
                   colSpan={totalDias + 1}
                 >
                   {t("roles.sinFuncionariosFiltro")}
@@ -580,7 +580,7 @@ function RowsGrupo({
           El nombre va en un span sticky para seguir visible aunque la
           tabla esté desplazada lateralmente. */}
       <tr className="pnlq-roles-divisor">
-        <td colSpan={columnas.length + 1} className={`border-y-2 border-slate-400 p-0 ${grupo.color}`}>
+        <td colSpan={columnas.length + 1} className={`border-y-2 border-line-strong p-0 ${grupo.color}`}>
           <span className="sticky left-0 flex h-7 w-fit max-w-full items-center px-2 text-[10px] font-bold uppercase tracking-widest sm:h-8 sm:px-3 sm:text-[11px]">
             {grupo.nombre}
           </span>
@@ -591,35 +591,35 @@ function RowsGrupo({
         const modalidad = getCfg(grupo, nombre, year, month);
         const nombrePartes = nombreEnDosLineas(nombre);
         return (
-          <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
+          <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-brand-soft/50" : "bg-surface"}>
             <td
-              className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-2 lg:min-w-[13rem] lg:max-w-[13rem]"
+              className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-r border-b border-line bg-surface p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-2 lg:min-w-[13rem] lg:max-w-[13rem]"
             >
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
                 <button
                   type="button"
                   onClick={() => toggleEdit(grupo.nombre, nombre)}
-                  className="flex min-h-10 w-full items-center rounded-lg border border-slate-200 bg-white px-0.5 py-1 text-left text-[11px] font-semibold leading-tight hover:bg-slate-50 sm:px-3 sm:py-2 sm:text-xs"
+                  className="flex min-h-10 w-full items-center rounded-lg border border-line bg-surface px-0.5 py-1 text-left text-[11px] font-semibold leading-tight text-ink hover:bg-surface-alt sm:px-3 sm:py-2 sm:text-xs"
                 >
                   <span className="flex w-full items-center justify-between gap-1">
                     <span className="min-w-0 leading-[1.05]">
                       <span className="block truncate">{nombrePartes.nombre}</span>
                       {nombrePartes.apellido && <span className="block truncate">{nombrePartes.apellido}</span>}
                     </span>
-                    <Icon name={editing ? "unlock" : "lock"} size={14} className="shrink-0 text-slate-500" />
+                    <Icon name={editing ? "unlock" : "lock"} size={14} className="shrink-0 text-ink-muted" />
                   </span>
                 </button>
                 {editing && (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-1.5 shadow-inner sm:rounded-2xl sm:p-2">
-                    <label className="mb-1 block text-[9px] font-bold uppercase text-emerald-900 sm:text-[10px]">
+                  <div className="rounded-xl border border-brand/40 bg-brand-soft/60 p-1.5 sm:rounded-2xl sm:p-2">
+                    <label className="mb-1 block text-[9px] font-bold uppercase text-ink sm:text-[10px]">
                       {t("roles.editarTipoRol")}
                     </label>
                     <div className="flex flex-col gap-1.5 sm:flex-row sm:gap-2">
                       <select
                         value={modalidad}
                         onChange={(e) => setCfg(grupo, nombre, e.target.value)}
-                        className="min-w-0 flex-1 rounded-lg border border-emerald-300 bg-white px-2 py-1 text-[11px] font-bold sm:text-xs"
+                        className="min-w-0 flex-1 rounded-lg border border-brand/50 bg-surface px-2 py-1 text-[11px] font-bold text-ink sm:text-xs"
                       >
                         {opcionesModalidad.map((x) => (
                           <option key={x}>{x}</option>
@@ -628,7 +628,7 @@ function RowsGrupo({
                       <button
                         type="button"
                         onClick={() => aplicarPatron(grupo, nombre)}
-                        className="rounded-lg bg-emerald-800 px-2 py-1 text-[10px] font-semibold text-white sm:text-[11px]"
+                        className="rounded-lg bg-brand px-2 py-1 text-[10px] font-semibold text-brand-fg sm:text-[11px]"
                       >
                         {t("roles.aplicar")}
                       </button>
@@ -672,7 +672,7 @@ function RowsGrupo({
         );
       })}
       <tr>
-        <td className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-slate-200 bg-slate-100 p-1.5 text-[10px] font-bold uppercase text-slate-600 shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem]">
+        <td className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-line bg-surface-alt p-1.5 text-[10px] font-bold uppercase text-ink-muted shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem]">
           {t("roles.cantidadEnTurno")}
         </td>
         {columnas.map((col) => {
@@ -686,8 +686,8 @@ function RowsGrupo({
           return (
             <td
               key={`${grupo.nombre}-cantidad-${iso}`}
-              className={`border-b border-b-slate-200 bg-white p-2 text-center font-semibold text-slate-800 ${
-                esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-slate-200"
+              className={`border-b border-b-line bg-surface p-2 text-center font-semibold text-ink ${
+                esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-line"
               }`}
             >
               {count}

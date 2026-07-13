@@ -88,7 +88,7 @@ export default function DiaLayout(props) {
   return (
     // Ancho de teléfono en móvil; desde md se amplía para aprovechar tablet
     // y escritorio (Dia.jsx arma cobertura + actividades en dos columnas).
-    <div className="relative mx-auto w-full max-w-md md:max-w-3xl lg:max-w-5xl">
+    <div className="relative mx-auto w-full max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl">
       {/* Vista principal del día (toda la lógica existente) */}
       <Dia {...props} />
 

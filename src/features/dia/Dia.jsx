@@ -43,10 +43,10 @@ function SubgrupoPuesto({ label, n, children, defaultOpen = true }) {
         aria-expanded={open}
         className="mb-1.5 flex w-full items-center gap-2 text-left active:scale-95"
       >
-        <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="shrink-0 text-slate-400" />
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">{n}</span>
-        <span className="h-px flex-1 bg-slate-100" />
+        <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="shrink-0 text-ink-subtle" />
+        <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{label}</span>
+        <span className="rounded-full bg-surface-alt px-2 py-0.5 text-[10px] font-semibold text-ink-muted">{n}</span>
+        <span className="h-px flex-1 bg-line/50" />
       </button>
       {open && children}
     </div>
@@ -200,16 +200,16 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   return (
     <section ref={swipeRef} className="space-y-4">
       {/* Navegación de fecha — una sola fila con flechas ‹ › y selector central */}
-      <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:gap-3 sm:p-3">
+      <div className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 sm:gap-3 sm:p-3">
         <button
           onClick={() => moveDay(-1)}
           aria-label={t("dia.diaAnterior")}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95 active:bg-slate-100"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-ink-muted transition-colors hover:bg-surface-alt active:scale-95"
         >
           <Icon name="chevronLeft" size={20} />
         </button>
         <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
-          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500 sm:text-xs">
+          <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-ink-muted sm:text-xs">
             {dowLabel} · {meses[monthIdx]} {yearD}
           </span>
           <input
@@ -217,13 +217,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             value={diaVista}
             onChange={(e) => e.target.value && setDiaVista(e.target.value)}
             aria-label={t("dia.seleccionarFecha")}
-            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-slate-300 bg-white px-2 py-1 text-center text-sm font-semibold text-slate-900 outline-none focus:border-emerald-700 [color-scheme:light] dark:[color-scheme:dark]"
+            className="min-h-touch w-full max-w-[13rem] rounded-xl border border-line bg-surface px-2 py-1 text-center text-sm font-semibold text-ink outline-none focus:border-brand [color-scheme:light] dark:[color-scheme:dark]"
           />
         </div>
         <button
           onClick={() => moveDay(1)}
           aria-label={t("dia.diaSiguiente")}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 active:scale-95 active:bg-slate-100"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-ink-muted transition-colors hover:bg-surface-alt active:scale-95"
         >
           <Icon name="chevronRight" size={20} />
         </button>
@@ -291,7 +291,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         }
       >
         {actsDelDia.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">{t("dia.sinActividades")}</div>
+          <div className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink-muted">{t("dia.sinActividades")}</div>
         ) : (
           <div className="space-y-3">
             {actsDelDia.map((act) => {
@@ -303,25 +303,25 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                     // Conflicto: acento lateral en vez de borde completo — el rojo
                     // no debe dominar la lectura cuando hay varias actividades.
                     conf.length
-                      ? "border-l-4 border-red-600 bg-red-50/70"
+                      ? "border-l-4 border-red-600 bg-surface"
                       : act.viatico
-                      ? "border border-orange-200 bg-orange-50"
-                      : "border border-emerald-200 bg-emerald-50"
+                      ? "border border-viatico/40 bg-viatico-soft"
+                      : "border border-ok/40 bg-ok-soft"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="break-words font-semibold text-slate-950">{act.titulo}</div>
-                      {act.lugar && <div className="mt-0.5 text-xs text-slate-600">📍 {act.lugar}</div>}
+                      <div className="break-words font-semibold text-ink">{act.titulo}</div>
+                      {act.lugar && <div className="mt-0.5 text-xs text-ink-muted">📍 {act.lugar}</div>}
                       {act.inicio !== (act.fin || act.inicio) && (
-                        <div className="mt-0.5 text-xs text-slate-500">
+                        <div className="mt-0.5 text-xs text-ink-muted">
                           {fecha(act.inicio)} → {fecha(act.fin)}
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => setModalActividad({ ...act })}
-                      className="shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 active:scale-95"
+                      className="shrink-0 rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold text-ink transition-all hover:bg-surface-alt active:scale-95"
                     >
                       {t("acciones.editar")}
                     </button>
@@ -340,7 +340,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                         <span
                           key={n}
                           className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
-                            conf.includes(n) ? "border-red-300 bg-white text-red-800" : "border-emerald-200 bg-white text-emerald-800"
+                            conf.includes(n) ? "border-red-400 bg-surface text-critical" : "border-ok/50 bg-surface text-ok-fg"
                           }`}
                         >
                           {n}
@@ -357,28 +357,31 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </Card>
       </div>
 
+      {/* Tarjetas secundarias: apiladas hasta lg; en xl, dos columnas para
+          aprovechar el ancho extra de escritorio sin estirar cada tarjeta. */}
+      <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
       {/* En turno con actividad */}
       <Card title={t("dia.enTurnoConActTitulo", { n: enTurnoConAct.length })} icon="✅" collapsible defaultOpen={false}>
         {enTurnoConAct.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("dia.enTurnoConActVacio")}</p>
+          <p className="text-sm text-ink-muted">{t("dia.enTurnoConActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoConAct).map((g) => (
               <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-line/50">
                   {g.items.map((p) => (
                     <div key={p.id} className="flex items-start gap-3 py-3">
                       <Avatar name={p.nombre} />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
+                          <span className="break-words text-sm font-semibold text-ink">{p.nombre}</span>
                           <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
                           {p.tieneViatico && <Badge className="border-orange-600 bg-orange-600 text-white">{t("dia.viaticoBadge")}</Badge>}
                           <MarcasDia {...marcaDe(p.nombre)} t={t} />
                         </div>
                         <div className="mt-1.5 flex flex-wrap gap-1">
                           {p.acts.map((a) => (
-                            <span key={a.id} className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[11px] text-emerald-800">
+                            <span key={a.id} className="rounded-full border border-ok/50 bg-surface px-2 py-0.5 text-[11px] text-ok-fg">
                               {a.titulo}
                             </span>
                           ))}
@@ -396,28 +399,28 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* En turno sin actividad — abierta por defecto: requiere asignar. */}
       <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen>
         {enTurnoSinAct.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("dia.enTurnoSinActVacio")}</p>
+          <p className="text-sm text-ink-muted">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
           <div className="space-y-4">
             {agruparPorPuesto(enTurnoSinAct).map((g) => (
               <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-line/50">
                   {g.items.map((p) => (
                     <div key={p.id} className="py-3">
                       <div className="flex items-start gap-3">
                         <Avatar name={p.nombre} />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="break-words text-sm font-semibold text-slate-950">{p.nombre}</span>
+                            <span className="break-words text-sm font-semibold text-ink">{p.nombre}</span>
                             <Badge className={codigoCls(p.rol, finde)}>{p.rol}</Badge>
                             <MarcasDia {...marcaDe(p.nombre)} t={t} />
                           </div>
-                          <div className="mt-0.5 text-xs text-slate-500">{p.puesto}</div>
+                          <div className="mt-0.5 text-xs text-ink-muted">{p.puesto}</div>
                         </div>
                       </div>
                       <button
                         onClick={() => setModalActividad(nuevaAct([p.nombre], p.puestoOperativo || ""))}
-                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-amber-700 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-800 active:scale-95 active:brightness-90 sm:w-auto"
+                        className="mt-2 inline-flex min-h-touch w-full items-center justify-center rounded-xl bg-warning px-3 py-2 text-sm font-semibold text-ink-inverse transition-all hover:opacity-90 active:scale-95 sm:w-auto"
                       >
                         {t("dia.asignar")}
                       </button>
@@ -433,7 +436,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* Fuera de turno */}
       <Card title={t("dia.fueraDeTurnoTitulo", { n: fueraDeTurno.length })} icon="📴" collapsible defaultOpen={false}>
         {fueraDeTurno.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("dia.fueraDeTurnoVacio")}</p>
+          <p className="text-sm text-ink-muted">{t("dia.fueraDeTurnoVacio")}</p>
         ) : (
           <div className="space-y-4">
             {Object.entries(fueraPorCat)
@@ -442,17 +445,17 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                 <div key={cat}>
                   <div className="mb-2 flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${catCls[cat]}`}>{catLabel[cat] || "Sin marcar"}</span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-ink-muted">
                       {t("dia.nFuncionarios", { n: list.length, plural: plural(list.length) })}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {list.map((p) => (
-                      <div key={p.id} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                      <div key={p.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
                         <Avatar name={p.nombre} />
                         <div>
-                          <div className="text-sm font-semibold text-slate-900">{p.nombre}</div>
-                          <div className="text-[10px] text-slate-500">{(p.puestoOperativo || "").replace("Puesto ", "")}</div>
+                          <div className="text-sm font-semibold text-ink">{p.nombre}</div>
+                          <div className="text-[10px] text-ink-muted">{(p.puestoOperativo || "").replace("Puesto ", "")}</div>
                           <div className="mt-1 flex flex-wrap gap-1">
                             <MarcasDia {...marcaDe(p.nombre)} t={t} />
                           </div>
@@ -472,17 +475,17 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           <div className="space-y-4">
             {agruparPorPuesto(conViatico).map((g) => (
               <SubgrupoPuesto key={g.key} label={g.label} n={g.items.length}>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-line/50">
                   {g.items.map((p) => (
                     <div key={p.id} className="flex items-start gap-3 py-2.5">
                       <Avatar name={p.nombre} />
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-slate-950">{p.nombre}</div>
+                        <div className="font-semibold text-ink">{p.nombre}</div>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {p.acts
                             .filter((a) => a.viatico)
                             .map((a) => (
-                              <span key={a.id} className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[11px] text-orange-800">
+                              <span key={a.id} className="rounded-full border border-viatico/40 bg-viatico-soft px-2 py-0.5 text-[11px] text-viatico-fg">
                                 {a.titulo}
                                 {a.lugar ? ` · ${a.lugar}` : ""}
                               </span>
@@ -497,6 +500,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           </div>
         </Card>
       )}
+      </div>
 
       {/* Modal de actividad:
           - Móvil (< 768 px): BottomSheet deslizable desde la base.

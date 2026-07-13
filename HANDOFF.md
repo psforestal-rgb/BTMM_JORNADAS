@@ -1,5 +1,11 @@
 # Handoff — continuación del trabajo (módulo Día / vista móvil)
 
+> **NOTA DE VIGENCIA (2026-07-13):** documento **histórico**. Describe el estado
+> del proyecto al 2026-07-08 (v1.14.8/1.14.9); el trabajo aquí listado ya fue
+> completado y publicado. Se conserva como referencia del pipeline de despliegue
+> (§2) y del contrato de no regresión (§7), que siguen vigentes. Para el estado
+> actual de la arquitectura ver `docs/ARQUITECTURA.md`.
+
 > Documento para que otro asistente (p. ej. Perplexity) continúe exactamente donde se dejó.
 > Fecha de corte: 2026-07-08. Rama de trabajo: `claude/dia-module-layout-nb9xlj`.
 

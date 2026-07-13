@@ -66,15 +66,15 @@ export default function FuncionarioCard({ f, onEditar, onBorrar }) {
 
       {f.obs && (
         <details className="mt-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
-          <summary className="min-h-touch cursor-pointer py-3 font-semibold">Observaciones</summary>
+          <summary className="min-h-touch cursor-pointer py-3 font-semibold">{t("funcionarios.card.observaciones")}</summary>
           <p className="break-words whitespace-pre-wrap">{f.obs}</p>
         </details>
       )}
 
       <section className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2">
         <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t("funcionarios.card.atributos")}</span>
-        {f.policia && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">Policía</Badge>}
-        {f.brigada && <Badge className="border-orange-200 bg-orange-50 text-orange-900">Brigada</Badge>}
+        {f.policia && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">{t("funcionarios.atributoPolicia")}</Badge>}
+        {f.brigada && <Badge className="border-orange-200 bg-orange-50 text-orange-900">{t("funcionarios.atributoBrigada")}</Badge>}
         {!f.policia && !f.brigada && <span className="text-xs text-slate-400">—</span>}
       </section>
 

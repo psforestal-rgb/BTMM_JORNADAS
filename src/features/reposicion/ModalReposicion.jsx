@@ -111,7 +111,7 @@ export default function ModalReposicion({ valor, personas, cerrar, guardar, elim
               <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">
                 {t("modalReposicion.fecha")}
               </span>
-              <input type="date" className={cls} value={r.fecha} onChange={(e) => set("fecha", e.target.value)} />
+              <input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={r.fecha} onChange={(e) => set("fecha", e.target.value)} />
             </label>
 
             <label>

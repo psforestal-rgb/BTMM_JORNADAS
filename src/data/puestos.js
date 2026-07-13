@@ -15,7 +15,7 @@ export const puestos = [
   {
     nombre: "Puesto Quetzales",
     tag: "QZ",
-    color: "bg-orange-500 text-white",
+    color: "bg-orange-700 text-white",
     funcionarios: ["Juan Pablo Granados", "Karen Valle", "Josué Brenes", "Laura Valverde", "Diana Tencio", "Jetzelly Villalobos", "Pablo Sánchez"],
   },
   {

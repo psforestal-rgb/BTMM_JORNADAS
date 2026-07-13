@@ -57,7 +57,7 @@ export default function Sidebar({ view, setView, nAlertas }) {
                 <Icon name={icon} size={18} />
                 {label}
                 {id === "alertas" && nAlertas > 0 && (
-                  <span aria-label={t("bottomNav.alertasAria", { n: nAlertas })} className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{nAlertas}</span>
+                  <span aria-label={t("bottomNav.alertasAria", { n: nAlertas })} className="ml-auto rounded-full bg-red-700 px-2 py-0.5 text-xs text-white">{nAlertas}</span>
                 )}
               </button>
             ))}
