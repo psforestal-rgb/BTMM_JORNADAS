@@ -1,4 +1,10 @@
 # PROMPT PARA REVISIÓN, OBSERVACIONES Y RECOMENDACIONES
+
+> **NOTA DE VIGENCIA (2026-07-13):** documento **histórico** (snapshot usado para
+> la auditoría externa que originó las series de PRs de mejoras móviles y de
+> contraste). Los detalles de UI descritos pueden no coincidir con el estado
+> actual; ver `docs/ARQUITECTURA.md`.
+
 ## Herramienta: PNLQ — Gestión de Jornadas Laborales
 ### Bloque Tapantí · Macizo de la Muerte (BTMM) — SINAC · Área de Conservación Central · Costa Rica
 

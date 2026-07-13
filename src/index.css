@@ -50,8 +50,8 @@
    TEMA OSCURO
    ===================================================================== */
 [data-theme="dark"] {
-  --c-brand: 16 185 129;         /* emerald-500 */
-  --c-brand-fg: 6 78 59;         /* emerald-900 */
+  --c-brand: 52 211 153;         /* emerald-400 (≥4.5:1 sobre surface y surface-alt) */
+  --c-brand-fg: 2 44 34;         /* emerald-950 (≥4.5:1 sobre brand) */
   --c-brand-soft: 6 95 70;       /* emerald-800 */
 
   --c-surface: 15 23 42;         /* slate-900 */

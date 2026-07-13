@@ -130,7 +130,7 @@ export default function ModalReponer({ registro, hj, cerrar, guardar }) {
           {/* Fecha editable */}
           <label className="block">
             <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">{t("reponer.fecha")}</span>
-            <input type="date" className={cls} value={fechaRep} onChange={(e) => setFechaRep(e.target.value)} />
+            <input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={fechaRep} onChange={(e) => setFechaRep(e.target.value)} />
           </label>
 
           {excede && (

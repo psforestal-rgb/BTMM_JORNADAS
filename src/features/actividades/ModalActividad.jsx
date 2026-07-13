@@ -169,11 +169,11 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
             </label>
             <label>
               <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">{t("modalActividad.fechaInicio")}</span>
-              <input type="date" className={cls} value={a.inicio} onChange={(e) => set("inicio", e.target.value)} />
+              <input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={a.inicio} onChange={(e) => set("inicio", e.target.value)} />
             </label>
             <label>
               <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">{t("modalActividad.fechaFinal")}</span>
-              <input type="date" className={cls} value={a.unDia ? a.inicio : a.fin} disabled={a.unDia} onChange={(e) => set("fin", e.target.value)} />
+              <input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={a.unDia ? a.inicio : a.fin} disabled={a.unDia} onChange={(e) => set("fin", e.target.value)} />
             </label>
             <label className="flex items-center gap-2 rounded-xl border border-slate-300 p-3 text-sm font-semibold">
               <input

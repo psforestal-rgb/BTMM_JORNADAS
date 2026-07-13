@@ -151,7 +151,7 @@ export default function Funcionarios({ personas, setPersonas }) {
             ))}
           </div>
           <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-slate-600">
-            Ordenar
+            {t("funcionarios.ordenar")}
             <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
               <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
             </select>
@@ -238,8 +238,8 @@ export default function Funcionarios({ personas, setPersonas }) {
                   </td>
                   <td className="p-3">
                     <div className="flex gap-1">
-                      {f.policia && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">Policía</Badge>}
-                      {f.brigada && <Badge className="border-orange-200 bg-orange-50 text-orange-900">Brigada</Badge>}
+                      {f.policia && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">{t("funcionarios.atributoPolicia")}</Badge>}
+                      {f.brigada && <Badge className="border-orange-200 bg-orange-50 text-orange-900">{t("funcionarios.atributoBrigada")}</Badge>}
                       {!f.policia && !f.brigada && <span className="text-slate-400">—</span>}
                     </div>
                   </td>

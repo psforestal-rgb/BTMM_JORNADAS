@@ -14,8 +14,8 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
     : t("roles.titleSinEdicion");
   return (
     <td
-      className={`border-b border-b-slate-200 p-0 text-center font-semibold ${codigoCls(v, finde)} ${
-        esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-slate-200"
+      className={`border-b border-b-line p-0 text-center font-semibold ${codigoCls(v, finde)} ${
+        esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-line"
       } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}
     >
       <button
@@ -31,7 +31,9 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
         }`}
         title={title}
       >
-        <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-white/45 px-1.5 py-0.5">
+        {/* Texto oscuro fijo: sobre el pill aclarado (bg-white/45) el texto blanco
+            heredado de codigoCls no alcanza contraste AA en ningún color de rol. */}
+        <span className="inline-flex min-w-8 items-center justify-center rounded-md bg-white/45 px-1.5 py-0.5 text-slate-900">
           {v || "—"}
         </span>
         <MarcaReposicionCelda trabajada={repoTrabajada} reposicion={repoReposicion} />

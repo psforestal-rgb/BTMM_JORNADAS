@@ -87,9 +87,9 @@ export default function Configuracion() {
         </div>
 
         {/* Cobertura */}
-        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
-          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.coberturaTitulo")}</summary>
-          <p className="mb-2 text-xs text-slate-500">{t("configuracion.coberturaSub")}</p>
+        <details className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.coberturaTitulo")}</summary>
+          <p className="mb-2 text-xs text-ink-muted">{t("configuracion.coberturaSub")}</p>
           <div className="flex flex-wrap gap-2">
             {opcionesPuestoOperativo.map((p) => {
               const activo = draft.puestosRequierenVisitantesDiario.includes(p);
@@ -101,8 +101,8 @@ export default function Configuracion() {
                   aria-pressed={activo}
                   className={`min-h-touch rounded-xl border px-3 py-2 text-xs font-bold ${
                     activo
-                      ? "border-red-300 bg-red-50 text-red-900"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-critical/50 bg-critical-soft text-critical-fg"
+                      : "border-line bg-surface text-ink hover:bg-surface-alt"
                   }`}
                 >
                   {activo && <Icon name="alert" size={14} className="mr-1 inline" />}
@@ -114,33 +114,33 @@ export default function Configuracion() {
         </details>
 
         {/* Viáticos */}
-        <details open className="mb-3 rounded-2xl border border-slate-200 p-3">
-          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.viaticosTitulo")}</summary>
+        <details open className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.viaticosTitulo")}</summary>
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{t("configuracion.diaCorte")}</span>
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-muted">{t("configuracion.diaCorte")}</span>
               <input
                 type="number"
                 min="1"
                 max="28"
                 value={draft.diaCorteViaticos}
                 onChange={(e) => setCampo("diaCorteViaticos", Number(e.target.value))}
-                className="min-h-touch w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700"
+                className="min-h-touch w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand"
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{t("configuracion.mesObjetivo")}</span>
+              <span className="mb-1 block text-xs font-bold uppercase text-ink-muted">{t("configuracion.mesObjetivo")}</span>
               <select
                 value={draft.mesObjetivoViaticos}
                 onChange={(e) => setCampo("mesObjetivoViaticos", e.target.value)}
-                className="min-h-touch w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700"
+                className="min-h-touch w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand"
               >
                 {VIATICOS_OBJETIVO_OPCIONES.map((x) => (
                   <option key={x} value={x}>{x}</option>
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 rounded-xl border border-slate-300 p-3 text-sm font-semibold">
+            <label className="flex items-center gap-2 rounded-xl border border-line p-3 text-sm font-semibold text-ink">
               <input
                 type="checkbox"
                 checked={draft.permitirConsultaDespuesCierre}
@@ -149,13 +149,13 @@ export default function Configuracion() {
               {t("configuracion.permitirConsulta")}
             </label>
           </div>
-          <p className="mt-2 text-xs text-slate-500">{t("configuracion.permitirConsultaSub")}</p>
+          <p className="mt-2 text-xs text-ink-muted">{t("configuracion.permitirConsultaSub")}</p>
         </details>
 
         {/* Feriados */}
-        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
-          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.feriadosTitulo")}</summary>
-          <label className="flex items-start gap-2 rounded-xl border border-slate-300 p-3 text-sm">
+        <details className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.feriadosTitulo")}</summary>
+          <label className="flex items-start gap-2 rounded-xl border border-line p-3 text-sm text-ink">
             <input
               type="checkbox"
               checked={draft.aplicarFeriadosEnPrimerDiaLaboral}
@@ -164,18 +164,18 @@ export default function Configuracion() {
             />
             <span>
               <strong className="block font-semibold">{t("configuracion.feriadosCheckTitle")}</strong>
-              <span className="block text-xs text-slate-500">{t("configuracion.feriadosCheckSub")}</span>
+              <span className="block text-xs text-ink-muted">{t("configuracion.feriadosCheckSub")}</span>
             </span>
           </label>
-          <details className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
-            <summary className="cursor-pointer font-semibold text-slate-700">
+          <details className="mt-2 rounded-xl border border-line bg-surface-inset p-3 text-xs">
+            <summary className="cursor-pointer font-semibold text-ink">
               {t("configuracion.feriadosVer", { n: aniosDisponibles.length, plural: plural(aniosDisponibles.length) })}
             </summary>
             <div className="mt-2 grid gap-3 sm:grid-cols-3">
               {aniosDisponibles.map((ano) => (
-                <div key={ano} className="rounded-lg bg-white p-2 ring-1 ring-slate-200">
-                  <p className="text-xs font-bold text-slate-700">{ano}</p>
-                  <ul className="mt-1 space-y-1 text-xs text-slate-600">
+                <div key={ano} className="rounded-lg bg-surface p-2 ring-1 ring-line">
+                  <p className="text-xs font-bold text-ink">{ano}</p>
+                  <ul className="mt-1 space-y-1 text-xs text-ink-muted">
                     {FERIADOS_CR[ano].map((f) => (
                       <li key={f.fecha} className="flex justify-between">
                         <span>{f.fecha}</span>
@@ -190,8 +190,8 @@ export default function Configuracion() {
         </details>
 
         {/* Alertas adicionales */}
-        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
-          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.alertasTitulo")}</summary>
+        <details className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.alertasTitulo")}</summary>
           <div className="grid gap-2 md:grid-cols-3">
             {[
               ["alertaInactivoConActividad", t("configuracion.alertaInactivo")],
@@ -206,18 +206,18 @@ export default function Configuracion() {
                   onChange={(e) => setCampo(k, e.target.checked)}
                   className="mt-1"
                 />
-                <span className="text-xs font-semibold text-slate-700">{label}</span>
+                <span className="text-xs font-semibold text-ink">{label}</span>
               </label>
             ))}
           </div>
-          <p className="mt-1 text-xs text-slate-500">{t("configuracion.alertasNota")}</p>
+          <p className="mt-1 text-xs text-ink-muted">{t("configuracion.alertasNota")}</p>
         </details>
 
         {/* Reposición de tiempo */}
-        <details className="mb-3 rounded-2xl border border-slate-200 p-3">
-          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-slate-700">{t("configuracion.reposicionTitulo")}</summary>
+        <details className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.reposicionTitulo")}</summary>
           <label className="block max-w-xs">
-            <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{t("configuracion.horasJornada")}</span>
+            <span className="mb-1 block text-xs font-bold uppercase text-ink-muted">{t("configuracion.horasJornada")}</span>
             <input
               type="number"
               min="1"
@@ -225,14 +225,14 @@ export default function Configuracion() {
               step="0.5"
               value={draft.horasJornada}
               onChange={(e) => setCampo("horasJornada", Number(e.target.value))}
-              className="min-h-touch w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700"
+              className="min-h-touch w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand"
             />
           </label>
-          <p className="mt-1 text-xs text-slate-500">{t("configuracion.horasJornadaSub")}</p>
+          <p className="mt-1 text-xs text-ink-muted">{t("configuracion.horasJornadaSub")}</p>
         </details>
 
         {advertencias.length > 0 && (
-          <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950" role="alert">
+          <div className="mb-4 rounded-xl border border-warning/40 bg-warning-soft p-3 text-xs text-warning-fg" role="alert">
             <p className="font-semibold">{t("configuracion.advertenciasTitulo")}</p>
             <ul className="mt-1 list-inside list-disc">
               {advertencias.map((m, i) => <li key={i}>{m}</li>)}
@@ -240,12 +240,12 @@ export default function Configuracion() {
           </div>
         )}
 
-        <footer className={`flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3 ${sucia ? "sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 -mx-3 rounded-2xl bg-white p-3 shadow-xl lg:bottom-2" : ""}`}>
-          {sucia && <strong className="w-full text-sm text-amber-900 sm:w-auto">Cambios pendientes</strong>}
+        <footer className={`flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 ${sucia ? "sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 -mx-3 rounded-2xl bg-surface p-3 shadow-xl lg:bottom-2" : ""}`}>
+          {sucia && <strong className="w-full text-sm text-warning-fg sm:w-auto">{t("configuracion.cambiosPendientes")}</strong>}
           <button
             type="button"
             onClick={onResetTotal}
-            className="min-h-touch rounded-xl border border-red-300 bg-white px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50"
+            className="min-h-touch rounded-xl border border-critical/50 bg-surface px-3 py-2 text-xs font-bold text-critical hover:bg-critical-soft"
           >
             {t("configuracion.restaurarPredet")}
           </button>
@@ -254,7 +254,7 @@ export default function Configuracion() {
               type="button"
               onClick={descartar}
               disabled={!sucia}
-              className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              className="min-h-touch rounded-xl border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50"
             >
               {t("configuracion.descartar")}
             </button>
@@ -263,7 +263,7 @@ export default function Configuracion() {
                 type="button"
                 onClick={() => setConfirmar(true)}
                 disabled={!sucia}
-                className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-emerald-700"
+                className="min-h-touch rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-brand-fg disabled:opacity-50 hover:opacity-90"
               >
                 {t("configuracion.aplicar")}
               </button>
@@ -271,7 +271,7 @@ export default function Configuracion() {
               <button
                 type="button"
                 onClick={aplicar}
-                className="min-h-touch rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+                className="min-h-touch rounded-xl bg-critical px-4 py-2 text-sm font-semibold text-ink-inverse hover:opacity-90"
               >
                 {t("configuracion.confirmarAplicar")}
               </button>
@@ -283,13 +283,13 @@ export default function Configuracion() {
       {/* ── Datos de ejemplo ─────────────────────────────────────────── */}
       <Card title={t("datos.reiniciarTitulo")} icon="🗄️">
         <p className="mb-3 text-sm text-ink-muted">{t("datos.reiniciarSub")}</p>
-        <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+        <p className="mb-4 rounded-xl border border-warning/40 bg-warning-soft px-3 py-2 text-xs font-semibold text-warning-fg">
           ⚠ {t("datos.reiniciarRec")}
         </p>
         <button
           type="button"
           onClick={onSeed}
-          className="min-h-touch w-full rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-bold text-red-800 hover:bg-red-100 sm:w-auto"
+          className="min-h-touch w-full rounded-xl border border-critical/50 bg-critical-soft px-4 py-2 text-sm font-bold text-critical-fg hover:opacity-90 sm:w-auto"
         >
           {t("datos.reiniciar")}
         </button>
@@ -307,7 +307,7 @@ export default function Configuracion() {
             <button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
               {t("acciones.cancelar")}
             </button>
-            <button type="button" onClick={confirmarResetTotal} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-white">
+            <button type="button" onClick={confirmarResetTotal} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-ink-inverse">
               {t("configuracion.restaurarPredet")}
             </button>
           </div>
@@ -336,7 +336,7 @@ export default function Configuracion() {
               <button
                 type="button"
                 onClick={() => setSeedConfirmStep(true)}
-                className="min-h-touch rounded-xl border border-red-400 bg-red-50 px-4 text-sm font-bold text-red-800 hover:bg-red-100"
+                className="min-h-touch rounded-xl border border-critical/50 bg-critical-soft px-4 text-sm font-bold text-critical-fg hover:opacity-90"
               >
                 {t("datos.confirmarReiniciar")}…
               </button>
@@ -344,7 +344,7 @@ export default function Configuracion() {
               <button
                 type="button"
                 onClick={confirmarSeed}
-                className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-bold text-white hover:bg-red-800"
+                className="min-h-touch rounded-xl bg-critical px-4 text-sm font-bold text-ink-inverse hover:opacity-90"
               >
                 {t("datos.confirmarReiniciar")} ✓
               </button>
@@ -352,12 +352,12 @@ export default function Configuracion() {
           </div>
         )}
       >
-        <p className="mb-2 text-xs font-semibold text-amber-900">
+        <p className="mb-2 text-xs font-semibold text-warning-fg">
           ⚠ {t("datos.reiniciarRec")}
         </p>
         {seedConfirmStep && (
-          <p className="mt-2 rounded-lg border border-red-300 bg-red-50 p-2 text-xs font-bold text-red-900">
-            Esta acción no se puede deshacer. Pulse «{t("datos.confirmarReiniciar")}» para confirmar.
+          <p className="mt-2 rounded-lg border border-critical/50 bg-critical-soft p-2 text-xs font-bold text-critical-fg">
+            {t("datos.noDeshacer", { accion: t("datos.confirmarReiniciar") })}
           </p>
         )}
       </Modal>
