@@ -143,7 +143,7 @@ export default function Topbar({ view, setView, month, setMonth, year, setYear, 
             <button
               type="button"
               onClick={() => setMobilePreviewOpen(true)}
-              className="hidden min-h-touch items-center gap-2 rounded-xl border border-brand bg-brand-soft px-3 text-sm font-semibold text-brand hover:bg-emerald-100 lg:inline-flex"
+              className="hidden min-h-touch items-center gap-2 rounded-xl border border-brand bg-brand-soft px-3 text-sm font-semibold text-ink hover:opacity-90 lg:inline-flex"
               aria-label={t("topbar.previewMobile")}
             >
               <Icon name="phone" size={18} />

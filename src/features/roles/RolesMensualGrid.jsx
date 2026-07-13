@@ -28,6 +28,10 @@ import ActividadesDiaModal from "./ActividadesDiaModal.jsx";
 // entrada miles de columnas.
 const MAX_MESES = 120;
 
+// Identificador del tbody de resumen general (no es un puesto real): la
+// esquina congelada lo detecta para mostrar "Resumen" al desplazarse hasta él.
+const GRUPO_RESUMEN = "__resumen__";
+
 function monthTone(month) {
   return month % 2 === 0
     ? {
@@ -229,9 +233,10 @@ export default function RolesMensualGrid({
     return () => ro.disconnect();
   }, []);
 
-  // Mide el alto real del último puesto: el relleno solo debe cubrir lo que
-  // falte para llegar a la franja congelada, no el alto completo del panel
-  // (si no, al llegar al final solo se vería un espacio en blanco).
+  // Mide el alto real del último bloque de la tabla (el resumen general):
+  // el relleno solo debe cubrir lo que falte para llegar a la franja
+  // congelada, no el alto completo del panel (si no, al llegar al final solo
+  // se vería un espacio en blanco).
   useEffect(() => {
     const el = lastGroupRef.current;
     if (!el) {
@@ -267,7 +272,11 @@ export default function RolesMensualGrid({
     return () => contenedor.removeEventListener("scroll", actualizar);
   }, [grupos, theadHeight]);
 
-  const grupoActivo = grupos.find((g) => g.nombre === grupoActivoNombre) || grupos[0];
+  const grupoActivo =
+    grupos.find((g) => g.nombre === grupoActivoNombre) ||
+    (grupoActivoNombre === GRUPO_RESUMEN
+      ? { nombre: t("roles.resumenCorto"), color: "bg-ink text-ink-inverse" }
+      : grupos[0]);
 
   const toggleEdit = (puesto, nombre) =>
     setEditRows((prev) => ({ ...prev, [rowId(puesto, nombre)]: !prev[rowId(puesto, nombre)] }));
@@ -481,31 +490,42 @@ export default function RolesMensualGrid({
               </tr>
             </tbody>
           ) : (
-            grupos.map((grupo, idx) => (
-              <RowsGrupo
-                key={grupo.nombre}
-                grupo={grupo}
+            <>
+              {grupos.map((grupo) => (
+                <RowsGrupo
+                  key={grupo.nombre}
+                  grupo={grupo}
+                  columnas={columnas}
+                  compact={compact}
+                  editRows={editRows}
+                  toggleEdit={toggleEdit}
+                  getCfg={getCfg}
+                  setCfg={setCfg}
+                  getCelda={getCelda}
+                  aplicarPatron={aplicarPatron}
+                  abrirConflicto={abrirConflicto}
+                  setMenu={setMenu}
+                  inicioDeMes={inicioDeMes}
+                  actividadesPlan={actividadesPlan}
+                  trabajadas={trabajadas}
+                  reposicionesDia={reposicionesDia}
+                  hoy={hoy}
+                  year={year}
+                  month={month}
+                  t={t}
+                />
+              ))}
+              {/* El resumen general es el último bloque de la tabla, así que
+                  toma el ref que dimensiona el relleno final del scroll. */}
+              <ResumenTbody
+                grupos={grupos}
                 columnas={columnas}
-                compact={compact}
-                editRows={editRows}
-                toggleEdit={toggleEdit}
-                getCfg={getCfg}
-                setCfg={setCfg}
                 getCelda={getCelda}
-                aplicarPatron={aplicarPatron}
-                abrirConflicto={abrirConflicto}
-                setMenu={setMenu}
-                inicioDeMes={inicioDeMes}
-                actividadesPlan={actividadesPlan}
-                trabajadas={trabajadas}
-                reposicionesDia={reposicionesDia}
-                registerBodyRef={idx === grupos.length - 1 ? lastGroupRef : undefined}
                 hoy={hoy}
-                year={year}
-                month={month}
+                registerBodyRef={lastGroupRef}
                 t={t}
               />
-            ))
+            </>
           )}
         </table>
       </div>
@@ -695,6 +715,70 @@ function RowsGrupo({
           );
         })}
       </tr>
+    </tbody>
+  );
+}
+
+/**
+ * Resumen general al pie de la tabla: totales por día sumando todos los
+ * puestos visibles — funcionarios en turno, libres, en vacaciones,
+ * incapacitados y otros (permisos, oficina, etc.). Los puntos de color de
+ * cada fila reutilizan los colores semánticos de los códigos de rol.
+ */
+function ResumenTbody({ grupos, columnas, getCelda, hoy, registerBodyRef, t }) {
+  const filas = [
+    { cat: "T", label: t("roles.resumenEnTurno"), dot: "bg-emerald-700" },
+    { cat: "L", label: t("roles.resumenLibres"), dot: "bg-amber-700" },
+    { cat: "V", label: t("roles.resumenVacaciones"), dot: "bg-sky-700" },
+    { cat: "I", label: t("roles.resumenIncapacidad"), dot: "bg-rose-700" },
+    { cat: "O", label: t("roles.resumenOtros"), dot: "bg-violet-700" },
+  ];
+  // Una sola pasada por columna: las cinco filas comparten estos totales.
+  const totales = columnas.map(({ year: y, month: m, dia: d }) => {
+    const acc = { T: 0, L: 0, V: 0, I: 0, O: 0 };
+    for (const grupo of grupos) {
+      for (const nombre of grupo.funcionarios) {
+        const cat = categoriaDe(getCelda(grupo, nombre, y, m, d));
+        if (cat) acc[cat] += 1;
+      }
+    }
+    return acc;
+  });
+  return (
+    <tbody data-grupo={GRUPO_RESUMEN} ref={registerBodyRef}>
+      <tr className="pnlq-roles-resumen">
+        <td colSpan={columnas.length + 1} className="border-y-2 border-line-strong bg-ink p-0 text-ink-inverse">
+          <span className="sticky left-0 flex h-7 w-fit max-w-full items-center px-2 text-[10px] font-bold uppercase tracking-widest sm:h-8 sm:px-3 sm:text-[11px]">
+            {t("roles.resumenGeneral")}
+          </span>
+        </td>
+      </tr>
+      {filas.map(({ cat, label, dot }) => (
+        <tr key={cat}>
+          <td className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-line bg-surface-alt p-1.5 text-[10px] font-bold uppercase text-ink-muted shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem]">
+            <span className="flex items-center gap-1.5">
+              <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+              <span className="truncate">{label}</span>
+            </span>
+          </td>
+          {columnas.map((col, i) => {
+            const { year: y, month: m, dia: d } = col;
+            const iso = isoFecha(y, m, d);
+            const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
+            const n = totales[i][cat];
+            return (
+              <td
+                key={`resumen-${cat}-${iso}`}
+                className={`border-b border-b-line bg-surface p-2 text-center ${
+                  n > 0 ? "font-semibold text-ink" : "font-medium text-ink-muted"
+                } ${esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-line"}`}
+              >
+                {n}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
     </tbody>
   );
 }

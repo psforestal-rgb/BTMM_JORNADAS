@@ -120,3 +120,29 @@ describe("Roles — divisor de puesto, hoy y búsqueda por fecha", () => {
     expect(setMonth).not.toHaveBeenCalled();
   });
 });
+
+describe("Roles — resumen general al pie de la tabla", () => {
+  it("muestra la banda de resumen y una fila por categoría (turno/libres/vacas/incapacidad/otros)", () => {
+    const { container } = renderRoles();
+    // Banda final con clase propia (no cuenta como divisor de puesto).
+    const banda = container.querySelector("tr.pnlq-roles-resumen");
+    expect(banda).not.toBeNull();
+    expect(banda.textContent).toMatch(/Resumen · todos los puestos/);
+    for (const etiqueta of ["En turno", "Libres", "Vacaciones", "Incapacidad", "Otros"]) {
+      expect(screen.getByText(etiqueta)).toBeDefined();
+    }
+  });
+
+  it("el total 'En turno' de una columna es la suma de las filas EN TURNO de todos los puestos", () => {
+    renderRoles();
+    const filaResumen = screen.getByText("En turno").closest("tr");
+    const filasPuesto = screen.getAllByText("EN TURNO").map((el) => el.closest("tr"));
+    expect(filasPuesto.length).toBe(2);
+    // children[0] es la celda de etiqueta; children[1] la primera columna de día.
+    for (const col of [1, 2, 15]) {
+      const totalResumen = Number(filaResumen.children[col].textContent);
+      const sumaPuestos = filasPuesto.reduce((acc, tr) => acc + Number(tr.children[col].textContent), 0);
+      expect(totalResumen).toBe(sumaPuestos);
+    }
+  });
+});
