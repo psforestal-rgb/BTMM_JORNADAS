@@ -31,7 +31,7 @@ export default function Sidebar({ view, setView, nAlertas }) {
           <img src={`${import.meta.env.BASE_URL}acc-logo.svg`} alt="ACC" className="h-12 w-12 shrink-0 rounded-xl bg-white p-1" />
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">{t("app.sinacCR")}</div>
-            <div className="mt-0.5 text-xs font-semibold text-white/50">{t("app.accNombre")}</div>
+            <div className="mt-0.5 text-xs font-semibold text-white/70">{t("app.accNombre")}</div>
           </div>
         </div>
         <div className="text-base font-semibold leading-snug">
@@ -44,7 +44,7 @@ export default function Sidebar({ view, setView, nAlertas }) {
       <nav className="flex-1 p-3">
         {grupos.map(([g, items]) => (
           <div key={g}>
-            <div className="px-3 pb-2 pt-4 text-xs font-semibold uppercase tracking-wider text-white/45">{g}</div>
+            <div className="px-3 pb-2 pt-4 text-xs font-semibold uppercase tracking-wider text-white/70">{g}</div>
             {items.map(([id, label, icon]) => (
               <button
                 key={id}
@@ -68,13 +68,13 @@ export default function Sidebar({ view, setView, nAlertas }) {
         <strong className="font-semibold">{t("app.perfilNombre")}</strong>
         <div className="text-white/60">{t("app.perfilCargo")}</div>
         <div
-          className="mt-3 border-t border-white/10 pt-3 text-[10px] font-mono leading-tight text-white/40"
+          className="mt-3 border-t border-white/10 pt-3 text-[10px] font-mono leading-tight text-white/65"
           title={`Versión ${APP_VERSION} · build ${APP_BUILD_TIME} · commit ${APP_COMMIT}`}
         >
           <div>
-            v{APP_VERSION} <span className="text-white/30">·</span> {APP_COMMIT}
+            v{APP_VERSION} <span className="text-white/60">·</span> {APP_COMMIT}
           </div>
-          <div className="text-white/30">build {formatBuildTime(APP_BUILD_TIME)}</div>
+          <div className="text-white/60">build {formatBuildTime(APP_BUILD_TIME)}</div>
         </div>
       </div>
     </aside>
