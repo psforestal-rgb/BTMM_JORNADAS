@@ -15,7 +15,7 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
   return (
     <td
       className={`border-b border-b-slate-200 p-0 text-center font-semibold ${codigoCls(v, finde)} ${
-        esHoy ? "border-l-2 border-r-2 border-l-emerald-600 border-r-emerald-600" : "border-r border-r-slate-200"
+        esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-slate-200"
       } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}
     >
       <button
