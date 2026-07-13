@@ -301,6 +301,8 @@ const dict = {
     semanaSiguiente: "Semana siguiente",
     semana7: "7 días",
     centrarHoy: "Centrar hoy",
+    irAFecha: "Ir a fecha",
+    irAFechaLabel: "Buscar por fecha",
     todosLosPuestos: "Todos los puestos",
     sinFuncionariosFiltro: "No hay funcionarios visibles con el filtro actual.",
     leyenda: {

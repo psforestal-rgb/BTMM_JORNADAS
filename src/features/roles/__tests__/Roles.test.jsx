@@ -82,3 +82,41 @@ describe("Roles — advertencia de cobertura de feriados", () => {
     expect(aviso.textContent).toMatch(/2028/);
   });
 });
+
+describe("Roles — divisor de puesto, hoy y búsqueda por fecha", () => {
+  it("muestra una banda divisoria con el nombre de cada puesto visible", () => {
+    const { container } = renderRoles();
+    const divisores = container.querySelectorAll("tr.pnlq-roles-divisor");
+    // Hay 2 funcionarios en 2 puestos distintos → 2 grupos visibles.
+    expect(divisores.length).toBe(2);
+    const textos = [...divisores].map((d) => d.textContent);
+    expect(textos.some((x) => /Puesto Orosi/i.test(x))).toBe(true);
+    expect(textos.some((x) => /Puesto Quetzales/i.test(x))).toBe(true);
+  });
+
+  it("el botón 'Ir a fecha' está deshabilitado sin fecha y re-basa el mes al buscar hacia atrás", () => {
+    const setYear = vi.fn();
+    const setMonth = vi.fn();
+    renderRoles({ setYear, setMonth });
+    const boton = screen.getByRole("button", { name: /Ir a fecha/i });
+    expect(boton.disabled).toBe(true);
+    const input = screen.getByLabelText(/Buscar por fecha/i);
+    // Fecha anterior al mes inicial (julio 2026) → debe re-basar el calendario.
+    fireEvent.change(input, { target: { value: "2026-03-10" } });
+    expect(screen.getByRole("button", { name: /Ir a fecha/i }).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: /Ir a fecha/i }));
+    expect(setYear).toHaveBeenCalledWith(2026);
+    expect(setMonth).toHaveBeenCalledWith(2);
+  });
+
+  it("buscar una fecha dentro del rango cargado NO re-basa el mes inicial", () => {
+    const setYear = vi.fn();
+    const setMonth = vi.fn();
+    renderRoles({ setYear, setMonth });
+    const input = screen.getByLabelText(/Buscar por fecha/i);
+    fireEvent.change(input, { target: { value: "2026-07-20" } });
+    fireEvent.click(screen.getByRole("button", { name: /Ir a fecha/i }));
+    expect(setYear).not.toHaveBeenCalled();
+    expect(setMonth).not.toHaveBeenCalled();
+  });
+});

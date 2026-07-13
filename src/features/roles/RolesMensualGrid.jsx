@@ -183,16 +183,20 @@ export default function RolesMensualGrid({
     const targetIso = focusDate
       ? isoFecha(focusDate.year, focusDate.month, focusDate.day)
       : isoFecha(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-    if (scrollHandledKeyRef.current === targetIso) return;
+    // El nonce distingue búsquedas repetidas de la misma fecha: sin él,
+    // buscar dos veces el mismo día (tras desplazarse a otro lado) no
+    // volvería a centrar la tabla.
+    const targetKey = focusDate ? `${targetIso}#${focusDate.nonce ?? 0}` : targetIso;
+    if (scrollHandledKeyRef.current === targetKey) return;
     const objetivo = contenedor.querySelector(`[data-fecha="${targetIso}"]`);
     if (!objetivo) {
       if (!focusDate) {
-        scrollHandledKeyRef.current = targetIso;
+        scrollHandledKeyRef.current = targetKey;
         contenedor.scrollTo({ left: 0, behavior: "auto" });
       }
       return;
     }
-    scrollHandledKeyRef.current = targetIso;
+    scrollHandledKeyRef.current = targetKey;
     contenedor.scrollTo({
       left: Math.max(0, objetivo.offsetLeft - contenedor.clientWidth / 2 + objetivo.clientWidth / 2),
       behavior: focusDate ? "smooth" : "auto",
@@ -432,7 +436,7 @@ export default function RolesMensualGrid({
                     aria-current={isToday ? "date" : undefined}
                     className={`sticky top-5 z-30 border-b p-0.5 text-center font-semibold sm:top-6 sm:p-1 ${
                       isToday
-                        ? "border-l-2 border-r-2 border-emerald-500 bg-emerald-700 text-white ring-2 ring-inset ring-emerald-300"
+                        ? "border-l-4 border-r-4 border-b-4 border-amber-400 bg-slate-900 text-white"
                         : isFocused
                           ? "border-r border-slate-200 bg-amber-100 text-amber-950 ring-2 ring-inset ring-amber-400"
                         : isWeekend
@@ -440,21 +444,20 @@ export default function RolesMensualGrid({
                           : `border-r border-slate-200 ${tone.day}`
                     }`}
                   >
-                    {/* El fondo emerald-700/ring del <th> quedaba tapado por
-                        esta insignia interna, que antes era blanca siempre
-                        (también para "hoy") — de ahí que la señalización de
-                        "hoy" casi no se notara. Ahora la insignia misma se
-                        rellena de verde sólido para "hoy", como un calendario
-                        estándar. */}
+                    {/* "Hoy" en verde no destacaba: la tabla está dominada por
+                        celdas de turno emerald. Se marca con la única
+                        combinación que no compite con ningún código de rol:
+                        encabezado negro + insignia y bordes amarillo vivo,
+                        que continúan (4px) a lo largo de toda la columna. */}
                     <div
                       className={`mx-auto flex h-9 w-7 flex-col items-center justify-center rounded-lg sm:h-10 sm:w-9 ${
-                        isToday ? "bg-emerald-600 shadow-sm" : "bg-white/80"
+                        isToday ? "bg-amber-400 shadow-sm" : "bg-white/80"
                       }`}
                     >
-                      <span className={`text-[9px] uppercase leading-none ${isToday ? "text-emerald-50" : "text-slate-500"}`}>
+                      <span className={`text-[9px] uppercase leading-none ${isToday ? "font-bold text-slate-900" : "text-slate-500"}`}>
                         {dias[dow]}
                       </span>
-                      <span className={`mt-0.5 text-[12px] leading-none font-semibold ${isToday ? "text-white" : "text-slate-950"}`}>
+                      <span className={`mt-0.5 text-[12px] leading-none ${isToday ? "font-bold text-slate-950" : "font-semibold text-slate-950"}`}>
                         {d}
                       </span>
                     </div>
@@ -570,14 +573,27 @@ function RowsGrupo({
 }) {
   return (
     <tbody data-grupo={grupo.nombre} ref={registerBodyRef}>
-      {grupo.funcionarios.map((nombre, idx) => {
+      {/* Divisor de puesto: banda a todo lo ancho con el nombre del grupo,
+          para que el cambio de puesto se lea en el flujo de la tabla (la
+          celda congelada superior ya muestra el puesto activo, pero al
+          desplazarse rápido la frontera entre grupos no era evidente).
+          El nombre va en un span sticky para seguir visible aunque la
+          tabla esté desplazada lateralmente. */}
+      <tr className="pnlq-roles-divisor">
+        <td colSpan={columnas.length + 1} className={`border-y-2 border-slate-400 p-0 ${grupo.color}`}>
+          <span className="sticky left-0 flex h-7 w-fit max-w-full items-center px-2 text-[10px] font-bold uppercase tracking-widest sm:h-8 sm:px-3 sm:text-[11px]">
+            {grupo.nombre}
+          </span>
+        </td>
+      </tr>
+      {grupo.funcionarios.map((nombre) => {
         const editing = !!editRows[rowId(grupo.nombre, nombre)];
         const modalidad = getCfg(grupo, nombre, year, month);
         const nombrePartes = nombreEnDosLineas(nombre);
         return (
           <tr key={`${grupo.nombre}-${nombre}`} className={editing ? "bg-emerald-50/60" : "bg-white"}>
             <td
-              className={`sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-2 lg:min-w-[13rem] lg:max-w-[13rem] ${idx === 0 ? "border-t-2 border-t-slate-300" : ""}`}
+              className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-r border-b border-slate-200 bg-white p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-2 lg:min-w-[13rem] lg:max-w-[13rem]"
             >
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
@@ -671,7 +687,7 @@ function RowsGrupo({
             <td
               key={`${grupo.nombre}-cantidad-${iso}`}
               className={`border-b border-b-slate-200 bg-white p-2 text-center font-semibold text-slate-800 ${
-                esHoy ? "border-l-2 border-r-2 border-l-emerald-600 border-r-emerald-600" : "border-r border-r-slate-200"
+                esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-slate-200"
               }`}
             >
               {count}

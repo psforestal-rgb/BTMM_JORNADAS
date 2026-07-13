@@ -10,6 +10,8 @@ import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
 export default function Roles({
   year,
   month,
+  setYear,
+  setMonth,
   compact,
   roleData,
   setRoleData,
@@ -21,6 +23,22 @@ export default function Roles({
 }) {
   const t = useT();
   const [busqueda, setBusqueda] = useState("");
+  // Búsqueda por fecha: centra la tabla en el día elegido. La tabla carga
+  // meses solo hacia adelante desde su mes inicial, así que si la fecha
+  // buscada queda antes de ese mes (o más allá del tope de carga), primero
+  // se re-basa el calendario en el mes de la fecha vía setMonth/setYear.
+  const [fechaInput, setFechaInput] = useState("");
+  const [focusDate, setFocusDate] = useState(null);
+  const irAFecha = () => {
+    const [y, m, d] = String(fechaInput || "").split("-").map(Number);
+    if (!y || !m || !d) return;
+    const distancia = (y - year) * 12 + (m - 1 - month);
+    if ((distancia < 0 || distancia >= 120) && setYear && setMonth) {
+      setYear(y);
+      setMonth(m - 1);
+    }
+    setFocusDate({ year: y, month: m - 1, day: d, nonce: Date.now() });
+  };
   // Cada puesto arranca contraído dentro del panel de selección: solo se ve
   // la fila de encabezado (casilla + "Solo"); el detalle de funcionarios
   // (para deseleccionar a alguien puntual) se expande bajo demanda.
@@ -244,6 +262,34 @@ export default function Roles({
               </div>
             )}
           </details>
+
+          {/* Ir a una fecha concreta: centra la tabla en ese día. */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              irAFecha();
+            }}
+            className="flex items-center gap-2 rounded-lg bg-white p-2"
+          >
+            <label className="flex min-h-touch min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-300 bg-white px-2 sm:max-w-xs">
+              <Icon name="calendar" size={14} className="shrink-0 text-slate-500" />
+              <span className="sr-only">{t("roles.irAFechaLabel")}</span>
+              <input
+                type="date"
+                value={fechaInput}
+                onChange={(e) => setFechaInput(e.target.value)}
+                className="min-h-touch w-full bg-transparent text-xs font-semibold text-slate-700 outline-none [color-scheme:light]"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={!fechaInput}
+              className="inline-flex min-h-touch shrink-0 items-center gap-1.5 rounded-lg bg-emerald-800 px-3 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              <Icon name="search" size={14} />
+              {t("roles.irAFecha")}
+            </button>
+          </form>
         </div>
 
         <div className="pnlq-print-page">
@@ -253,6 +299,7 @@ export default function Roles({
             year={year}
             month={month}
             compact={compact}
+            focusDate={focusDate}
             roleData={roleData}
             setRoleData={setRoleData}
             personas={personas}
