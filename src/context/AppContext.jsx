@@ -26,6 +26,15 @@ const fechaInicialIso = toLocalISODate(fechaInicial);
 // marcada como aplicada: no hay nada legado que limpiar.
 const MIGRACION_LIMPIEZA_2026 = "limpiezaEnzoYSetDic2026";
 
+// Migración única que incorpora las actividades de ejemplo agregadas en
+// julio 2026 (a23–a46, fechas desde el 2026-07-14) a instalaciones que ya
+// tenían datos persistidos: sin esta migración, el `actividadesPlan`
+// almacenado gana por completo y las semillas nuevas jamás aparecen. Solo
+// se agregan ids ausentes y solo una vez, para respetar borrados
+// posteriores del usuario.
+const MIGRACION_ACTIVIDADES_JUL2026 = "actividadesEjemploJul2026";
+const FECHA_SEMILLAS_JUL2026 = "2026-07-14";
+
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
   view: "dia",
@@ -38,7 +47,7 @@ const seedState = {
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
   reglas: { ...REGLAS_DEFAULT },
-  migraciones: { [MIGRACION_LIMPIEZA_2026]: true },
+  migraciones: { [MIGRACION_LIMPIEZA_2026]: true, [MIGRACION_ACTIVIDADES_JUL2026]: true },
 };
 
 // El dashboard quedó fuera de la navegación. Normalizamos snapshots o
@@ -94,9 +103,20 @@ function mergePersistedWithSeed(stored) {
   // snapshot corrupto en storage (no solo uno importado) podría traer
   // entradas `null`/no-objeto en estos arreglos. `indexarReposiciones()`
   // y los listados de actividades asumen forma de objeto en cada elemento.
-  const actividadesPlan = Array.isArray(stored?.actividadesPlan)
+  let actividadesPlan = Array.isArray(stored?.actividadesPlan)
     ? stored.actividadesPlan.filter((a) => a && typeof a === "object")
     : seedState.actividadesPlan;
+
+  // Migración única: incorpora las actividades de ejemplo nuevas (desde el
+  // 2026-07-14) a estados persistidos que aún no las tienen. Solo agrega
+  // ids ausentes; una vez marcada, los borrados del usuario se respetan.
+  if (!migracionesAplicadas[MIGRACION_ACTIVIDADES_JUL2026] && Array.isArray(stored?.actividadesPlan)) {
+    const idsExistentes = new Set(actividadesPlan.map((a) => a.id));
+    const semillasNuevas = baseActividadesPlan.filter(
+      (a) => a.inicio >= FECHA_SEMILLAS_JUL2026 && !idsExistentes.has(a.id),
+    );
+    if (semillasNuevas.length) actividadesPlan = [...actividadesPlan, ...semillasNuevas];
+  }
   const reposiciones = Array.isArray(stored?.reposiciones)
     ? stored.reposiciones.filter((r) => r && typeof r === "object" && r.funcionario && r.fecha)
     : seedState.reposiciones;
@@ -110,7 +130,11 @@ function mergePersistedWithSeed(stored) {
     reposiciones,
     roleData: { ...baseRoleData, ...storedRoleData },
     reglas: mergeReglas(stored?.reglas),
-    migraciones: { ...migracionesAplicadas, [MIGRACION_LIMPIEZA_2026]: true },
+    migraciones: {
+      ...migracionesAplicadas,
+      [MIGRACION_LIMPIEZA_2026]: true,
+      [MIGRACION_ACTIVIDADES_JUL2026]: true,
+    },
   };
 }
 
