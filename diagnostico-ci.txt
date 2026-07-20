@@ -1,0 +1,210 @@
+{
+  "total": 2136,
+  "ids": 2136
+}
+
+> btmm-jornadas-pnlq@1.14.16 test
+> vitest run --run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90m/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS[39m
+
+ [32m✓[39m src/lib/__tests__/storage.test.js [2m([22m[2m26 tests[22m[2m)[22m[90m 202[2mms[22m[39m
+ [32m✓[39m src/features/funcionarios/__tests__/Funcionarios.test.jsx [2m([22m[2m8 tests[22m[2m)[22m[33m 914[2mms[22m[39m
+[90mstderr[2m | src/context/__tests__/AppContext-hydration.test.jsx[2m > [22m[2mAppContext — hidratación async desde Dexie[2m > [22m[2mno sobrescribe ediciones del usuario hechas durante la hidratación
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-hydration.test.jsx[2m > [22m[2mAppContext — hidratación async desde Dexie[2m > [22m[2maplica el snapshot de Dexie si el usuario no editó nada
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-hydration.test.jsx[2m > [22m[2mAppContext — hidratación async desde Dexie[2m > [22m[2muna vez aplicada la migración de limpieza, NO vuelve a borrar ediciones de setiembre-diciembre 2026
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+ [32m✓[39m src/context/__tests__/AppContext-hydration.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[90m 290[2mms[22m[39m
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — Dexie round-trip[2m > [22m[2msaveToDexie + loadFromDexie preservan el payload
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — Dexie round-trip[2m > [22m[2mclearDexie elimina el snapshot
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — migración desde localStorage[2m > [22m[2mcopia snapshot de LS a Dexie cuando Dexie está vacío
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — migración desde localStorage[2m > [22m[2mno migra si Dexie ya tiene datos (idempotente)
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — migración desde localStorage[2m > [22m[2mno hace nada si LS está vacío
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — migración desde localStorage[2m > [22m[2mrechaza snapshot de LS con schemaVersion distinta
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — migración desde localStorage[2m > [22m[2mrechaza snapshot de LS sin schemaVersion (payload corrupto)
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — cola de pendientes[2m > [22m[2mencolarCambio aumenta el contador
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/lib/__tests__/db.test.js[2m > [22m[2mdb — cola de pendientes[2m > [22m[2mwipeDexie limpia state y pendientes
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+ [32m✓[39m src/lib/__tests__/db.test.js [2m([22m[2m10 tests[22m[2m)[22m[90m 139[2mms[22m[39m
+ [32m✓[39m src/features/roles/__tests__/Roles.test.jsx [2m([22m[2m9 tests[22m[2m)[22m[33m 2253[2mms[22m[39m
+   [33m[2m✓[22m[39m Roles — control compacto de puestos/funcionarios[2m > [22mal desmarcar un puesto, el resumen dice cuántos quedan seleccionados (no 'todos') [33m308[2mms[22m[39m
+   [33m[2m✓[22m[39m Roles — divisor de puesto, hoy y búsqueda por fecha[2m > [22mel botón 'Ir a fecha' está deshabilitado sin fecha y re-basa el mes al buscar hacia atrás [33m617[2mms[22m[39m
+[90mstderr[2m | src/context/__tests__/AppContext-persistencia.test.jsx[2m > [22m[2mAppContext — flush inmediato al ocultar/cerrar la pestaña[2m > [22m[2mpagehide fuerza el guardado sin esperar el debounce de 500ms
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-persistencia.test.jsx[2m > [22m[2mAppContext — flush inmediato al ocultar/cerrar la pestaña[2m > [22m[2mvisibilitychange a 'hidden' fuerza el guardado sin esperar el debounce
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-persistencia.test.jsx[2m > [22m[2mAppContext — flush inmediato al ocultar/cerrar la pestaña[2m > [22m[2mvisibilitychange a 'visible' NO dispara guardado anticipado
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+ [32m✓[39m src/context/__tests__/AppContext-persistencia.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[33m 363[2mms[22m[39m
+[90mstderr[2m | src/features/datos/__tests__/Datos.test.jsx[2m > [22m[2mDatos — respaldo/restauración round-trip[2m > [22m[2mexportar conserva reglas no predeterminadas y restaurar las aplica de vuelta
+[22m[39mError: Not implemented: navigation (except hash changes)
+    at module.exports (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at navigateFetch (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+    at exports.navigate (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+    at Timeout._onTimeout (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:81:7)
+    at listOnTimeout (node:internal/timers:585:17)
+    at processTimers (node:internal/timers:521:7) [90mundefined[39m
+
+ [32m✓[39m src/features/datos/__tests__/Datos.test.jsx [2m([22m[2m1 test[22m[2m)[22m[33m 778[2mms[22m[39m
+   [33m[2m✓[22m[39m Datos — respaldo/restauración round-trip[2m > [22mexportar conserva reglas no predeterminadas y restaurar las aplica de vuelta [33m776[2mms[22m[39m
+[90mstderr[2m | src/features/datos/__tests__/Datos.test.jsx[2m > [22m[2mDatos — respaldo/restauración round-trip[2m > [22m[2mexportar conserva reglas no predeterminadas y restaurar las aplica de vuelta
+[22m[39mError: Not implemented: navigation (except hash changes)
+    at module.exports (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+    at navigateFetch (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+    at exports.navigate (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+    at Timeout._onTimeout (/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:81:7)
+    at listOnTimeout (node:internal/timers:585:17)
+    at processTimers (node:internal/timers:521:7) [90mundefined[39m
+
+[90mstderr[2m | src/context/__tests__/AppContext-semillas.test.jsx[2m > [22m[2mAppContext — migración de actividades de ejemplo (julio 2026)[2m > [22m[2magrega las semillas nuevas a un estado persistido que no las tiene, sin tocar lo del usuario
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-semillas.test.jsx[2m > [22m[2mAppContext — migración de actividades de ejemplo (julio 2026)[2m > [22m[2mcon la migración ya marcada NO resucita semillas borradas por el usuario
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+[90mstderr[2m | src/context/__tests__/AppContext-semillas.test.jsx[2m > [22m[2mAppContext — migración de actividades de ejemplo (julio 2026)[2m > [22m[2muna instalación nueva (sin estado persistido) arranca con la migración marcada y las semillas completas
+[22m[39mAnother connection wants to delete database 'pnlq'. Closing db now to resume the delete request.
+
+ [31m❯[39m src/context/__tests__/AppContext-semillas.test.jsx [2m([22m[2m3 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 144[2mms[22m[39m
+[31m   [31m×[31m AppContext — migración de actividades de ejemplo (julio 2026)[2m > [22magrega las semillas nuevas a un estado persistido que no las tiene, sin tocar lo del usuario[90m 75[2mms[22m[31m[39m
+[31m     → expected [ 'a1752500000000', …(441) ] to include 'a36'[39m
+[31m   [31m×[31m AppContext — migración de actividades de ejemplo (julio 2026)[2m > [22muna instalación nueva (sin estado persistido) arranca con la migración marcada y las semillas completas[90m 39[2mms[22m[31m[39m
+[31m     → expected [ 'plan2026-0001', …(2135) ] to include 'a46'[39m
+ [32m✓[39m src/features/planificacion/__tests__/Planificacion.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1131[2mms[22m[39m
+   [33m[2m✓[22m[39m Planificación — modos agenda y cuadrícula[2m > [22mel toggle cambia a agenda y conserva la actividad visible [33m451[2mms[22m[39m
+ [32m✓[39m src/ui/__tests__/ErrorBoundary.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[90m 174[2mms[22m[39m
+ [32m✓[39m src/features/dia/__tests__/DiaLayout.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[90m 256[2mms[22m[39m
+ [32m✓[39m src/features/funcionarios/__tests__/ModalFuncionario.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[33m 367[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/a11y.test.js [2m([22m[2m5 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m✓[39m src/ui/__tests__/SyncStatus.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[90m 193[2mms[22m[39m
+ [32m✓[39m src/features/reposicion/__tests__/ReposicionMobile.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 302[2mms[22m[39m
+ [32m✓[39m src/layout/__tests__/TopbarMobilePreview.test.jsx [2m([22m[2m1 test[22m[2m)[22m[90m 177[2mms[22m[39m
+ [32m✓[39m src/ui/__tests__/EmptyState.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[90m 129[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/useVirtualKeyboard.test.jsx [2m([22m[2m1 test[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m✓[39m src/layout/__tests__/BottomNav.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[90m 224[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/sanitize.test.js [2m([22m[2m26 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/reposicion.test.js [2m([22m[2m14 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/roles.test.js [2m([22m[2m15 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/validaciones.test.js [2m([22m[2m22 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/useSessionState.test.jsx [2m([22m[2m1 test[22m[2m)[22m[90m 145[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/alertas-extended.test.js [2m([22m[2m11 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/feriados.test.js [2m([22m[2m16 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/fechas.test.js [2m([22m[2m11 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/alertas.test.js [2m([22m[2m7 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/config/__tests__/reglas.test.js [2m([22m[2m11 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m src/i18n/__tests__/es-CR.test.js [2m([22m[2m12 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/conflictos.test.js [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/actividades.test.js [2m([22m[2m2 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [31m❯[39m src/data/__tests__/seedActividades2026.test.js [2m([22m[2m4 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 290[2mms[22m[39m
+[31m   [31m×[31m planificación institucional BTMM 2026[2m > [22mcarga 1791 actividades con ids únicos[90m 34[2mms[22m[31m[39m
+[31m     → expected [ …(2136) ] to have a length of 1791 but got 2136[39m
+[31m   [31m×[31m planificación institucional BTMM 2026[2m > [22mincluye a todos los funcionarios del catálogo suministrado[90m 2[2mms[22m[31m[39m
+[31m     → Monserrath Navarro no aparece asignado: expected false to be true // Object.is equality[39m
+ [32m✓[39m src/data/__tests__/seedRoles.test.js [2m([22m[2m4 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/navigation.test.js [2m([22m[2m4 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m src/domain/__tests__/cobertura.test.js [2m([22m[2m3 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/mobilePreview.test.js [2m([22m[2m2 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 4 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/context/__tests__/AppContext-semillas.test.jsx[2m > [22mAppContext — migración de actividades de ejemplo (julio 2026)[2m > [22magrega las semillas nuevas a un estado persistido que no las tiene, sin tocar lo del usuario
+[31m[1mAssertionError[22m: expected [ 'a1752500000000', …(441) ] to include 'a36'[39m
+[36m [2m❯[22m src/context/__tests__/AppContext-semillas.test.jsx:[2m79:17[22m[39m
+    [90m 77| [39m    [35mconst[39m ids [33m=[39m ctx[33m.[39mactividadesPlan[33m.[39m[34mmap[39m((a) [33m=>[39m a[33m.[39mid)[33m;[39m
+    [90m 78| [39m    [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m(actividadUsuario[33m.[39mid)[33m;[39m
+    [90m 79| [39m    [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"a36"[39m)[33m;[39m
+    [90m   | [39m                [31m^[39m
+    [90m 80| [39m    [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"a46"[39m)[33m;[39m
+    [90m 81| [39m    [34mexpect[39m(ctx[33m.[39mmigraciones[33m.[39mactividadesEjemploJul2026)[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/context/__tests__/AppContext-semillas.test.jsx[2m > [22mAppContext — migración de actividades de ejemplo (julio 2026)[2m > [22muna instalación nueva (sin estado persistido) arranca con la migración marcada y las semillas completas
+[31m[1mAssertionError[22m: expected [ 'plan2026-0001', …(2135) ] to include 'a46'[39m
+[36m [2m❯[22m src/context/__tests__/AppContext-semillas.test.jsx:[2m102:17[22m[39m
+    [90m100| [39m    [35mconst[39m ctx [33m=[39m [35mawait[39m [34mleerContexto[39m()[33m;[39m
+    [90m101| [39m    [35mconst[39m ids [33m=[39m ctx[33m.[39mactividadesPlan[33m.[39m[34mmap[39m((a) [33m=>[39m a[33m.[39mid)[33m;[39m
+    [90m102| [39m    [34mexpect[39m(ids)[33m.[39m[34mtoContain[39m([32m"a46"[39m)[33m;[39m
+    [90m   | [39m                [31m^[39m
+    [90m103| [39m    [34mexpect[39m(ctx[33m.[39mmigraciones[33m.[39mactividadesEjemploJul2026)[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m104| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/data/__tests__/seedActividades2026.test.js[2m > [22mplanificación institucional BTMM 2026[2m > [22mcarga 1791 actividades con ids únicos
+[31m[1mAssertionError[22m: expected [ …(2136) ] to have a length of 1791 but got 2136[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1791[39m
+[31m+ 2136[39m
+
+[36m [2m❯[22m src/data/__tests__/seedActividades2026.test.js:[2m29:33[22m[39m
+    [90m 27| [39m  [34mit[39m([32m"carga 1791 actividades con ids únicos"[39m[33m,[39m () [33m=>[39m {
+    [90m 28| [39m    [34mexpect[39m(baseActividadesPlan)[33m.[39m[34mtoHaveLength[39m(metadataPlanificacion2026…
+    [90m 29| [39m    [34mexpect[39m(baseActividadesPlan)[33m.[39m[34mtoHaveLength[39m([34m1791[39m)[33m;[39m
+    [90m   | [39m                                [31m^[39m
+    [90m 30| [39m    [34mexpect[39m([35mnew[39m [33mSet[39m(baseActividadesPlan[33m.[39m[34mmap[39m((a) [33m=>[39m a[33m.[39mid))[33m.[39msize)[33m.[39m[34mtoBe[39m(
+    [90m 31| [39m      baseActividadesPlan[33m.[39mlength[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/data/__tests__/seedActividades2026.test.js[2m > [22mplanificación institucional BTMM 2026[2m > [22mincluye a todos los funcionarios del catálogo suministrado
+[31m[1mAssertionError[22m: Monserrath Navarro no aparece asignado: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m src/data/__tests__/seedActividades2026.test.js:[2m51:70[22m[39m
+    [90m 49| [39m    )[33m;[39m
+    [90m 50| [39m    [35mfor[39m ([35mconst[39m nombre [35mof[39m [33mFUNCIONARIOS_ESPERADOS[39m) {
+    [90m 51| [39m      [34mexpect[39m(asignados[33m.[39m[34mhas[39m(nombre)[33m,[39m [32m`[39m[36m${[39mnombre[36m}[39m[32m no aparece asignado`[39m)[33m.[39m[34mt[39m…
+    [90m   | [39m                                                                     [31m^[39m
+    [90m 52| [39m    }
+    [90m 53| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m35 passed[39m[22m[90m (37)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m259 passed[39m[22m[90m (263)[39m
+[2m   Start at [22m 22:28:10
+[2m   Duration [22m 13.89s[2m (transform 1.40s, setup 0ms, collect 8.05s, tests 8.72s, environment 12.63s, prepare 3.75s)[22m
+
+
+::error file=/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/src/context/__tests__/AppContext-semillas.test.jsx,title=src/context/__tests__/AppContext-semillas.test.jsx > AppContext — migración de actividades de ejemplo (julio 2026) > agrega las semillas nuevas a un estado persistido que no las tiene%2C sin tocar lo del usuario,line=79,column=17::AssertionError: expected [ 'a1752500000000', …(441) ] to include 'a36'%0A ❯ src/context/__tests__/AppContext-semillas.test.jsx:79:17%0A%0A
+
+::error file=/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/src/context/__tests__/AppContext-semillas.test.jsx,title=src/context/__tests__/AppContext-semillas.test.jsx > AppContext — migración de actividades de ejemplo (julio 2026) > una instalación nueva (sin estado persistido) arranca con la migración marcada y las semillas completas,line=102,column=17::AssertionError: expected [ 'plan2026-0001', …(2135) ] to include 'a46'%0A ❯ src/context/__tests__/AppContext-semillas.test.jsx:102:17%0A%0A
+
+::error file=/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/src/data/__tests__/seedActividades2026.test.js,title=src/data/__tests__/seedActividades2026.test.js > planificación institucional BTMM 2026 > carga 1791 actividades con ids únicos,line=29,column=33::AssertionError: expected [ …(2136) ] to have a length of 1791 but got 2136%0A%0A- Expected%0A+ Received%0A%0A- 1791%0A+ 2136%0A%0A ❯ src/data/__tests__/seedActividades2026.test.js:29:33%0A%0A
+
+::error file=/home/runner/work/BTMM_JORNADAS/BTMM_JORNADAS/src/data/__tests__/seedActividades2026.test.js,title=src/data/__tests__/seedActividades2026.test.js > planificación institucional BTMM 2026 > incluye a todos los funcionarios del catálogo suministrado,line=51,column=70::AssertionError: Monserrath Navarro no aparece asignado: expected false to be true // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- true%0A+ false%0A%0A ❯ src/data/__tests__/seedActividades2026.test.js:51:70%0A%0A
