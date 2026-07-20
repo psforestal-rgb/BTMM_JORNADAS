@@ -4,12 +4,19 @@ on:
   push:
     branches:
       - codex/planificacion-btmm-2026
+    paths-ignore:
+      - diagnostico-ci.txt
+
+permissions:
+  contents: write
 
 jobs:
   diagnostico:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: codex/planificacion-btmm-2026
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -18,9 +25,13 @@ jobs:
       - name: Generar diagnóstico
         shell: bash
         run: |
-          node --input-type=module -e 'import("./src/data/seedActividades.js").then(({baseActividadesPlan}) => console.log(JSON.stringify({total: baseActividadesPlan.length, ids: new Set(baseActividadesPlan.map(a => a.id)).size}, null, 2)))' > diagnostico.txt 2>&1
-          npm test -- --run >> diagnostico.txt 2>&1 || true
-      - uses: actions/upload-artifact@v4
-        with:
-          name: diagnostico-planificacion
-          path: diagnostico.txt
+          node --input-type=module -e 'import("./src/data/seedActividades.js").then(({baseActividadesPlan}) => console.log(JSON.stringify({total: baseActividadesPlan.length, ids: new Set(baseActividadesPlan.map(a => a.id)).size}, null, 2)))' > diagnostico-ci.txt 2>&1
+          npm test -- --run >> diagnostico-ci.txt 2>&1 || true
+      - name: Publicar diagnóstico en la rama
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostico-ci.txt
+          git commit -m "diagnóstico temporal de pruebas [skip ci]" || exit 0
+          git push origin HEAD:codex/planificacion-btmm-2026
