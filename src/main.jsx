@@ -4,6 +4,7 @@ import App from './App.jsx'
 import PWAWrapper from './PWAWrapper.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { APP_VERSION, APP_BUILD_TIME, APP_COMMIT } from './lib/appVersion.js'
+import { prepararPlanificacionOficial2026 } from './data/migratePlanificacion2026.js'
 import './index.css'
 
 if (typeof console !== 'undefined') {
@@ -21,12 +22,25 @@ if (typeof window !== 'undefined') {
   })
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ThemeProvider>
-      <PWAWrapper>
-        <App />
-      </PWAWrapper>
-    </ThemeProvider>
-  </React.StrictMode>,
-)
+async function iniciar() {
+  const resultadoMigracion = await prepararPlanificacionOficial2026()
+  if (resultadoMigracion?.migrada && typeof console !== 'undefined') {
+    console.info(
+      `Planificación BTMM 2026 cargada: ${resultadoMigracion.totalActividades} actividades`,
+    )
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <ThemeProvider>
+        <PWAWrapper>
+          <App />
+        </PWAWrapper>
+      </ThemeProvider>
+    </React.StrictMode>,
+  )
+}
+
+iniciar().catch((error) => {
+  console.error('No fue posible iniciar la aplicación:', error)
+})
