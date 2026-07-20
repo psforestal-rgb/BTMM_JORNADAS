@@ -1,0 +1,26 @@
+name: Diagnóstico temporal planificación 2026
+
+on:
+  push:
+    branches:
+      - codex/planificacion-btmm-2026
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generar diagnóstico
+        shell: bash
+        run: |
+          node --input-type=module -e 'import("./src/data/seedActividades.js").then(({baseActividadesPlan}) => console.log(JSON.stringify({total: baseActividadesPlan.length, ids: new Set(baseActividadesPlan.map(a => a.id)).size}, null, 2)))' > diagnostico.txt 2>&1
+          npm test -- --run >> diagnostico.txt 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-planificacion
+          path: diagnostico.txt
