@@ -1,37 +1,19 @@
 name: Diagnóstico temporal planificación 2026
 
 on:
-  push:
+  pull_request:
     branches:
-      - codex/planificacion-btmm-2026
-    paths-ignore:
-      - diagnostico-ci.txt
-
-permissions:
-  contents: write
+      - main
 
 jobs:
   diagnostico:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: codex/planificacion-btmm-2026
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Generar diagnóstico
+      - name: Diagnóstico compacto
         shell: bash
         run: |
-          node --input-type=module -e 'import("./src/data/seedActividades.js").then(({baseActividadesPlan}) => console.log(JSON.stringify({total: baseActividadesPlan.length, ids: new Set(baseActividadesPlan.map(a => a.id)).size}, null, 2)))' > diagnostico-ci.txt 2>&1
-          npm test -- --run >> diagnostico-ci.txt 2>&1 || true
-      - name: Publicar diagnóstico en la rama
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add diagnostico-ci.txt
-          git commit -m "diagnóstico temporal de pruebas [skip ci]" || exit 0
-          git push origin HEAD:codex/planificacion-btmm-2026
+          git clone --quiet --depth 1 --branch "$GITHUB_HEAD_REF" "https://github.com/$GITHUB_REPOSITORY.git" repo
+          cd repo
+          npm ci --silent
+          node --input-type=module -e 'import("./src/data/seedActividades.js").then(({baseActividadesPlan}) => console.log("TOTAL_ACTIVIDADES=" + baseActividadesPlan.length))'
+          npm test -- --run --reporter=dot
