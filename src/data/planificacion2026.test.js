@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertirPlanificacion2026 } from "./planificacion2026.js";
+import { cargarPlanificacion2026, convertirPlanificacion2026 } from "./planificacion2026.js";
 
 describe("convertirPlanificacion2026", () => {
   it("crea un registro por puesto y día con categoría y horario institucional", () => {
@@ -43,5 +43,14 @@ DT prepara informe`;
     const [actividad] = convertirPlanificacion2026(texto);
     expect(actividad.observaciones).toBe("• KV atiende turismo\n• DT prepara informe");
     expect(actividad.funcionarios).toEqual(["Karen Valle", "Diana Tencio"]);
+  });
+
+  it("carga la fuente institucional local completa sin depender de la red", async () => {
+    const actividades = await cargarPlanificacion2026();
+
+    expect(actividades).toHaveLength(768);
+    expect(actividades.every((a) => a.categoria === "Otra actividad")).toBe(true);
+    expect(actividades.every((a) => a.horaInicio === "08:00" && a.horaFin === "16:00")).toBe(true);
+    expect(actividades.some((a) => a.inicio === "2026-07-20" && a.lugar === "Parque Nacional Los Quetzales")).toBe(true);
   });
 });
