@@ -113,6 +113,12 @@ YC patrullaje`;
     expect(actividades.every((a) => a.titulo.trim().length > 0)).toBe(true);
     expect(actividades.some((a) => a.titulo.startsWith("Programación institucional"))).toBe(false);
     expect(actividades.some((a) => a.inicio === "2026-07-20" && a.lugar === "Parque Nacional Los Quetzales")).toBe(true);
+
+    // Ids oficiales, deterministas y únicos (evita claves React/selección
+    // duplicadas al refrescar de hoy en adelante conservando filas pasadas).
+    const ids = actividades.map((a) => a.id);
+    expect(ids.every((id) => id.startsWith("plan2026-"))).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("expone una versión de planificación no vacía", () => {

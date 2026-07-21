@@ -19,9 +19,14 @@ export function startVersionCheck({ intervalMs = DEFAULT_INTERVAL_MS, onOutdated
   let primera = true
 
   const check = async () => {
-    if (stopped || typeof navigator === 'undefined' || !navigator.onLine) return
+    if (stopped) return
+    // Se consume `immediate` en la PRIMERA llamada (el chequeo de montaje),
+    // aunque sea sin conexión: si la app se abrió offline, al reconectar el
+    // chequeo ya NO se considera de apertura, así que se mostrará el aviso en
+    // lugar de auto-recargar a mitad de sesión.
     const immediate = primera
     primera = false
+    if (typeof navigator === 'undefined' || !navigator.onLine) return
     try {
       const remote = await fetchRemoteVersion()
       // Compara por commit (no solo por número de versión) para detectar

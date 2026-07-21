@@ -211,6 +211,12 @@ export function convertirPlanificacion2026(texto) {
   for (const grupo of grupos.values()) {
     const fecha = `2026-${String(grupo.mes).padStart(2, "0")}-${String(grupo.dia).padStart(2, "0")}`;
     let ultimosFuncionarios = [];
+    // Secuencia por celda (fecha + sitio) para un id determinista y estable.
+    // Un id posicional global (`plan2026-0001`) se renumera si la fuente
+    // cambia antes de `hoy`, y al refrescar "de hoy en adelante" un id nuevo
+    // podía chocar con el de una fila pasada conservada (claves React/selección
+    // duplicadas). Al incluir la fecha, pasado y futuro nunca comparten id.
+    let secuencia = 0;
 
     for (const linea of repararCortes(grupo.textos)) {
       const { funcionarios: responsables, titulo } = detectarResponsables(linea);
@@ -232,7 +238,7 @@ export function convertirPlanificacion2026(texto) {
       }
 
       actividades.push({
-        id: `plan2026-${String(actividades.length + 1).padStart(4, "0")}`,
+        id: `plan2026-${fecha}-${grupo.sitio}-${secuencia++}`,
         titulo,
         categoria: "Otra actividad",
         inicio: fecha,

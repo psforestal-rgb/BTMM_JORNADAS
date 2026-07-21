@@ -3,7 +3,6 @@ import { useApp } from "../../context/AppContext.jsx";
 import {
   PLANIFICACION_VERSION,
   cargarPlanificacion2026,
-  esActividadOficial,
   reconciliarPlanificacion,
 } from "../../data/planificacion2026.js";
 import { toLocalISODate } from "../../domain/fechas.js";
@@ -60,16 +59,14 @@ export default function ImportadorPlanificacion2026() {
       try {
         const nuevas = await cargarPlanificacion2026();
         if (cancelado) return;
-        const hoy = toLocalISODate();
-        // Sustitución atómica en una sola actualización de estado. Se decide
-        // dentro del updater para leer el estado real: si aún no hay
-        // planificación, se importa completa; si ya la hay, se refresca solo
-        // de hoy en adelante conservando lo demás.
-        setActividadesPlan((previas) =>
-          previas.some(esActividadOficial)
-            ? reconciliarPlanificacion(previas, nuevas, hoy)
-            : nuevas,
-        );
+        // Corte del refresco oficial: en una instalación nueva (sin versión
+        // previa) se importa la planificación completa (corte ""); en una
+        // actualización, solo de hoy en adelante. En AMBOS casos
+        // reconciliarPlanificacion conserva SIEMPRE las actividades propias
+        // del usuario (id distinto de `plan2026-`), incluso si borró la
+        // importación oficial y solo le quedan las suyas.
+        const corte = aplicada == null ? "" : toLocalISODate();
+        setActividadesPlan((previas) => reconciliarPlanificacion(previas, nuevas, corte));
         try {
           window.localStorage.setItem(CLAVE_VERSION, PLANIFICACION_VERSION);
         } catch {
