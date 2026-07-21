@@ -43,34 +43,121 @@ function sitioDe(linea) {
   return ["PNLQ", "PLE", "PVM"].includes(limpio) ? limpio : "";
 }
 
-function participantes(textos) {
-  const funcionarios = [];
-  const otrosParticipantes = [];
-  const agregarFuncionario = (nombre) => {
-    if (!funcionarios.includes(nombre)) funcionarios.push(nombre);
+/**
+ * Participantes externos ("invitados"): voluntarios, covirenas, pasantes,
+ * investigadores, funcionarios de otras instituciones, etc. A diferencia del
+ * personal de planta, no se asignan como `funcionarios` de la actividad.
+ */
+function detectarOtros(texto) {
+  const normal = ascii(texto);
+  const otros = [];
+  const agregar = (nombre) => {
+    if (!otros.some((p) => p.nombre === nombre)) otros.push({ nombre, contacto: "" });
   };
-  const agregarOtro = (nombre) => {
-    if (!otrosParticipantes.some((p) => p.nombre === nombre)) otrosParticipantes.push({ nombre, contacto: "" });
+  for (const [alias, nombre] of Object.entries(otrosAlias)) {
+    if (contieneAlias(normal, alias)) agregar(nombre);
+  }
+  if (/\bENZO\b/.test(normal)) agregar("Enzo");
+  if (/\bALEX(?:ANDER)?\b/.test(normal)) agregar("Alex");
+  if (/\bMERYLL(?:\s+ARIAS)?\b/.test(normal)) agregar("Meryll Arias");
+  if (/\bLUIS\s*DAVID\b|\bLUISDA\b/.test(normal)) agregar("Luis David");
+  if (/\bVOLUNTARI(?:O|A|OS|AS)\b/.test(normal)) agregar("Voluntariado");
+  if (/\bINVESTIGADOR(?:A|ES|AS)?\b/.test(normal)) agregar("Investigadores");
+  if (/\bPASANTES?\b/.test(normal)) agregar("Pasantes");
+  if (/\bESTUDIANTES?\b/.test(normal)) agregar("Estudiantes");
+  return otros;
+}
+
+/**
+ * Una nota es "de invitado" cuando su sujeto es una persona externa
+ * (voluntario, covirena, invitado, investigador, pasante, estudiante) o
+ * describe su entrada/salida/pernocta. Estas líneas se registran SIN
+ * funcionario y no heredan el del renglón anterior.
+ *
+ * Ojo: "voluntariado" (el programa) NO cuenta como invitado — es una tarea
+ * institucional (p. ej. "Charla voluntariado"); solo "voluntario/a/os/as"
+ * (las personas) marcan la nota como externa.
+ */
+function esNotaDeInvitado(texto) {
+  const normal = ascii(texto);
+  if (/\bVOLUNTARI[OA]S?\b/.test(normal)) return true;
+  if (/\bCOVIRENAS?\b/.test(normal)) return true;
+  if (/\bINVITAD[OA]S?\b/.test(normal)) return true;
+  if (/\bINVESTIGADOR/.test(normal)) return true;
+  if (/\bPASANTES?\b/.test(normal)) return true;
+  if (/\bESTUDIANTES?\b/.test(normal)) return true;
+  if (/\bPRACTICANTES?\b/.test(normal)) return true;
+  if (/\bENZO\b/.test(normal)) return true;
+  if (/\bMERYLL\b/.test(normal)) return true;
+  if (/^(INGRESAN?|SALEN?|PERNOCTAN?|LLEGAN?|VISITAN?)\b/.test(normal)) return true;
+  return false;
+}
+
+/**
+ * Extrae el/los funcionarios responsables al inicio del renglón (el sujeto de
+ * la tarea) y devuelve el título ya sin ese prefijo. Solo se toman las siglas
+ * encadenadas al comienzo ("ES y ME ...", "ME, FC, MN ...", "DT:..."); una
+ * sigla que aparece más adelante ("PS coordina con YC ...") es colaboradora,
+ * no responsable, y no se agrega.
+ */
+function detectarResponsables(linea) {
+  const emparejarSigla = (texto) => {
+    const m = texto.match(/^([A-Za-z]{2,3})(?![A-Za-z])/);
+    if (!m) return null;
+    const clave = m[1].toUpperCase();
+    return aliasFuncionarios[clave] ? { nombre: aliasFuncionarios[clave], largo: m[1].length } : null;
   };
 
-  for (const texto of textos) {
-    const normal = ascii(texto);
-    for (const [alias, nombre] of Object.entries(aliasFuncionarios).sort((a, b) => b[0].length - a[0].length)) {
-      if (contieneAlias(normal, alias)) agregarFuncionario(nombre);
-    }
-    for (const [alias, nombre] of Object.entries(otrosAlias)) {
-      if (contieneAlias(normal, alias)) agregarOtro(nombre);
-    }
-    if (/\bENZO\b/.test(normal)) agregarOtro("Enzo");
-    if (/\bALEX(?:ANDER)?\b/.test(normal)) agregarOtro("Alex");
-    if (/\bMERYLL(?:\s+ARIAS)?\b/.test(normal)) agregarOtro("Meryll Arias");
-    if (/\bLUIS\s*DAVID\b|\bLUISDA\b/.test(normal)) agregarOtro("Luis David");
-    if (/\bVOLUNTARI(?:O|A|OS|AS)\b/.test(normal)) agregarOtro("Voluntariado");
-    if (/\bINVESTIGADOR(?:A|ES|AS)?\b/.test(normal)) agregarOtro("Investigadores");
-    if (/\bPASANTES?\b/.test(normal)) agregarOtro("Pasantes");
-    if (/\bESTUDIANTES?\b/.test(normal)) agregarOtro("Estudiantes");
+  let resto = linea.replace(/^\s+/, "");
+  const primero = emparejarSigla(resto);
+  if (!primero) return { funcionarios: [], titulo: linea.trim() };
+
+  const funcionarios = [primero.nombre];
+  resto = resto.slice(primero.largo);
+
+  // Encadena siglas adicionales unidas por separadores ("y", ",", "/", "-").
+  for (;;) {
+    const sep = resto.match(/^(\s*(?:y|,|\/|-|–|&|;)\s*|\s+)/i);
+    if (!sep) break;
+    const despues = resto.slice(sep[0].length);
+    const siguiente = emparejarSigla(despues);
+    if (!siguiente) break; // el separador pertenece a la tarea, no a otra sigla
+    if (!funcionarios.includes(siguiente.nombre)) funcionarios.push(siguiente.nombre);
+    resto = despues.slice(siguiente.largo);
   }
-  return { funcionarios, otrosParticipantes };
+
+  // Descarta el separador que une el sujeto con la tarea (":", "-", espacios) y
+  // una conjunción suelta que haya quedado de una sigla no reconocida
+  // ("PS y JS" => "JS"). Si no queda tarea, `titulo` es "" y el renglón se omite.
+  const titulo = resto
+    .replace(/^\s*[:\-–]?\s*/, "")
+    .replace(/^(?:y|e|&|,|;)\s+/i, "")
+    .trim();
+  return { funcionarios, titulo };
+}
+
+/**
+ * Repara cortes de palabra a mitad de renglón provenientes de la exportación
+ * del documento (p. ej. "... YC a" + "ctividades de la semana" =>
+ * "... YC actividades de la semana"). Solo une cuando el renglón previo
+ * termina en un fragmento suelto de una letra y el siguiente empieza en
+ * minúscula; así no toca renglones que solo empiezan en minúscula por estilo
+ * ("pernocta covirena", "informes", etc.).
+ */
+function repararCortes(textos) {
+  const salida = [];
+  for (const linea of textos) {
+    const previa = salida[salida.length - 1];
+    if (previa !== undefined && /^[a-záéíóúñ]/.test(linea)) {
+      const ultima = previa.split(/\s+/).pop() || "";
+      if (ultima.length === 1 && /^[a-záéíóúñ]$/.test(ultima)) {
+        salida[salida.length - 1] = previa + linea;
+        continue;
+      }
+    }
+    salida.push(linea);
+  }
+  return salida;
 }
 
 export function convertirPlanificacion2026(texto) {
@@ -111,25 +198,49 @@ export function convertirPlanificacion2026(texto) {
     grupos.get(clave).textos.push(linea);
   }
 
-  return [...grupos.values()].map((grupo, indice) => {
+  const actividades = [];
+  for (const grupo of grupos.values()) {
     const fecha = `2026-${String(grupo.mes).padStart(2, "0")}-${String(grupo.dia).padStart(2, "0")}`;
-    const { funcionarios, otrosParticipantes } = participantes(grupo.textos);
-    return {
-      id: `plan2026-${String(indice + 1).padStart(4, "0")}`,
-      titulo: `Programación institucional — ${grupo.sitio}`,
-      categoria: "Otra actividad",
-      inicio: fecha,
-      fin: fecha,
-      unDia: true,
-      horaInicio: "08:00",
-      horaFin: "16:00",
-      funcionarios,
-      otrosParticipantes,
-      lugar: lugares[grupo.sitio],
-      observaciones: grupo.textos.map((linea) => `• ${linea}`).join("\n"),
-      viatico: false,
-    };
-  });
+    let ultimosFuncionarios = [];
+
+    for (const linea of repararCortes(grupo.textos)) {
+      const { funcionarios: responsables, titulo } = detectarResponsables(linea);
+      if (!titulo) continue;
+
+      let funcionarios;
+      if (responsables.length) {
+        funcionarios = responsables;
+        ultimosFuncionarios = responsables;
+      } else if (esNotaDeInvitado(linea)) {
+        // Tarea de un invitado (voluntario, covirena, etc.): sin funcionario.
+        funcionarios = [];
+      } else if (ultimosFuncionarios.length) {
+        // Continuación sin sigla de la tarea del funcionario anterior
+        // (p. ej. "Charla voluntariado" debajo de "DT:Mantenimiento senderos").
+        funcionarios = ultimosFuncionarios;
+      } else {
+        funcionarios = [];
+      }
+
+      actividades.push({
+        id: `plan2026-${String(actividades.length + 1).padStart(4, "0")}`,
+        titulo,
+        categoria: "Otra actividad",
+        inicio: fecha,
+        fin: fecha,
+        unDia: true,
+        horaInicio: "08:00",
+        horaFin: "16:00",
+        funcionarios,
+        otrosParticipantes: detectarOtros(linea),
+        lugar: lugares[grupo.sitio],
+        observaciones: "",
+        viatico: false,
+      });
+    }
+  }
+
+  return actividades;
 }
 
 export async function cargarPlanificacion2026() {

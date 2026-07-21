@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useApp } from "../../context/AppContext.jsx";
 import { cargarPlanificacion2026 } from "../../data/planificacion2026.js";
 
-const MARCA_IMPORTACION = "btmm:planificacion2026:importada:v2";
+const MARCA_IMPORTACION = "btmm:planificacion2026:importada:v3";
 
 /**
  * Migración única de la programación institucional 2026.
