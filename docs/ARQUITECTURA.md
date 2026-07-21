@@ -70,6 +70,7 @@ initialState(): loadState() síncrono desde localStorage (o seed)
 |---|---|---|
 | Service worker (Workbox) | `vite.config.js` | `skipWaiting` + `clientsClaim` + `cleanupOutdatedCaches`. HTML `NetworkFirst`, assets `StaleWhileRevalidate`, `version.json` `NetworkOnly`. |
 | Heartbeat de versión | `lib/versionCheck.js` | Consulta `/version.json` cada 5 min y al volver el foco/conexión; si difiere, banner de actualización. |
+| Roles institucionales | `data/seedRoles.js` + `context/AppContext.jsx` | Tras hidratar el estado, compara `ROLES_FUENTE_VERSION`; si cambió, reconcilia una sola vez las celdas oficiales de julio-agosto y conserva meses, configuraciones y personas fuera del alcance. |
 | Estado de respaldo global | `ui/SyncStatus.jsx` | Pill en Topbar: en línea/sin conexión + hora del último respaldo + "Guardando…" durante el debounce. |
 | Banner offline | `PWAWrapper.jsx` | "Sin conexión — datos en caché" + fecha de última carga local. |
 | Detalle completo | `features/datos/Datos.jsx` | Backend activo, migración, pendientes de sync, export/import/reset. |

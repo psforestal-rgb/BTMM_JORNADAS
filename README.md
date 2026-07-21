@@ -148,6 +148,23 @@ celda, respetando la **modalidad** del funcionario:
 | 16x8 | 16 | 8 |
 | 20x10 | 20 | 10 |
 
+### Actualización institucional de julio-agosto de 2026
+
+`src/data/seedRoles.js` conserva una versión normalizada del archivo
+institucional **Rol Bloque 2026.xlsm**. Al abrir la aplicación después de un
+despliegue con una versión nueva de esa fuente, la revisión se aplica una sola
+vez y se guarda en localStorage e IndexedDB. La actualización reemplaza
+únicamente las celdas oficiales de julio-agosto —incluidos los blancos que
+retiran una asignación anterior— y conserva enero-junio, setiembre-diciembre,
+las claves de configuración `CFG`, las personas agregadas localmente y sus
+registros fuera del rango oficial.
+
+El libro institucional es privado y está en formato `.xlsm`; GitHub Pages no accede
+directamente a él desde el navegador. Por eso cada revisión del libro debe
+normalizarse en el repositorio y aumentar `ROLES_FUENTE_VERSION`. La apertura
+de la app distribuye automáticamente esa revisión a las instalaciones que aún
+no la tengan.
+
 ---
 
 ## Tema visual (Fase 3)

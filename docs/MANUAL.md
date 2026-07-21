@@ -127,6 +127,10 @@ mayor de reglas).
 - **Mecanismo anti-cache** que evita que un usuario quede atascado
   con código viejo tras un deploy (banner verde "Nueva versión
   disponible", heartbeat cada 5 minutos contra `/version.json`).
+- **Actualización versionada de roles** al abrir: cuando se publica una
+  revisión institucional nueva, julio-agosto se actualiza una sola vez en el
+  dispositivo y queda respaldado localmente; los demás meses y registros
+  locales fuera de ese alcance se conservan.
 
 ### Lo que la herramienta NO hace (verificable)
 - No envía datos a terceros automáticamente.
