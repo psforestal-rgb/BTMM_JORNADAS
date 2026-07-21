@@ -1,10 +1,9 @@
 /**
  * @vitest-environment jsdom
  *
- * Migración de semillas de actividades (julio 2026): un estado persistido
- * anterior a v1.14.13 tiene su propio `actividadesPlan` y, sin migración,
- * las actividades de ejemplo nuevas jamás aparecerían (el arreglo
- * almacenado gana por completo sobre el seed).
+ * Las actividades ficticias fueron retiradas. AppContext debe conservar los
+ * registros persistidos del usuario y dejar una instalación nueva sin
+ * actividades hasta que el importador institucional 2026 complete la carga.
  */
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -48,8 +47,7 @@ function persistir(estado) {
 async function leerContexto() {
   let observado = null;
   function Probe() {
-    const ctx = useApp();
-    observado = ctx;
+    observado = useApp();
     return null;
   }
   await act(async () => {
@@ -62,8 +60,8 @@ async function leerContexto() {
   return observado;
 }
 
-describe("AppContext — migración de actividades de ejemplo (julio 2026)", () => {
-  it("agrega las semillas nuevas a un estado persistido que no las tiene, sin tocar lo del usuario", async () => {
+describe("AppContext — actividades semilla retiradas", () => {
+  it("conserva las actividades persistidas sin resucitar ejemplos eliminados", async () => {
     persistir({
       personas: [],
       actividadesPlan: [actividadUsuario],
@@ -74,14 +72,11 @@ describe("AppContext — migración de actividades de ejemplo (julio 2026)", () 
     });
 
     const ctx = await leerContexto();
-    const ids = ctx.actividadesPlan.map((a) => a.id);
-    expect(ids).toContain(actividadUsuario.id);
-    expect(ids).toContain("a36");
-    expect(ids).toContain("a46");
+    expect(ctx.actividadesPlan.map((a) => a.id)).toEqual([actividadUsuario.id]);
     expect(ctx.migraciones.actividadesEjemploJul2026).toBe(true);
   });
 
-  it("con la migración ya marcada NO resucita semillas borradas por el usuario", async () => {
+  it("con la migración histórica marcada mantiene intactos los registros del usuario", async () => {
     persistir({
       personas: [],
       actividadesPlan: [actividadUsuario],
@@ -92,14 +87,12 @@ describe("AppContext — migración de actividades de ejemplo (julio 2026)", () 
     });
 
     const ctx = await leerContexto();
-    const ids = ctx.actividadesPlan.map((a) => a.id);
-    expect(ids).toEqual([actividadUsuario.id]);
+    expect(ctx.actividadesPlan.map((a) => a.id)).toEqual([actividadUsuario.id]);
   });
 
-  it("una instalación nueva (sin estado persistido) arranca con la migración marcada y las semillas completas", async () => {
+  it("una instalación nueva arranca sin actividades ficticias", async () => {
     const ctx = await leerContexto();
-    const ids = ctx.actividadesPlan.map((a) => a.id);
-    expect(ids).toContain("a46");
+    expect(ctx.actividadesPlan).toEqual([]);
     expect(ctx.migraciones.actividadesEjemploJul2026).toBe(true);
   });
 });
