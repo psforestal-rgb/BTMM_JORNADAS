@@ -2,7 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { baseFuncionarios } from "../data/seedFuncionarios.js";
 import { baseActividadesPlan } from "../data/seedActividades.js";
 import { baseReposiciones } from "../data/seedReposiciones.js";
-import { baseRoleData } from "../data/seedRoles.js";
+import {
+  baseRoleData,
+  reconciliarRoleDataConFuente,
+  ROLES_FUENTE_VERSION,
+} from "../data/seedRoles.js";
 import {
   loadState,
   loadStateAsync,
@@ -35,6 +39,11 @@ const MIGRACION_LIMPIEZA_2026 = "limpiezaEnzoYSetDic2026";
 const MIGRACION_ACTIVIDADES_JUL2026 = "actividadesEjemploJul2026";
 const FECHA_SEMILLAS_JUL2026 = "2026-07-14";
 
+// Versión de la pestaña julio-agosto del rol institucional que ya fue
+// aplicada a este dispositivo. La marca vive dentro del estado persistido
+// para que localStorage e IndexedDB mantengan la misma trazabilidad.
+const MIGRACION_ROLES_FUENTE_2026 = "rolesFuenteJulAgo2026";
+
 // Estado por defecto (datos semilla) cuando no hay nada persistido.
 const seedState = {
   view: "dia",
@@ -47,7 +56,11 @@ const seedState = {
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
   reglas: { ...REGLAS_DEFAULT },
-  migraciones: { [MIGRACION_LIMPIEZA_2026]: true, [MIGRACION_ACTIVIDADES_JUL2026]: true },
+  migraciones: {
+    [MIGRACION_LIMPIEZA_2026]: true,
+    [MIGRACION_ACTIVIDADES_JUL2026]: true,
+    [MIGRACION_ROLES_FUENTE_2026]: ROLES_FUENTE_VERSION,
+  },
 };
 
 // El dashboard quedó fuera de la navegación. Normalizamos snapshots o
@@ -175,6 +188,16 @@ function reducer(state, action) {
       return { ...state, reposiciones: resolveUpdater(action.payload, state.reposiciones) };
     case "SET_ROLE_DATA":
       return { ...state, roleData: resolveUpdater(action.payload, state.roleData) };
+    case "SYNC_ROLES_FUENTE":
+      if (state.migraciones?.[MIGRACION_ROLES_FUENTE_2026] === action.version) return state;
+      return {
+        ...state,
+        roleData: reconciliarRoleDataConFuente(state.roleData),
+        migraciones: {
+          ...(state.migraciones || {}),
+          [MIGRACION_ROLES_FUENTE_2026]: action.version,
+        },
+      };
     case "SET_REGLAS": {
       const next = resolveUpdater(action.payload, state.reglas);
       return { ...state, reglas: mergeReglas(next) };
@@ -211,6 +234,7 @@ export function AppProvider({ children }) {
   const [pendingChanges, setPendingChanges] = useState(0);
   const [storageBackend, setStorageBackend] = useState(() => getBackendInfo());
   const [migracionLs, setMigracionLs] = useState(false);
+  const [hidratacionCompleta, setHidratacionCompleta] = useState(false);
   // Resultado del último intento de guardado, con detalle por backend.
   // `durableSaveFailed` es la señal que la UI usa para mostrar una
   // advertencia recuperable en vez de un simple "guardado" cuando
@@ -259,28 +283,36 @@ export function AppProvider({ children }) {
   useEffect(() => {
     let cancelado = false;
     (async () => {
-      const { state: dbState, source, migrated } = await loadStateAsync();
-      if (cancelado) return;
-      if (migrated) setMigracionLs(true);
-      if (dbState && source === "indexeddb") {
-        const hydratedState = mergePersistedWithSeed(dbState);
-        const dbSerialized = JSON.stringify(pickPersistable(hydratedState));
-        const initialSerialized = initialSignatureRef.current;
-        const currentSerialized = JSON.stringify(pickPersistable(currentStateRef.current));
+      try {
+        const { state: dbState, source, migrated } = await loadStateAsync();
+        if (cancelado) return;
+        if (migrated) setMigracionLs(true);
+        if (dbState && source === "indexeddb") {
+          const hydratedState = mergePersistedWithSeed(dbState);
+          const dbSerialized = JSON.stringify(pickPersistable(hydratedState));
+          const initialSerialized = initialSignatureRef.current;
+          const currentSerialized = JSON.stringify(pickPersistable(currentStateRef.current));
 
-        // Si el estado actual cambió respecto al inicial, hubo edición
-        // del usuario durante la hidratación: NO sobrescribir.
-        if (currentSerialized !== initialSerialized) {
-          hydratedFromIDBRef.current = true;
-          return;
+          // Si el estado actual cambió respecto al inicial, hubo edición
+          // del usuario durante la hidratación: NO sobrescribir.
+          if (currentSerialized !== initialSerialized) return;
+
+          // Si LS y Dexie ya coinciden, no hace falta despachar (evita
+          // render extra en el caso normal del segundo arranque).
+          if (initialSerialized !== dbSerialized) {
+            dispatch({ type: "REPLACE_STATE", payload: hydratedState });
+          }
         }
-        // Si LS y Dexie ya coinciden, no hace falta despachar (evita
-        // render extra en el caso normal del segundo arranque).
-        if (initialSerialized !== dbSerialized) {
-          dispatch({ type: "REPLACE_STATE", payload: hydratedState });
+      } catch (error) {
+        // La aplicación puede seguir con el snapshot síncrono/semilla; la
+        // sincronización oficial de roles todavía debe intentarse.
+        console.error("No fue posible completar la hidratación local", error);
+      } finally {
+        if (!cancelado) {
+          hydratedFromIDBRef.current = true;
+          setHidratacionCompleta(true);
         }
       }
-      hydratedFromIDBRef.current = true;
     })();
     return () => {
       cancelado = true;
@@ -288,6 +320,18 @@ export function AppProvider({ children }) {
     // Solo se ejecuta una vez al montar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Al terminar la hidratación, aplica una nueva revisión oficial de roles
+  // exactamente una vez por versión. El parche solo abarca julio-agosto:
+  // conserva enero-junio, setiembre-diciembre, configuraciones CFG y personas
+  // agregadas localmente. Al ser un cambio normal del reducer, se guarda en
+  // ambos backends mediante el mismo debounce que cualquier edición.
+  useEffect(() => {
+    if (!hidratacionCompleta) return;
+    const aplicada = currentStateRef.current.migraciones?.[MIGRACION_ROLES_FUENTE_2026];
+    if (aplicada === ROLES_FUENTE_VERSION) return;
+    dispatch({ type: "SYNC_ROLES_FUENTE", version: ROLES_FUENTE_VERSION });
+  }, [hidratacionCompleta]);
 
   // Función de guardado real, reasignada en cada render para leer siempre
   // `currentStateRef.current` al vuelo (evita cerrar sobre un `state`
