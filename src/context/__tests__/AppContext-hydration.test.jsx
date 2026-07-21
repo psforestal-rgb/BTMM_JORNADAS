@@ -12,6 +12,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { AppProvider, useApp } from "../AppContext.jsx";
 import { __INTERNALS__, saveToDexie, getDb } from "../../lib/db.js";
+import { ROLES_FUENTE_VERSION } from "../../data/seedRoles.js";
 
 async function resetAll() {
   __INTERNALS__.resetSingleton();
@@ -145,5 +146,48 @@ describe("AppContext — hidratación async desde Dexie", () => {
       expect(observedRoleData).toBeTruthy();
       expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("V3");
     });
+  });
+
+  it("al abrir aplica una revisión nueva de julio-agosto y conserva lo ajeno a la fuente", async () => {
+    await saveToDexie({
+      personas: [{ id: "f1", nombre: "Diana Tencio" }],
+      actividadesPlan: [],
+      reposiciones: [],
+      roleData: {
+        "2026-7-Puesto Quetzales-Diana Tencio-13": "T99",
+        "2026-7-Puesto Orosi-Monserrath Navarro-15": "T1",
+        "2026-9-Puesto Orosi-Errol Salazar-15": "V3",
+        "CFG-2026-7-Puesto Orosi-Errol Salazar": "12x6",
+        "2026-7-Puesto Personal-Persona local-1": "T1",
+      },
+      reglas: {},
+      migraciones: {
+        limpiezaEnzoYSetDic2026: true,
+        actividadesEjemploJul2026: true,
+      },
+    });
+
+    let observado = null;
+    function Probe() {
+      observado = useApp();
+      return null;
+    }
+
+    await act(async () => {
+      render(
+        <AppProvider>
+          <Probe />
+        </AppProvider>,
+      );
+    });
+
+    await waitFor(() => {
+      expect(observado.migraciones.rolesFuenteJulAgo2026).toBe(ROLES_FUENTE_VERSION);
+    });
+    expect(observado.roleData["2026-7-Puesto Quetzales-Diana Tencio-13"]).toBe("V1");
+    expect(observado.roleData["2026-7-Puesto Orosi-Monserrath Navarro-15"]).toBe("");
+    expect(observado.roleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("V3");
+    expect(observado.roleData["CFG-2026-7-Puesto Orosi-Errol Salazar"]).toBe("12x6");
+    expect(observado.roleData["2026-7-Puesto Personal-Persona local-1"]).toBe("T1");
   });
 });
