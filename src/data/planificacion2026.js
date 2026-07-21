@@ -1,5 +1,14 @@
 import { PLANIFICACION_2026_TEXTO } from "./planificacion2026Fuente/index.js";
 
+/**
+ * Versión de la planificación institucional. SUBIR este valor cada vez que
+ * cambie la fuente (`texto*.js`), p. ej. tras sincronizar el Google Doc.
+ * El importador la compara con la versión ya aplicada: si difiere, refresca
+ * las actividades oficiales de hoy en adelante; si coincide, no hace nada.
+ * Formato sugerido: fecha de la sincronización (YYYY-MM-DD[-sufijo]).
+ */
+export const PLANIFICACION_VERSION = "2026-07-21";
+
 const lugares = {
   PNTMM: "Parque Nacional Tapantí Macizo de la Muerte",
   PNLQ: "Parque Nacional Los Quetzales",
@@ -202,6 +211,12 @@ export function convertirPlanificacion2026(texto) {
   for (const grupo of grupos.values()) {
     const fecha = `2026-${String(grupo.mes).padStart(2, "0")}-${String(grupo.dia).padStart(2, "0")}`;
     let ultimosFuncionarios = [];
+    // Secuencia por celda (fecha + sitio) para un id determinista y estable.
+    // Un id posicional global (`plan2026-0001`) se renumera si la fuente
+    // cambia antes de `hoy`, y al refrescar "de hoy en adelante" un id nuevo
+    // podía chocar con el de una fila pasada conservada (claves React/selección
+    // duplicadas). Al incluir la fecha, pasado y futuro nunca comparten id.
+    let secuencia = 0;
 
     for (const linea of repararCortes(grupo.textos)) {
       const { funcionarios: responsables, titulo } = detectarResponsables(linea);
@@ -223,7 +238,7 @@ export function convertirPlanificacion2026(texto) {
       }
 
       actividades.push({
-        id: `plan2026-${String(actividades.length + 1).padStart(4, "0")}`,
+        id: `plan2026-${fecha}-${grupo.sitio}-${secuencia++}`,
         titulo,
         categoria: "Otra actividad",
         inicio: fecha,
@@ -241,6 +256,32 @@ export function convertirPlanificacion2026(texto) {
   }
 
   return actividades;
+}
+
+/** Una actividad es "oficial" (proviene de la planificación) si su id lleva
+ * el prefijo `plan2026-`. Las actividades creadas por el usuario usan otro id
+ * y nunca se tocan durante un refresco. */
+export function esActividadOficial(actividad) {
+  return typeof actividad?.id === "string" && actividad.id.startsWith("plan2026-");
+}
+
+/**
+ * Refresco incremental "de hoy en adelante" cuando llega una planificación
+ * nueva. Regla (el plan manda para el futuro, sin perder lo demás):
+ *   - Conserva TODO lo anterior a `hoy` (oficial o propio).
+ *   - Conserva TODAS las actividades propias del usuario (cualquier fecha).
+ *   - Reemplaza las actividades OFICIALES con fecha >= `hoy` por las de la
+ *     fuente nueva (refleja altas, cambios y bajas del documento).
+ * `hoy` es una fecha ISO local (YYYY-MM-DD).
+ */
+export function reconciliarPlanificacion(previas, nuevas, hoy) {
+  const conservadas = (previas || []).filter(
+    (a) => !(esActividadOficial(a) && (a.inicio || "") >= hoy),
+  );
+  const oficialesFuturas = (nuevas || []).filter(
+    (a) => esActividadOficial(a) && (a.inicio || "") >= hoy,
+  );
+  return [...conservadas, ...oficialesFuturas];
 }
 
 export async function cargarPlanificacion2026() {

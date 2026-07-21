@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { APP_VERSION, formatBuildTime } from './lib/appVersion.js'
 import { startVersionCheck } from './lib/versionCheck.js'
 import { t } from './i18n/es-CR.js'
 
 const LAST_LOADED_KEY = 'pnlq:lastLoadedAt'
+// Commit remoto para el que ya se intentó una auto-actualización en esta
+// sesión (sessionStorage). Evita bucles de recarga si, tras recargar, la
+// versión sigue viéndose desactualizada (p. ej. CDN rezagada).
+const AUTO_UPDATE_KEY = 'pnlq:autoUpdateIntento'
 
 function InstallBanner({ onInstall, onDismiss }) {
   return (
@@ -169,9 +173,29 @@ export default function PWAWrapper({ children }) {
     }
   }, [])
 
+  // Ref siempre apuntando al `updateServiceWorker` vigente, para usarlo dentro
+  // del callback de verificación sin re-suscribir el chequeo en cada render.
+  const updateSWRef = useRef(updateServiceWorker)
+  useEffect(() => { updateSWRef.current = updateServiceWorker }, [updateServiceWorker])
+
   useEffect(() => {
     const stop = startVersionCheck({
-      onOutdated: (info) => setVersionOutdated(info),
+      onOutdated: (info) => {
+        // Refuerzo anti-cacheo: si al ABRIR la app ya hay una versión nueva,
+        // se actualiza sola (recarga segura: el estado se autoguarda), sin
+        // esperar a que el usuario toque el aviso. A mitad de sesión no se
+        // recarga: se muestra el aviso para no interrumpir el trabajo.
+        if (info?.immediate && info.remoteCommit) {
+          let intentado = null
+          try { intentado = sessionStorage.getItem(AUTO_UPDATE_KEY) } catch { /* no-op */ }
+          if (intentado !== info.remoteCommit) {
+            try { sessionStorage.setItem(AUTO_UPDATE_KEY, info.remoteCommit) } catch { /* no-op */ }
+            updateSWRef.current?.(true)
+            return
+          }
+        }
+        setVersionOutdated(info)
+      },
     })
     return stop
   }, [])
