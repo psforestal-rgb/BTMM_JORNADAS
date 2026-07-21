@@ -114,7 +114,7 @@ export default function Configuracion() {
         </details>
 
         {/* Viáticos */}
-        <details open className="mb-3 rounded-2xl border border-line p-3">
+        <details className="mb-3 rounded-2xl border border-line p-3">
           <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">{t("configuracion.viaticosTitulo")}</summary>
           <div className="grid gap-3 md:grid-cols-3">
             <label className="block">

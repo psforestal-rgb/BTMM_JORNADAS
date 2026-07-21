@@ -33,7 +33,7 @@ function ColHead({ label }) {
   );
 }
 
-function SubgrupoPuesto({ label, n, children, defaultOpen = true }) {
+function SubgrupoPuesto({ label, n, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div>
@@ -278,7 +278,6 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         ariaLabel={t("dia.actividadesTitulo", { n: actsDelDia.length })}
         icon="🗓️"
         collapsible
-        defaultOpen
         action={
           <button
             id="dia-boton-nueva-actividad"
@@ -397,7 +396,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       </Card>
 
       {/* En turno sin actividad — abierta por defecto: requiere asignar. */}
-      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible defaultOpen>
+      <Card title={t("dia.enTurnoSinActTitulo", { n: enTurnoSinAct.length })} icon={enTurnoSinAct.length > 0 ? "⚠️" : "✅"} collapsible>
         {enTurnoSinAct.length === 0 ? (
           <p className="text-sm text-ink-muted">{t("dia.enTurnoSinActVacio")}</p>
         ) : (
