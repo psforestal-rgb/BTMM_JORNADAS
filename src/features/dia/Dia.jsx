@@ -80,6 +80,8 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     reposicion: reposicionesDia[`${nombre}|${diaVista}`],
   });
   const [modalActividad, setModalActividad] = useState(null);
+  const [tipoFiltroActividades, setTipoFiltroActividades] = useState("general");
+  const [valorFiltroActividades, setValorFiltroActividades] = useState("");
   const [yearD, monthD, dayD] = diaVista.split("-").map(Number);
   const monthIdx = monthD - 1;
   const feriados = useFeriadosDelAno(yearD);
@@ -99,7 +101,38 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   const enTurnoSinAct = statusDia.filter((p) => p.enTurno && !p.tieneActividad);
   const fueraDeTurno = statusDia.filter((p) => !p.enTurno);
   const conViatico = statusDia.filter((p) => p.tieneViatico);
-  const actsDelDia = actividadesEnDia(actividadesPlan, diaVista).sort((a, b) => a.titulo.localeCompare(b.titulo));
+  const compararTexto = (a, b) => String(a || "").localeCompare(String(b || ""), "es-CR", { sensitivity: "base" });
+  const personaPorNombre = new Map(personasActivas.map((p) => [p.nombre, p]));
+  const actsDelDia = actividadesEnDia(actividadesPlan, diaVista)
+    .map((act) => ({
+      ...act,
+      funcionarios: [...(act.funcionarios || [])].sort(compararTexto),
+    }))
+    .sort((a, b) => {
+      const porFuncionario = compararTexto(a.funcionarios[0] || "\uffff", b.funcionarios[0] || "\uffff");
+      return porFuncionario || compararTexto(a.titulo, b.titulo);
+    });
+  const funcionariosConActividades = [...new Set(actsDelDia.flatMap((act) => act.funcionarios))].sort(compararTexto);
+  const puestosConActividades = [...new Set(
+    funcionariosConActividades
+      .map((nombre) => personaPorNombre.get(nombre)?.puestoOperativo)
+      .filter(Boolean),
+  )].sort(compararTexto);
+  const opcionesFiltroActividades = tipoFiltroActividades === "funcionario"
+    ? funcionariosConActividades
+    : tipoFiltroActividades === "puesto"
+    ? puestosConActividades
+    : [];
+  const valorFiltroActivo = opcionesFiltroActividades.includes(valorFiltroActividades)
+    ? valorFiltroActividades
+    : opcionesFiltroActividades[0] || "";
+  const actsVisibles = actsDelDia.filter((act) => {
+    if (tipoFiltroActividades === "funcionario") return act.funcionarios.includes(valorFiltroActivo);
+    if (tipoFiltroActividades === "puesto") {
+      return act.funcionarios.some((nombre) => personaPorNombre.get(nombre)?.puestoOperativo === valorFiltroActivo);
+    }
+    return true;
+  });
   const statsPuesto = opcionesPuestoOperativo.map((puesto) => {
     const delPuesto = statusDia.filter((p) => (p.puestoOperativo || "") === puesto);
     const enTurno = delPuesto.filter((p) => p.enTurno);
@@ -231,7 +264,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
 
       {/* Cobertura + actividades: una columna en móvil; desde md, dos
           columnas lado a lado para aprovechar tablet/escritorio. */}
-      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+      <div className="grid gap-4 md:grid-cols-[minmax(19rem,0.85fr)_minmax(0,1.25fr)] md:items-start xl:grid-cols-[minmax(24rem,0.8fr)_minmax(0,1.4fr)]">
       {/* Resumen por puesto — siempre visible: es el dato crítico del día,
           no debe quedar oculto detrás de un colapsable. */}
       <Card title={t("dia.porPuesto")} icon="📍">
@@ -289,15 +322,67 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           </button>
         }
       >
-        {actsDelDia.length === 0 ? (
+        <div className="mb-4 rounded-xl border border-line bg-surface-inset p-3">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-muted">
+            {t("dia.filtroActividades.mostrar")}
+          </div>
+          <div role="group" aria-label={t("dia.filtroActividades.aria")} className="grid grid-cols-3 gap-1 rounded-xl bg-surface-alt p-1">
+            {[
+              ["general", t("dia.filtroActividades.general")],
+              ["funcionario", t("dia.filtroActividades.funcionario")],
+              ["puesto", t("dia.filtroActividades.puesto")],
+            ].map(([tipo, label]) => (
+              <button
+                key={tipo}
+                type="button"
+                aria-pressed={tipoFiltroActividades === tipo}
+                onClick={() => {
+                  setTipoFiltroActividades(tipo);
+                  setValorFiltroActividades("");
+                }}
+                className={`min-h-touch rounded-lg px-2 py-2 text-xs font-semibold transition-colors sm:text-sm ${
+                  tipoFiltroActividades === tipo
+                    ? "bg-surface text-brand shadow-sm"
+                    : "text-ink-muted hover:bg-surface hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {tipoFiltroActividades !== "general" && (
+            <label className="mt-3 block text-xs font-semibold text-ink-muted">
+              {tipoFiltroActividades === "funcionario"
+                ? t("dia.filtroActividades.seleccionarFuncionario")
+                : t("dia.filtroActividades.seleccionarPuesto")}
+              <select
+                value={valorFiltroActivo}
+                onChange={(e) => setValorFiltroActividades(e.target.value)}
+                className="mt-1 min-h-touch w-full rounded-xl border border-line bg-surface px-3 text-sm font-semibold text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              >
+                {opcionesFiltroActividades.map((opcion) => (
+                  <option key={opcion} value={opcion}>
+                    {tipoFiltroActividades === "puesto" ? opcion.replace("Puesto ", "") : opcion}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div aria-live="polite" className="mt-2 text-xs text-ink-muted">
+            {t("dia.filtroActividades.resultados", { n: actsVisibles.length, total: actsDelDia.length })}
+          </div>
+        </div>
+
+        {actsVisibles.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink-muted">{t("dia.sinActividades")}</div>
         ) : (
           <div className="space-y-3">
-            {actsDelDia.map((act) => {
+            {actsVisibles.map((act) => {
               const conf = conflictosActividadDia(act, dayD, yearD, monthIdx, personas, roleData, feriados);
               return (
                 <div
                   key={act.id}
+                  data-actividad-id={act.id}
                   className={`rounded-lg p-4 ${
                     // Conflicto: acento lateral en vez de borde completo — el rojo
                     // no debe dominar la lectura cuando hay varias actividades.

@@ -7,7 +7,111 @@ import { PLANIFICACION_2026_TEXTO } from "./planificacion2026Fuente/index.js";
  * las actividades oficiales de hoy en adelante; si coincide, no hace nada.
  * Formato sugerido: fecha de la sincronización (YYYY-MM-DD[-sufijo]).
  */
-export const PLANIFICACION_VERSION = "2026-07-21";
+export const PLANIFICACION_VERSION = "2026-07-21-agenda-viaticos";
+
+function actividadAdicional({ id, titulo, fecha, funcionarios, lugar = "", observaciones = "" }) {
+  return {
+    id: `plan2026-agenda-${id}`,
+    titulo,
+    categoria: "Otra actividad",
+    inicio: fecha,
+    fin: fecha,
+    unDia: true,
+    horaInicio: "08:00",
+    horaFin: "16:00",
+    funcionarios,
+    otrosParticipantes: [],
+    lugar,
+    observaciones,
+    viatico: true,
+  };
+}
+
+// Agenda complementaria recibida el 15/07/2026. Las filas coincidentes por
+// fecha y actividad se agrupan en un registro con varios funcionarios. Por
+// indicación operativa, cada fecha es una actividad individual y requiere
+// viático.
+export const ACTIVIDADES_ADICIONALES_AGOSTO_2026 = [
+  actividadAdicional({
+    id: "2026-08-01-cerro-vueltas",
+    titulo: "PPC (entrada de Cerro Vueltas, tema caballistas)",
+    fecha: "2026-08-01",
+    funcionarios: ["Jetzelly Villalobos", "Yolanda Elizondo"],
+    lugar: "Entrada de Cerro Vueltas",
+    observaciones: "Tema: caballistas.",
+  }),
+  actividadAdicional({
+    id: "2026-08-05-reunion-cne",
+    titulo: "Reunión CNE",
+    fecha: "2026-08-05",
+    funcionarios: ["Karen Valle"],
+    lugar: "CNE",
+  }),
+  actividadAdicional({
+    id: "2026-08-06-jaular",
+    titulo: "PPC pica montaña a Jaular",
+    fecha: "2026-08-06",
+    funcionarios: ["Yeison Cortés", "Errol Salazar", "Kenneth Mena"],
+    lugar: "Jaular",
+  }),
+  actividadAdicional({
+    id: "2026-08-08-cerros",
+    titulo: "PPC a Cerros",
+    fecha: "2026-08-08",
+    funcionarios: ["Yolanda Elizondo"],
+    lugar: "Cerros",
+  }),
+  ...[10, 11, 12, 13, 14].map((dia) => actividadAdicional({
+    id: `2026-08-${dia}-ea-escuelas`,
+    titulo: "EA Escuelas",
+    fecha: `2026-08-${dia}`,
+    funcionarios: ["Errol Salazar", "Diana Tencio"],
+    lugar: "Escuelas",
+  })),
+  actividadAdicional({
+    id: "2026-08-12-ppc-san-gerardo",
+    titulo: "PPC San Gerardo",
+    fecha: "2026-08-12",
+    funcionarios: ["Karen Valle", "Laura Valverde", "Pablo Sánchez"],
+    lugar: "San Gerardo",
+  }),
+  actividadAdicional({
+    id: "2026-08-12-capacitacion-serpientes",
+    titulo: "Capacitación en manipulación y manejo de serpientes",
+    fecha: "2026-08-12",
+    funcionarios: ["Yeison Cortés", "Laura Valverde"],
+    observaciones: "Las dos descripciones de la fuente se consolidaron en una sola actividad.",
+  }),
+  actividadAdicional({
+    id: "2026-08-16-duelas-esperanza",
+    titulo: "PPC Duelas, La Esperanza y otros",
+    fecha: "2026-08-16",
+    funcionarios: ["Jetzelly Villalobos"],
+    lugar: "Duelas y La Esperanza",
+  }),
+  actividadAdicional({
+    id: "2026-08-17-vida-silvestre-acc",
+    titulo: "Apoyo operativo Vida Silvestre ACC",
+    fecha: "2026-08-17",
+    funcionarios: ["Fabricio Carbonell", "Kenneth Mena", "Jetzelly Villalobos"],
+    lugar: "ACC",
+    observaciones: "Confirmar detalles con Fabricio.",
+  }),
+  actividadAdicional({
+    id: "2026-08-18-reserva-san-gerardo",
+    titulo: "PPC Reserva San Gerardo",
+    fecha: "2026-08-18",
+    funcionarios: ["Karen Valle", "Yolanda Elizondo", "Pablo Sánchez"],
+    lugar: "Reserva San Gerardo",
+  }),
+  actividadAdicional({
+    id: "2026-08-30-rancho-lalo",
+    titulo: "PPC Rancho de Lalo",
+    fecha: "2026-08-30",
+    funcionarios: ["Jetzelly Villalobos", "Mariano Solís"],
+    lugar: "Rancho de Lalo",
+  }),
+];
 
 const lugares = {
   PNTMM: "Parque Nacional Tapantí Macizo de la Muerte",
@@ -287,5 +391,5 @@ export function reconciliarPlanificacion(previas, nuevas, hoy) {
 export async function cargarPlanificacion2026() {
   const actividades = convertirPlanificacion2026(PLANIFICACION_2026_TEXTO);
   if (!actividades.length) throw new Error("La planificación 2026 no produjo actividades válidas.");
-  return actividades;
+  return [...actividades, ...ACTIVIDADES_ADICIONALES_AGOSTO_2026];
 }

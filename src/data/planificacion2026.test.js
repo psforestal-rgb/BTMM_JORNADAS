@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ACTIVIDADES_ADICIONALES_AGOSTO_2026,
   PLANIFICACION_VERSION,
   cargarPlanificacion2026,
   convertirPlanificacion2026,
@@ -124,6 +125,24 @@ YC patrullaje`;
   it("expone una versión de planificación no vacía", () => {
     expect(typeof PLANIFICACION_VERSION).toBe("string");
     expect(PLANIFICACION_VERSION.length).toBeGreaterThan(0);
+  });
+
+  it("incorpora la agenda complementaria de agosto agrupada, por día y con viático", () => {
+    expect(ACTIVIDADES_ADICIONALES_AGOSTO_2026).toHaveLength(15);
+    expect(ACTIVIDADES_ADICIONALES_AGOSTO_2026.every((a) => a.viatico)).toBe(true);
+    expect(ACTIVIDADES_ADICIONALES_AGOSTO_2026.every((a) => a.unDia && a.inicio === a.fin)).toBe(true);
+
+    const sanGerardo = ACTIVIDADES_ADICIONALES_AGOSTO_2026.find((a) => a.titulo === "PPC San Gerardo");
+    expect(sanGerardo.funcionarios).toEqual(["Karen Valle", "Laura Valverde", "Pablo Sánchez"]);
+
+    const escuelas = ACTIVIDADES_ADICIONALES_AGOSTO_2026.filter((a) => a.titulo === "EA Escuelas");
+    expect(escuelas.map((a) => a.inicio)).toEqual([
+      "2026-08-10",
+      "2026-08-11",
+      "2026-08-12",
+      "2026-08-13",
+      "2026-08-14",
+    ]);
   });
 
   it("refleja el ejemplo real del 21 de julio en Los Quetzales", async () => {
