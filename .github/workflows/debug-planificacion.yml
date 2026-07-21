@@ -1,0 +1,18 @@
+name: Debug planificación 2026
+on:
+  push:
+    branches: [hotfix/planificacion-2026-offline]
+permissions:
+  contents: read
+jobs:
+  contar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Contar actividades
+        run: node --input-type=module -e 'import("./src/data/planificacion2026.js").then(async ({cargarPlanificacion2026}) => { const a = await cargarPlanificacion2026(); console.log("TOTAL_ACTIVIDADES=" + a.length); console.log("JULIO_20_PNLQ=" + a.some(x => x.inicio === "2026-07-20" && x.lugar === "Parque Nacional Los Quetzales")); })'
