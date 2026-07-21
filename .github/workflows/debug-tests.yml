@@ -2,6 +2,8 @@ name: Debug tests
 on:
   push:
     branches: [codex/importar-planificacion-2026]
+  pull_request:
+    branches: [main]
 permissions:
   contents: read
 jobs:
