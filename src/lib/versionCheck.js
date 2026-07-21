@@ -13,14 +13,21 @@ export function startVersionCheck({ intervalMs = DEFAULT_INTERVAL_MS, onOutdated
   let stopped = false
   let timer = null
 
+  // La primera verificación ocurre al abrir la app (`immediate`): permite que
+  // el consumidor auto-actualice en ese momento (recarga segura) en lugar de
+  // solo mostrar el aviso. Las verificaciones periódicas o por foco no lo son.
+  let primera = true
+
   const check = async () => {
     if (stopped || typeof navigator === 'undefined' || !navigator.onLine) return
+    const immediate = primera
+    primera = false
     try {
       const remote = await fetchRemoteVersion()
       // Compara por commit (no solo por número de versión) para detectar
       // cualquier despliegue nuevo, incluso cuando package.json no cambió.
       if (remote?.commit && remote.commit !== APP_COMMIT) {
-        onOutdated?.({ local: APP_VERSION, remote: remote.version, remoteBuildTime: remote.buildTime, remoteCommit: remote.commit })
+        onOutdated?.({ local: APP_VERSION, remote: remote.version, remoteBuildTime: remote.buildTime, remoteCommit: remote.commit, immediate })
       }
     } catch {
       // silencioso: sin red o JSON ausente; reintenta en el siguiente tick.

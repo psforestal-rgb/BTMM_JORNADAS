@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cargarPlanificacion2026, convertirPlanificacion2026 } from "./planificacion2026.js";
+import {
+  PLANIFICACION_VERSION,
+  cargarPlanificacion2026,
+  convertirPlanificacion2026,
+  esActividadOficial,
+  reconciliarPlanificacion,
+} from "./planificacion2026.js";
 
 describe("convertirPlanificacion2026", () => {
   it("crea una actividad por tarea con el texto descriptivo como título", () => {
@@ -109,6 +115,11 @@ YC patrullaje`;
     expect(actividades.some((a) => a.inicio === "2026-07-20" && a.lugar === "Parque Nacional Los Quetzales")).toBe(true);
   });
 
+  it("expone una versión de planificación no vacía", () => {
+    expect(typeof PLANIFICACION_VERSION).toBe("string");
+    expect(PLANIFICACION_VERSION.length).toBeGreaterThan(0);
+  });
+
   it("refleja el ejemplo real del 21 de julio en Los Quetzales", async () => {
     const actividades = await cargarPlanificacion2026();
     const delDia = actividades
@@ -121,5 +132,64 @@ YC patrullaje`;
       { titulo: "coordina con YC actividades de la semana", funcionarios: ["Pablo Sánchez"] },
       { titulo: "reunión", funcionarios: ["Karen Valle"] },
     ]);
+  });
+});
+
+describe("esActividadOficial", () => {
+  it("reconoce las actividades importadas por su id plan2026-", () => {
+    expect(esActividadOficial({ id: "plan2026-0001" })).toBe(true);
+    expect(esActividadOficial({ id: "abc-123" })).toBe(false);
+    expect(esActividadOficial({})).toBe(false);
+    expect(esActividadOficial(null)).toBe(false);
+  });
+});
+
+describe("reconciliarPlanificacion (refresco de hoy en adelante)", () => {
+  const HOY = "2026-07-21";
+  const oficial = (id, inicio, extra = {}) => ({ id, inicio, funcionarios: [], ...extra });
+  const propia = (id, inicio, extra = {}) => ({ id, inicio, funcionarios: [], ...extra });
+
+  it("conserva el pasado oficial y no lo reemplaza", () => {
+    const previas = [oficial("plan2026-0001", "2026-07-10", { titulo: "pasado" })];
+    const nuevas = [oficial("plan2026-0001", "2026-07-10", { titulo: "pasado editado" })];
+    const resultado = reconciliarPlanificacion(previas, nuevas, HOY);
+    expect(resultado).toEqual([{ id: "plan2026-0001", inicio: "2026-07-10", funcionarios: [], titulo: "pasado" }]);
+  });
+
+  it("conserva las actividades propias del usuario en cualquier fecha", () => {
+    const previas = [
+      propia("user-abc", "2026-12-01", { titulo: "mi actividad futura", funcionarios: ["Karen Valle"] }),
+      propia("user-xyz", "2026-01-05", { titulo: "mi actividad pasada" }),
+    ];
+    const nuevas = [];
+    const resultado = reconciliarPlanificacion(previas, nuevas, HOY);
+    expect(resultado).toEqual(previas);
+  });
+
+  it("reemplaza las actividades oficiales de hoy en adelante por la fuente nueva", () => {
+    const previas = [
+      oficial("plan2026-0009", "2026-07-25", { titulo: "viejo", funcionarios: ["Yeison Cortés"] }),
+    ];
+    const nuevas = [
+      oficial("plan2026-0009", "2026-07-25", { titulo: "nuevo", funcionarios: ["Diana Tencio"] }),
+    ];
+    const resultado = reconciliarPlanificacion(previas, nuevas, HOY);
+    expect(resultado).toEqual([
+      { id: "plan2026-0009", inicio: "2026-07-25", funcionarios: ["Diana Tencio"], titulo: "nuevo" },
+    ]);
+  });
+
+  it("refleja altas y bajas del documento a futuro, incluida la fecha de hoy", () => {
+    const previas = [
+      oficial("plan2026-0001", "2026-07-10", { titulo: "pasado" }), // se conserva
+      oficial("plan2026-0050", "2026-07-21", { titulo: "hoy vieja" }), // baja
+      oficial("plan2026-0051", "2026-08-01", { titulo: "futura vieja" }), // baja
+    ];
+    const nuevas = [
+      oficial("plan2026-0050", "2026-07-21", { titulo: "hoy nueva" }), // alta/cambio
+      oficial("plan2026-0099", "2026-09-15", { titulo: "nueva futura" }), // alta
+    ];
+    const resultado = reconciliarPlanificacion(previas, nuevas, HOY);
+    expect(resultado.map((a) => a.titulo)).toEqual(["pasado", "hoy nueva", "nueva futura"]);
   });
 });
