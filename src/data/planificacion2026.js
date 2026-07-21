@@ -1,5 +1,4 @@
-const DOCUMENTO_ID = "12K3C6CmQ1xcwo4zfS8hZF4qObRb8EvyFHDwI9WZ9ZiU";
-const URL_EXPORTACION = `https://docs.google.com/document/d/${DOCUMENTO_ID}/export?format=txt`;
+import { PLANIFICACION_2026_TEXTO } from "./planificacion2026Fuente/index.js";
 
 const lugares = {
   PNTMM: "Parque Nacional Tapantí Macizo de la Muerte",
@@ -82,7 +81,13 @@ export function convertirPlanificacion2026(texto) {
 
   for (const lineaOriginal of texto.split(/\r?\n/)) {
     const linea = lineaOriginal.trim();
-    if (!linea || diasSemana.has(linea) || /^_+$/.test(linea) || linea === "De") continue;
+    if (
+      !linea ||
+      diasSemana.has(linea) ||
+      /^_+$/.test(linea) ||
+      linea === "De" ||
+      /^Pestaña\s+\d+$/i.test(linea)
+    ) continue;
     const encabezadoMes = linea.match(/^([A-ZÁÉÍÓÚÑ]+) 2026$/);
     if (encabezadoMes && meses[encabezadoMes[1]]) {
       mes = meses[encabezadoMes[1]];
@@ -128,9 +133,7 @@ export function convertirPlanificacion2026(texto) {
 }
 
 export async function cargarPlanificacion2026() {
-  const respuesta = await fetch(URL_EXPORTACION, { cache: "no-store", credentials: "omit" });
-  if (!respuesta.ok) throw new Error(`No se pudo descargar la planificación 2026 (${respuesta.status}).`);
-  const actividades = convertirPlanificacion2026(await respuesta.text());
+  const actividades = convertirPlanificacion2026(PLANIFICACION_2026_TEXTO);
   if (!actividades.length) throw new Error("La planificación 2026 no produjo actividades válidas.");
   return actividades;
 }
