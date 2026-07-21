@@ -8,6 +8,7 @@ import BottomNav from "./layout/BottomNav.jsx";
 import { useAppNavigation } from "./lib/useAppNavigation.js";
 import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 import ErrorBoundary from "./ui/ErrorBoundary.jsx";
+import ImportadorPlanificacion2026 from "./features/planificacion/ImportadorPlanificacion2026.jsx";
 
 // Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
 // para reducir el tiempo de carga inicial en dispositivos modestos.
@@ -77,6 +78,7 @@ function AppShell() {
 
   return (
     <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-surface-alt text-ink ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
+      <ImportadorPlanificacion2026 />
       <div className="flex min-h-screen">
         <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
         {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho
