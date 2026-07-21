@@ -19,7 +19,9 @@ export default function Card({
   action,
   children,
   collapsible = false,
-  defaultOpen = true,
+  // Divulgación progresiva: lo colapsable viene contraído por defecto para no
+  // saturar la pantalla; el usuario abre solo lo que necesita.
+  defaultOpen = false,
   variant = "flat",
   className = "",
   ariaLabel,
