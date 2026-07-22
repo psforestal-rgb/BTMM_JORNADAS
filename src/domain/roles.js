@@ -182,6 +182,121 @@ export function patchCategoriaDia({ roleData, personas, year, month, persona, di
   return patch;
 }
 
+/**
+ * Posición (0-indexada) dentro del ciclo T/L que corresponde a un código
+ * concreto (p. ej. en 10x5: "T1"→0, "T10"→9, "L1"→10, "L5"→14). Devuelve
+ * `null` si el código no es un turno/libre válido para la modalidad (vacío,
+ * V/I/O, número fuera de rango o modalidad administrativa, que no tiene
+ * ciclo). Es la operación inversa de `codigoDePosCiclo`.
+ */
+export function posCicloDeCodigo(codigo, modalidad) {
+  const cfg = parseModalidad(modalidad);
+  if (cfg.administrativo) return null;
+  const x = String(codigo || "").toUpperCase();
+  const mT = /^T(\d+)$/.exec(x);
+  if (mT) {
+    const n = Number(mT[1]);
+    if (n >= 1 && n <= cfg.trabajo) return n - 1;
+    return null;
+  }
+  const mL = /^L(\d+)$/.exec(x);
+  if (mL) {
+    const n = Number(mL[1]);
+    if (n >= 1 && n <= cfg.libre) return cfg.trabajo + n - 1;
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Código T/L que corresponde a una posición del ciclo (0-indexada), con
+ * envoltura modular (acepta posiciones negativas o mayores que el ciclo).
+ * En 10x5: 0→"T1", 9→"T10", 10→"L1", 15→"T1". Operación inversa de
+ * `posCicloDeCodigo` (para modalidades de turnos, no administrativas).
+ */
+export function codigoDePosCiclo(pos, modalidad) {
+  const cfg = parseModalidad(modalidad);
+  const ciclo = cfg.trabajo + cfg.libre;
+  const p = (((pos % ciclo) + ciclo) % ciclo) | 0;
+  if (p < cfg.trabajo) return `T${p + 1}`;
+  return `L${p - cfg.trabajo + 1}`;
+}
+
+/**
+ * Genera el patrón de rol para cada día del rango [desde, hasta] inclusive,
+ * de forma CONTINUA a través de los meses: el ciclo T/L no se reinicia al
+ * cambiar de mes (a diferencia de `generarValorPatron`, que ancla cada mes
+ * en su primer día laboral). `desde` y `hasta` son `{ year, month, day }`
+ * con `month` 0-indexado (convención de `Date`).
+ *
+ *  - `posInicial` es la posición de ciclo (0 = T1) que se asigna al primer
+ *    día del rango. Para "reiniciar" la rotación se pasa 0; para
+ *    "continuar" desde un rol previo, la posición siguiente a la del último
+ *    día ya programado.
+ *  - Para el horario administrativo el patrón depende solo del día de la
+ *    semana y `posInicial` se ignora.
+ *
+ * Devuelve un arreglo `[{ year, month, day, valor }]` en orden cronológico.
+ * Si `hasta` es anterior a `desde` devuelve un arreglo vacío.
+ */
+export function generarPatronRangoContinuo({ modalidad, desde, hasta, posInicial = 0 }) {
+  const cfg = parseModalidad(modalidad);
+  const resultado = [];
+  const fin = new Date(hasta.year, hasta.month, hasta.day);
+  const cursor = new Date(desde.year, desde.month, desde.day);
+  let offset = 0;
+  while (cursor <= fin) {
+    const y = cursor.getFullYear();
+    const m = cursor.getMonth();
+    const d = cursor.getDate();
+    let valor;
+    if (cfg.administrativo) {
+      const dow = cursor.getDay();
+      valor = dow >= 1 && dow <= 5 ? `T${dow}` : dow === 6 ? "L1" : "L2";
+    } else {
+      valor = codigoDePosCiclo(posInicial + offset, modalidad);
+    }
+    resultado.push({ year: y, month: m, day: d, valor });
+    cursor.setDate(cursor.getDate() + 1);
+    offset += 1;
+  }
+  return resultado;
+}
+
+function escapeRegExp(texto) {
+  return String(texto).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Busca en `roleData` el último día (fecha máxima) que tiene un rol
+ * explícitamente programado (override no vacío en `rolKey`) para un
+ * `puesto`/`persona` dados. Ignora la modalidad configurada (`rolCfgKey`) y
+ * los días derivados dinámicamente del patrón: solo cuenta lo guardado día
+ * a día. Devuelve `{ year, month, day }` (month 0-indexado) o `null` si la
+ * persona no tiene ningún día programado.
+ */
+export function ultimoDiaProgramado(roleData, puesto, persona) {
+  if (!roleData) return null;
+  const re = new RegExp(`^(\\d+)-(\\d+)-${escapeRegExp(puesto)}-${escapeRegExp(persona)}-(\\d+)$`);
+  let best = null;
+  let bestRank = -1;
+  for (const key of Object.keys(roleData)) {
+    const val = roleData[key];
+    if (val == null || val === "") continue;
+    const mt = re.exec(key);
+    if (!mt) continue;
+    const year = Number(mt[1]);
+    const month = Number(mt[2]) - 1;
+    const day = Number(mt[3]);
+    const rank = year * 10000 + month * 100 + day;
+    if (rank > bestRank) {
+      bestRank = rank;
+      best = { year, month, day };
+    }
+  }
+  return best;
+}
+
 // Renumera consecutivamente toda una fila tras un cambio puntual de categoría.
 // `days` es el listado de días del mes; `categorias[d]` la categoría destino por día.
 export function renumerarFila({ days, categorias, modalidad }) {

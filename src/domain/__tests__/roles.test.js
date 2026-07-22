@@ -9,6 +9,10 @@ import {
   categoriaDe,
   formatearCategoria,
   renumerarFila,
+  posCicloDeCodigo,
+  codigoDePosCiclo,
+  generarPatronRangoContinuo,
+  ultimoDiaProgramado,
 } from "../roles.js";
 
 describe("roles.rolKey / rolCfgKey", () => {
@@ -133,5 +137,109 @@ describe("roles.renumerarFila", () => {
     expect(resultado[2]).toBe("");
     expect(resultado[3]).toBe("T1");
     expect(resultado[4]).toBe("T2");
+  });
+});
+
+describe("roles.posCicloDeCodigo / codigoDePosCiclo", () => {
+  it("son inversas dentro del ciclo (10x5)", () => {
+    expect(posCicloDeCodigo("T1", "10x5")).toBe(0);
+    expect(posCicloDeCodigo("T10", "10x5")).toBe(9);
+    expect(posCicloDeCodigo("L1", "10x5")).toBe(10);
+    expect(posCicloDeCodigo("L5", "10x5")).toBe(14);
+    expect(codigoDePosCiclo(0, "10x5")).toBe("T1");
+    expect(codigoDePosCiclo(9, "10x5")).toBe("T10");
+    expect(codigoDePosCiclo(10, "10x5")).toBe("L1");
+    expect(codigoDePosCiclo(14, "10x5")).toBe("L5");
+  });
+  it("codigoDePosCiclo envuelve posiciones fuera del ciclo", () => {
+    expect(codigoDePosCiclo(15, "10x5")).toBe("T1");
+    expect(codigoDePosCiclo(-1, "10x5")).toBe("L5");
+  });
+  it("posCicloDeCodigo devuelve null para códigos no T/L o fuera de rango", () => {
+    expect(posCicloDeCodigo("V1", "10x5")).toBeNull();
+    expect(posCicloDeCodigo("", "10x5")).toBeNull();
+    expect(posCicloDeCodigo("T11", "10x5")).toBeNull(); // fuera del rango de trabajo
+    expect(posCicloDeCodigo("L6", "10x5")).toBeNull(); // fuera del rango libre
+    expect(posCicloDeCodigo("T1", "Horario administrativo L-V")).toBeNull(); // sin ciclo
+  });
+});
+
+describe("roles.generarPatronRangoContinuo", () => {
+  it("llena un ciclo 10x5 empezando en T1 (posInicial 0)", () => {
+    // 5 → 20 de mayo de 2026 (16 días): T1..T10, L1..L5, T1
+    const filas = generarPatronRangoContinuo({
+      modalidad: "10x5",
+      desde: { year: 2026, month: 4, day: 5 },
+      hasta: { year: 2026, month: 4, day: 20 },
+      posInicial: 0,
+    });
+    expect(filas).toHaveLength(16);
+    expect(filas[0]).toEqual({ year: 2026, month: 4, day: 5, valor: "T1" });
+    expect(filas[9].valor).toBe("T10");
+    expect(filas[10].valor).toBe("L1");
+    expect(filas[14].valor).toBe("L5");
+    expect(filas[15].valor).toBe("T1");
+  });
+
+  it("no reinicia el ciclo al cruzar el cambio de mes", () => {
+    // Empieza el 30 abr 2026 en T9 (posInicial 8) y sigue continuo a mayo.
+    const filas = generarPatronRangoContinuo({
+      modalidad: "10x5",
+      desde: { year: 2026, month: 3, day: 30 },
+      hasta: { year: 2026, month: 4, day: 3 },
+      posInicial: 8,
+    });
+    expect(filas.map((f) => f.valor)).toEqual(["T9", "T10", "L1", "L2"]);
+    // Cruce de mes correcto (abril → mayo) sin reiniciar en T1.
+    expect(filas[0]).toEqual({ year: 2026, month: 3, day: 30, valor: "T9" });
+    expect(filas[1]).toEqual({ year: 2026, month: 4, day: 1, valor: "T10" });
+    expect(filas[2]).toEqual({ year: 2026, month: 4, day: 2, valor: "L1" });
+  });
+
+  it("administrativo se llena por día de la semana e ignora posInicial", () => {
+    // 1 mayo 2026 = viernes; 2 = sábado; 3 = domingo; 4 = lunes.
+    const filas = generarPatronRangoContinuo({
+      modalidad: "Horario administrativo L-V",
+      desde: { year: 2026, month: 4, day: 1 },
+      hasta: { year: 2026, month: 4, day: 4 },
+      posInicial: 7,
+    });
+    expect(filas.map((f) => f.valor)).toEqual(["T5", "L1", "L2", "T1"]);
+  });
+
+  it("devuelve vacío si el rango está invertido", () => {
+    const filas = generarPatronRangoContinuo({
+      modalidad: "10x5",
+      desde: { year: 2026, month: 4, day: 10 },
+      hasta: { year: 2026, month: 4, day: 5 },
+      posInicial: 0,
+    });
+    expect(filas).toEqual([]);
+  });
+});
+
+describe("roles.ultimoDiaProgramado", () => {
+  const puesto = "Puesto Orosi";
+  const persona = "Errol Salazar";
+  it("encuentra la fecha máxima con override no vacío", () => {
+    const roleData = {
+      [rolKey(2026, 6, puesto, persona, 5)]: "T1",
+      [rolKey(2026, 6, puesto, persona, 20)]: "T10",
+      [rolKey(2026, 7, puesto, persona, 3)]: "L2", // agosto: mayor
+      [rolCfgKey(2026, 6, puesto, persona)]: "10x5", // no cuenta (config)
+    };
+    expect(ultimoDiaProgramado(roleData, puesto, persona)).toEqual({ year: 2026, month: 7, day: 3 });
+  });
+  it("ignora overrides vacíos y de otras personas", () => {
+    const roleData = {
+      [rolKey(2026, 6, puesto, persona, 5)]: "T1",
+      [rolKey(2026, 6, puesto, persona, 28)]: "", // vacío: no cuenta
+      [rolKey(2026, 6, puesto, "Otra Persona", 30)]: "T1", // otra persona
+    };
+    expect(ultimoDiaProgramado(roleData, puesto, persona)).toEqual({ year: 2026, month: 6, day: 5 });
+  });
+  it("devuelve null si no hay días programados", () => {
+    expect(ultimoDiaProgramado({}, puesto, persona)).toBeNull();
+    expect(ultimoDiaProgramado(null, puesto, persona)).toBeNull();
   });
 });

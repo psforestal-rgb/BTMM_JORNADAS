@@ -336,6 +336,7 @@ const dict = {
     resumenOtros: "Otros",
     editarTipoRol: "Tipo de rol desde 1er día laboral",
     aplicar: "Aplicar",
+    aplicarPatronAbrir: "Aplicar…",
     titleConflicto: "Clic para resolver: rol vs actividad planificada",
     titleEditar: "Cambiar marca del día",
     titleSinEdicion: "Active edición del funcionario para modificar",
@@ -347,6 +348,37 @@ const dict = {
       confirmarDesc: "Se aplicará {cat} a {n} selección(es) y se renumerarán las filas afectadas.",
       nota: "Revise la cantidad antes de confirmar. Puede deshacer el último cambio mientras permanezca en esta vista.",
       deshacer: "Deshacer último cambio",
+    },
+    aplicarPatron: {
+      titulo: "Aplicar patrón de rol",
+      descripcion:
+        "Genera el tipo de día (turno/libre) de {persona} según la modalidad, desde una fecha inicial hasta un último día. El rango puede abarcar varios meses.",
+      modalidad: "Modalidad",
+      desde: "A partir de",
+      hasta: "Último día",
+      hastaAyuda: "Se llenará hasta esta fecha, inclusive.",
+      botonUltimoProgramado: "Desde el último día con rol programado",
+      botonUltimoProgramadoAyuda:
+        "Coloca «A partir de» el día siguiente al último día ya programado, para continuar sin sobrescribir.",
+      sinProgramado: "Aún no hay días con rol programado para esta persona.",
+      fase: "¿Cómo debe empezar la rotación?",
+      faseReiniciar: "Reiniciar en T1",
+      faseReiniciarAyuda:
+        "La fecha «A partir de» se vuelve el nuevo inicio: ese día es T1 y la rotación avanza desde ahí. Sobrescribe lo que haya en el rango.",
+      faseContinuar: "Continuar la rotación anterior",
+      faseContinuarAyuda:
+        "No reinicia: sigue la rotación del día anterior. Si venía en {codigoPrevio}, ese día continúa en {codigoSiguiente}.",
+      faseContinuarSinAncla:
+        "Para continuar, el día anterior a «A partir de» debe tener un turno o libre. Hoy no lo tiene; use «Reiniciar en T1».",
+      faseAdministrativo:
+        "El horario administrativo se llena por día de la semana (L–V en turno, S/D libres); no usa rotación T/L.",
+      resumen: "Se llenarán {dias} día(s), del {desde} al {hasta}.",
+      sobrescribe: "Se sobrescribirán {n} día(s) que ya tenían rol programado en el rango.",
+      errorRango: "«A partir de» debe ser igual o anterior a «Último día».",
+      errorMaxDias: "El rango es muy largo (máx. {max} días). Acórtelo e intente de nuevo.",
+      errorSinFechas: "Elija la fecha inicial y el último día.",
+      confirmar: "Aplicar patrón",
+      cancelar: "Cancelar",
     },
   },
   menuCelda: {

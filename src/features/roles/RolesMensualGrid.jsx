@@ -8,6 +8,8 @@ import {
   rolCfgKey,
   esRolActivo,
   generarValorPatron,
+  generarPatronRangoContinuo,
+  ultimoDiaProgramado,
   categoriaDe,
   formatearCategoria,
 } from "../../domain/roles.js";
@@ -21,6 +23,7 @@ import RoleCell from "./RoleCell.jsx";
 import MenuCelda from "./MenuCelda.jsx";
 import ConflictoModal from "./ConflictoModal.jsx";
 import ActividadesDiaModal from "./ActividadesDiaModal.jsx";
+import AplicarPatronModal from "./AplicarPatronModal.jsx";
 
 // Tope del scroll continuo hacia adelante: 10 años (120 meses) desde el mes
 // inicial. Los meses se cargan progresivamente (uno a la vez) a medida que
@@ -46,6 +49,13 @@ function monthTone(month) {
 
 function rowId(puesto, nombre) {
   return `${puesto}|${nombre}`;
+}
+
+// "YYYY-MM-DD" → { year, month, day } con month 0-indexado (o null).
+function parseISO(iso) {
+  const [y, m, d] = String(iso || "").split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return { year: y, month: m - 1, day: d };
 }
 
 function nombreEnDosLineas(nombreCompleto) {
@@ -83,6 +93,7 @@ export default function RolesMensualGrid({
   const [menu, setMenu] = useState(null);
   const [conflictoActivo, setConflictoActivo] = useState(null);
   const [actividadesDiaModal, setActividadesDiaModal] = useState(null);
+  const [patronModal, setPatronModal] = useState(null);
   const scrollRef = useRef(null);
   const theadRef = useRef(null);
   const sentinelRef = useRef(null);
@@ -130,7 +141,13 @@ export default function RolesMensualGrid({
     });
     return mapa;
   }, [rangoMeses, feriadosPorAnio]);
-  const inicioDeMes = (y, m) => inicioPorMes.get(`${y}-${m}`) ?? 1;
+  // Primer día laboral de un mes. Para meses precargados usa el mapa; para
+  // cualquier otro (p. ej. el día anterior a la fecha inicial de un llenado
+  // por rango, que puede caer fuera del rango cargado) lo calcula al vuelo
+  // con los feriados de ese año.
+  const inicioDeMes = (y, m) =>
+    inicioPorMes.get(`${y}-${m}`) ??
+    primerDiaLaboral(y, m, feriadosPorAnio.get(y) ?? buildFeriadosSet(y, reglas));
 
   // Lista plana y cronológica de todas las columnas de día actualmente
   // cargadas, cada una con su (year, month, dia) explícito — reemplaza al
@@ -296,19 +313,63 @@ export default function RolesMensualGrid({
     roleData[rolKey(y, m, grupo.nombre, persona, dia)] ??
     generarValorPatron(getCfg(grupo, persona, y, m), dia, inicioDeMes(y, m), y, m);
 
-  // "Aplicar" solo llena el mes inicial (igual que antes de soportar varios
-  // meses en la misma tabla): un solo click nunca debe sobrescribir de golpe
-  // datos reales importados de otros meses ya cargados (10 años de rango).
-  // Los meses fuera del inicial siguen mostrando el patrón generado
-  // dinámicamente vía `getCelda` hasta que el usuario los edite ahí mismo.
-  const aplicarPatron = (grupo, persona) => {
-    const modalidad = getCfg(grupo, persona, year, month);
-    const inicioMes = inicioDeMes(year, month);
+  // Código de rol vigente en una fecha concreta (override explícito si lo
+  // hay; si no, el valor derivado del patrón del mes). Sirve al asistente de
+  // llenado por rango para leer el día anterior (ancla de "continuar") en
+  // cualquier mes, incluso fuera del rango cargado.
+  const valorEnFecha = (grupo, persona, y, m, d) =>
+    roleData[rolKey(y, m, grupo.nombre, persona, d)] ??
+    generarValorPatron(getCfg(grupo, persona, y, m), d, inicioDeMes(y, m), y, m);
+
+  // Cuenta cuántos días del rango [desdeISO, hastaISO] ya tienen un rol
+  // explícitamente programado (override no vacío) para esta persona.
+  const contarProgramadosEnRango = (grupo, persona, desdeISO, hastaISO) => {
+    const desde = parseISO(desdeISO);
+    const hasta = parseISO(hastaISO);
+    if (!desde || !hasta) return 0;
+    let n = 0;
+    const cursor = new Date(desde.year, desde.month, desde.day);
+    const fin = new Date(hasta.year, hasta.month, hasta.day);
+    while (cursor <= fin) {
+      const v = roleData[rolKey(cursor.getFullYear(), cursor.getMonth(), grupo.nombre, persona, cursor.getDate())];
+      if (v != null && v !== "") n += 1;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return n;
+  };
+
+  // Aplica el patrón de rol a un rango de fechas continuo (puede cruzar
+  // meses). Escribe un override por día y alinea la modalidad configurada
+  // (rolCfgKey) de cada mes tocado para que la generación dinámica y las
+  // ediciones futuras en esos meses usen la misma modalidad.
+  const aplicarPatronRango = ({ grupo, persona, modalidad, desdeISO, hastaISO, posInicial }) => {
+    const desde = parseISO(desdeISO);
+    const hasta = parseISO(hastaISO);
+    if (!desde || !hasta) return;
+    const filas = generarPatronRangoContinuo({ modalidad, desde, hasta, posInicial });
+    if (filas.length === 0) return;
     const cambios = {};
-    for (let dia = 1; dia <= dim(year, month); dia += 1) {
-      cambios[rolKey(year, month, grupo.nombre, persona, dia)] = generarValorPatron(modalidad, dia, inicioMes, year, month);
+    const mesesTocados = new Set();
+    for (const { year: y, month: m, day: d, valor } of filas) {
+      cambios[rolKey(y, m, grupo.nombre, persona, d)] = valor;
+      mesesTocados.add(`${y}-${m}`);
+    }
+    for (const clave of mesesTocados) {
+      const [y, m] = clave.split("-").map(Number);
+      cambios[rolCfgKey(y, m, grupo.nombre, persona)] = modalidad;
     }
     setRoleData((prev) => ({ ...prev, ...cambios }));
+    setPatronModal(null);
+  };
+
+  // ISO del día SIGUIENTE al último día con rol programado de una persona
+  // (o null si no tiene ninguno): base del atajo "continuar sin sobrescribir".
+  const diaSiguienteAlUltimoProgramado = (grupo, persona) => {
+    const ult = ultimoDiaProgramado(roleData, grupo.nombre, persona);
+    if (!ult) return null;
+    const dt = new Date(ult.year, ult.month, ult.day);
+    dt.setDate(dt.getDate() + 1);
+    return isoFecha(dt.getFullYear(), dt.getMonth(), dt.getDate());
   };
 
   // Renumera solo dentro del mes (y, m) del día editado — nunca a través de
@@ -502,7 +563,7 @@ export default function RolesMensualGrid({
                   getCfg={getCfg}
                   setCfg={setCfg}
                   getCelda={getCelda}
-                  aplicarPatron={aplicarPatron}
+                  abrirPatronModal={(grupo, persona) => setPatronModal({ grupo, persona })}
                   abrirConflicto={abrirConflicto}
                   setMenu={setMenu}
                   inicioDeMes={inicioDeMes}
@@ -565,6 +626,34 @@ export default function RolesMensualGrid({
           cerrar={() => setActividadesDiaModal(null)}
         />
       )}
+      {patronModal && (
+        <AplicarPatronModal
+          persona={patronModal.persona}
+          modalidadInicial={getCfg(patronModal.grupo, patronModal.persona, year, month)}
+          opcionesModalidad={opcionesModalidad}
+          defaultDesdeISO={isoFecha(year, month, inicioDeMes(year, month))}
+          defaultHastaISO={isoFecha(year, month, dim(year, month))}
+          ultimoProgramadoSiguienteISO={diaSiguienteAlUltimoProgramado(patronModal.grupo, patronModal.persona)}
+          valorEnFecha={(iso) => {
+            const p = parseISO(iso);
+            return p ? valorEnFecha(patronModal.grupo, patronModal.persona, p.year, p.month, p.day) : "";
+          }}
+          contarProgramados={(dISO, hISO) =>
+            contarProgramadosEnRango(patronModal.grupo, patronModal.persona, dISO, hISO)
+          }
+          onAplicar={({ modalidad, desdeISO, hastaISO, posInicial }) =>
+            aplicarPatronRango({
+              grupo: patronModal.grupo,
+              persona: patronModal.persona,
+              modalidad,
+              desdeISO,
+              hastaISO,
+              posInicial,
+            })
+          }
+          onClose={() => setPatronModal(null)}
+        />
+      )}
     </div>
   );
 }
@@ -578,7 +667,7 @@ function RowsGrupo({
   getCfg,
   setCfg,
   getCelda,
-  aplicarPatron,
+  abrirPatronModal,
   abrirConflicto,
   setMenu,
   inicioDeMes,
@@ -647,10 +736,10 @@ function RowsGrupo({
                       </select>
                       <button
                         type="button"
-                        onClick={() => aplicarPatron(grupo, nombre)}
+                        onClick={() => abrirPatronModal(grupo, nombre)}
                         className="rounded-lg bg-brand px-2 py-1 text-[10px] font-semibold text-brand-fg sm:text-[11px]"
                       >
-                        {t("roles.aplicar")}
+                        {t("roles.aplicarPatronAbrir")}
                       </button>
                     </div>
                   </div>

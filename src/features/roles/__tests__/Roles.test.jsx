@@ -121,6 +121,37 @@ describe("Roles — divisor de puesto, hoy y búsqueda por fecha", () => {
   });
 });
 
+describe("Roles — asistente de patrón por rango", () => {
+  it("abre el modal desde el panel de edición y muestra la elección de rotación", () => {
+    renderRoles();
+    // Activar edición de la fila de Ana Pérez (candado).
+    fireEvent.click(screen.getByRole("button", { name: /Ana/i }));
+    // El panel muestra el botón que abre el asistente.
+    fireEvent.click(screen.getByRole("button", { name: /Aplicar…/ }));
+    // Modal abierto con la elección de fase de rotación explicada.
+    expect(screen.getByText(/Aplicar patrón de rol/i)).toBeDefined();
+    expect(screen.getByText(/¿Cómo debe empezar la rotación\?/i)).toBeDefined();
+    expect(screen.getByText(/Reiniciar en T1/i)).toBeDefined();
+    expect(screen.getByText(/Continuar la rotación anterior/i)).toBeDefined();
+  });
+
+  it("aplica el patrón y persiste overrides de rol para la persona/puesto en el rango", () => {
+    const setRoleData = vi.fn();
+    renderRoles({ setRoleData });
+    fireEvent.click(screen.getByRole("button", { name: /Ana/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Aplicar…/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Aplicar patrón/i }));
+    // El fill escribe roleData una sola vez, con claves para Ana Pérez en Orosi.
+    expect(setRoleData).toHaveBeenCalledTimes(1);
+    const updater = setRoleData.mock.calls[0][0];
+    const resultado = updater({});
+    const claves = Object.keys(resultado);
+    expect(claves.some((k) => k.includes("Puesto Orosi-Ana Pérez"))).toBe(true);
+    // Por defecto (julio 2026, reiniciar) el primer día laboral es T1.
+    expect(resultado["2026-7-Puesto Orosi-Ana Pérez-1"]).toBe("T1");
+  });
+});
+
 describe("Roles — resumen general al pie de la tabla", () => {
   it("muestra la banda de resumen y una fila por categoría (turno/libres/vacas/incapacidad/otros)", () => {
     const { container } = renderRoles();
