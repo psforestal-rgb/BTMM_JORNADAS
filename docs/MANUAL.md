@@ -39,6 +39,14 @@ cara y para consulta rápida en campo.
 - 🟢 **INICIO** marca el primer día laboral del mes (desde donde
   empieza tu rotación).
 - ⚠️ Anillo rojo pulsante = conflicto entre tu rol y una actividad.
+- **Aplicar patrón por rango** (botón «Aplicar…» en el panel de
+  edición): llena el tipo de día (turno/libre) según la modalidad
+  entre dos fechas —**A partir de** y **Último día**— y el rango
+  puede abarcar varios meses. Un atajo coloca «A partir de» el día
+  siguiente al último día ya programado (para continuar sin
+  sobrescribir). Antes de aplicar se elige cómo empieza la rotación:
+  **Reiniciar en T1** en la fecha inicial, o **Continuar** la
+  rotación del día anterior (p. ej. si venía en T7, sigue en T8).
 
 ### Detalle del día
 - Desliza ← → en el teléfono o usa los botones para navegar.

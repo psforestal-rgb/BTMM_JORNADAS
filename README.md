@@ -422,8 +422,13 @@ ninguna funcionalidad de escritorio:
   ≥ 48 px, conservando: códigos T/L/V/I/O, anillo verde "INICIO",
   anillo rojo de conflicto, candado de edición + modalidad/Aplicar
   patrón, modales `MenuCelda` / `ConflictoModal` /
-  `ActividadesDiaModal`. La fila "CANTIDAD EN TURNO" se reubica
-  como **tarjeta resumen al final de la semana**.
+  `ActividadesDiaModal` / `AplicarPatronModal`. La fila "CANTIDAD EN
+  TURNO" se reubica como **tarjeta resumen al final de la semana**.
+  El botón «Aplicar…» abre el asistente de **llenado por rango**
+  (`AplicarPatronModal`): fecha inicial + último día —puede cruzar
+  varios meses— con atajo "desde el último día con rol programado" y
+  elección de fase de rotación (reiniciar en T1 vs. continuar la
+  rotación previa, p. ej. T7 → T8).
 - **Detalle del día** — swipe horizontal (← →) entre días en
   dispositivos táctiles. Los botones Anterior/Siguiente y el
   selector de fecha siguen siendo la ruta principal (a11y).
