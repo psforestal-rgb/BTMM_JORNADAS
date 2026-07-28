@@ -10,9 +10,6 @@ import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 import ErrorBoundary from "./ui/ErrorBoundary.jsx";
 import ImportadorPlanificacion2026 from "./features/planificacion/ImportadorPlanificacion2026.jsx";
 
-// Eager: vista por defecto. Las demás se cargan bajo demanda con React.lazy
-// para reducir el tiempo de carga inicial en dispositivos modestos.
-// DiaLayout es el thin wrapper mobile-first que envuelve Dia con FAB + BottomSheet.
 import DiaLayout from "./features/dia/DiaLayout.jsx";
 
 const Roles = lazy(() => import("./features/roles/Roles.jsx"));
@@ -81,9 +78,6 @@ function AppShell() {
       <ImportadorPlanificacion2026 />
       <div className="flex min-h-screen">
         <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
-        {/* `min-w-0` y `overflow-x-clip` aseguran que un hijo ancho
-            (tabla con overflow-x propio, modal mal medido, etc.) NO
-            produzca scroll horizontal de la página entera en móvil. */}
         <main className="pnlq-app-main min-w-0 flex-1 overflow-x-clip">
           <Topbar
             view={view}
@@ -95,8 +89,6 @@ function AppShell() {
             compact={compact}
             setCompact={setCompact}
           />
-          {/* pb generoso en móvil para librar la BottomNav fija (≈64px) más
-              el safe-area del home indicator; en lg la nav desaparece. */}
           <div className="pnlq-app-content space-y-5 p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
             <Suspense fallback={<FallbackVista />}>
               {view === "dia" && (
@@ -109,6 +101,8 @@ function AppShell() {
                   roleData={roleData}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
+                  nAlertas={nAlertas}
+                  setView={navigate}
                 />
               )}
               {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}

@@ -10,14 +10,16 @@ function badgeText(n) {
 export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
   const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
+  // Alertas en la barra principal: acceso en 1 toque para usuarios de campo.
+  // Planificación queda en «Más» (uso menos frecuente en celular).
   const main = [
     ["dia", t("bottomNav.dia"), "calendar"],
     ["roles", t("bottomNav.roles"), "chart"],
-    ["planificacion", t("bottomNav.plan"), "calendarDays"],
+    ["alertas", t("bottomNav.alertas"), "bell"],
     ["funcionarios", t("bottomNav.personal"), "users"],
   ];
   const more = [
-    ["alertas", t("bottomNav.alertas"), "bell"],
+    ["planificacion", t("bottomNav.plan"), "calendarDays"],
     ["adelantos", t("bottomNav.viaticos"), "banknote"],
     ["reposicion", t("bottomNav.reposicion"), "refresh"],
     ["disponibilidad", t("bottomNav.disponib"), "shield"],
@@ -43,10 +45,15 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
               type="button"
               onClick={() => go(id)}
               aria-current={view === id ? "page" : undefined}
-              className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${view === id ? "text-brand" : "text-ink-muted"}`}
+              className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-0.5 py-2 text-sm font-semibold ${view === id ? "text-brand" : "text-ink-muted"}`}
             >
-              <Icon name={icon} size={22} />
+              <Icon name={icon} size={24} />
               {label}
+              {id === "alertas" && nAlertas > 0 && (
+                <span className="absolute right-[18%] top-1 min-w-5 rounded-full bg-critical px-1 text-center text-xs font-bold leading-5 text-ink-inverse" aria-label={t("bottomNav.alertasAria", { n: nAlertas })}>
+                  {badgeText(nAlertas)}
+                </span>
+              )}
             </button>
           ))}
           <button
@@ -54,15 +61,10 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             aria-current={moreActive ? "page" : undefined}
-            className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-1 py-2 text-xs font-semibold ${moreOpen || moreActive ? "text-brand" : "text-ink-muted"}`}
+            className={`pnlq-bottom-nav-item relative flex min-h-touch flex-col items-center justify-center gap-0.5 py-2 text-sm font-semibold ${moreOpen || moreActive ? "text-brand" : "text-ink-muted"}`}
           >
-            <Icon name="menu" size={22} />
+            <Icon name="menu" size={24} />
             {t("bottomNav.mas")}
-            {nAlertas > 0 && (
-              <span className="absolute right-[22%] top-1 min-w-5 rounded-full bg-critical px-1 text-center text-[11px] font-bold leading-5 text-ink-inverse" aria-label={t("bottomNav.alertasAria", { n: nAlertas })}>
-                {badgeText(nAlertas)}
-              </span>
-            )}
           </button>
         </div>
       </nav>
@@ -77,9 +79,8 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
               aria-current={view === id ? "page" : undefined}
               className={`relative flex min-h-[56px] items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold ${view === id ? "bg-brand text-brand-fg" : "border border-line bg-surface-alt text-ink"}`}
             >
-              <Icon name={icon} size={20} />
+              <Icon name={icon} size={22} />
               <span>{label}</span>
-              {id === "alertas" && nAlertas > 0 && <span className="ml-auto rounded-full bg-critical px-2 py-0.5 text-xs font-bold text-ink-inverse">{badgeText(nAlertas)}</span>}
             </button>
           ))}
         </div>
