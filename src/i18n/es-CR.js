@@ -2,17 +2,6 @@
  * Diccionario es-CR de la herramienta. Cada clave usa notación punteada
  * (`grupo.subgrupo.clave`). Los valores admiten plantillas estilo
  * `{nombre}` que el hook `useT()` interpola con un objeto.
- *
- * Convenciones:
- * - terminología institucional SINAC/PNLQ:
- *   "Visit." = atención rutinaria de visitantes
- *   "Acumulativa" = jornada acumulativa por turno
- *   "ONG-Invest-Volunt" = personal de apoyo externo
- * - "Regla dura": la herramienta solo registra y alerta.
- *
- * Cobertura: cadenas visibles en UI (componentes React). Las cadenas que
- * pertenecen al dominio (`alertas()`) viven en `src/domain/alertas.js` y
- * se traducen ahí; este diccionario las re-expone para facilitar QA.
  */
 const dict = {
   app: {
@@ -136,6 +125,12 @@ const dict = {
     seleccionarFecha: "Seleccionar fecha",
     pistaSwipe: "Deslice ←/→ para cambiar día",
     porPuesto: "Por puesto operativo",
+    resumenTitulo: "Resumen del día",
+    resumenEnTurno: "En turno",
+    resumenSinActividad: "Sin actividad",
+    resumenAlertas: "Alertas",
+    resumenPistaSinActividad: "Hay personas en turno sin actividad. Baje a la sección «En turno · sin actividad» para asignar.",
+    ayudaAria: "Cómo usar la vista Día",
     th: {
       puesto: "Puesto",
       fuera: "Fuera",
@@ -171,6 +166,18 @@ const dict = {
     viaticoBadge: "💵 Viático",
     conflictosBadge: "⚠ {n} conflicto{plural}",
     sinLugar: "Sin lugar",
+  },
+  help: {
+    dia: {
+      titulo: "Cómo usar la vista Día",
+      lineas: [
+        "Arriba elige la fecha con las flechas o el calendario.",
+        "Las tres cifras grandes muestran quién está en turno, quién falta actividad y cuántas alertas hay.",
+        "Toque «Alertas» en la barra inferior o la cifra de alertas para ver los avisos.",
+        "Use «+ Nueva» o el botón redondo para registrar una actividad.",
+        "Los cambios se guardan solos en este teléfono (vea el mensaje «Guardado»).",
+      ],
+    },
   },
   funcionarios: {
     titulo: "Funcionarios",
@@ -643,7 +650,6 @@ const dict = {
     magnitudDiaEntero: "Día entero",
     magnitudMedioDia: "Medio día",
     magnitudHoras: "Por horas",
-    horas: "Cantidad de horas",
     estadoPendiente: "Pendiente",
     estadoRepuesto: "Repuesto",
     reposiciones: "Reposiciones registradas",
@@ -684,8 +690,6 @@ const dict = {
       rojo: "No automatizar",
       azul: "Dato pendiente",
     },
-    // Mensajes que vienen del dominio (alertas.js); duplicados aquí para
-    // testear que coinciden y para facilitar traducción futura.
     venceHoy: "Disponibilidad vence HOY — {nombre}",
     vencida: "Disponibilidad vencida — {nombre}",
     porVencer: "Disponibilidad por vencer — {nombre}",
@@ -860,22 +864,12 @@ const dict = {
   },
 };
 
-/**
- * Interpola `{clave}` con valores de `vars`. Si la clave no existe,
- * devuelve el placeholder inalterado para detectarlo en QA.
- */
 export function format(plantilla, vars) {
   if (!plantilla || !vars) return plantilla;
   if (typeof plantilla !== "string") return plantilla;
   return plantilla.replace(/\{(\w+)\}/g, (m, key) => (vars[key] !== undefined ? String(vars[key]) : m));
 }
 
-/**
- * Busca la cadena por ruta punteada en el diccionario. Devuelve la
- * propia clave si no se encuentra, para que en pantalla quede visible
- * qué texto falta traducir. Acepta valores no-string (arreglos) y los
- * devuelve sin format.
- */
 export function lookup(path) {
   const partes = String(path || "").split(".");
   let cur = dict;
@@ -889,17 +883,12 @@ export function lookup(path) {
   return cur === undefined ? path : cur;
 }
 
-/**
- * API principal: `t("dia.actividadesTitulo", { n: 2 })`.
- * Es función directa (no hook) para que pueda usarse en módulos no React.
- */
 export function t(path, vars) {
   const v = lookup(path);
   if (Array.isArray(v)) return v.map((x) => format(x, vars));
   return format(v, vars);
 }
 
-/** Helper de plural simple: devuelve "s" si n !== 1, sino "". */
 export function plural(n) {
   return n === 1 ? "" : "s";
 }
