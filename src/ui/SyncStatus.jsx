@@ -3,17 +3,12 @@ import { useApp } from "../context/AppContext.jsx";
 import { useT } from "../i18n/useT.js";
 
 /**
- * Indicador global de conexión y respaldo, siempre visible en la Topbar.
+ * Indicador global de conexión y respaldo.
  *
- * Muestra en un solo "pill" compacto:
- *  - Estado de red: en línea (verde) / sin conexión (ámbar).
- *  - Hora del último respaldo local (lastSavedAt del AppContext).
- *  - "Guardando…" mientras hay cambios en la cola de debounce.
- *
- * En móvil se reduce a punto de color + hora para no saturar la barra;
- * el detalle completo vive en la vista «Datos · respaldo».
+ * Props:
+ *  - prominent {boolean}  variante más legible para anclar en vista Día móvil.
  */
-export default function SyncStatus() {
+export default function SyncStatus({ prominent = false }) {
   const { lastSavedAt, pendingChanges, durableSaveFailed } = useApp();
   const t = useT();
   const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
@@ -45,29 +40,57 @@ export default function SyncStatus() {
 
   const ariaLabel = `${online ? t("sync.enLinea") : t("sync.sinConexion")} · ${label}`;
 
+  if (prominent) {
+    return (
+      <span
+        role="status"
+        aria-label={ariaLabel}
+        title={ariaLabel}
+        className={`inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${
+          guardadoParcial || !online
+            ? "border-warning/40 bg-warning-soft text-warning-fg"
+            : "border-line bg-surface text-ink-muted"
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+            pendingChanges > 0
+              ? "animate-pulse bg-info"
+              : guardadoParcial || !online
+              ? "bg-warning"
+              : "bg-ok"
+          }`}
+        />
+        <span className="truncate">{label}</span>
+        {!online && <span className="shrink-0 text-xs font-bold uppercase tracking-wide">{t("sync.sinConexion")}</span>}
+      </span>
+    );
+  }
+
   return (
     <span
       role="status"
       aria-label={ariaLabel}
       title={ariaLabel}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium sm:text-sm ${
         guardadoParcial
-          ? "border-amber-300 bg-amber-50 text-amber-800"
+          ? "border-warning/40 bg-warning-soft text-warning-fg"
           : online
-          ? "border-slate-200 bg-white text-slate-500"
-          : "border-amber-300 bg-amber-50 text-amber-800"
+          ? "border-line bg-surface text-ink-muted"
+          : "border-warning/40 bg-warning-soft text-warning-fg"
       }`}
     >
       <span
         aria-hidden="true"
         className={`h-2 w-2 shrink-0 rounded-full ${
           pendingChanges > 0
-            ? "animate-pulse bg-sky-500"
+            ? "animate-pulse bg-info"
             : guardadoParcial
-            ? "bg-amber-500"
+            ? "bg-warning"
             : online
-            ? "bg-emerald-500"
-            : "bg-amber-500"
+            ? "bg-ok"
+            : "bg-warning"
         }`}
       />
       <span className="hidden sm:inline">{label}</span>
