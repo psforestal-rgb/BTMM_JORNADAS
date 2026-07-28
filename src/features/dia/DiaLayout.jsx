@@ -1,12 +1,17 @@
 /**
  * DiaLayout — shell nativo-móvil para la ruta #/dia/:fecha.
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Dia from "./Dia.jsx";
+import DiaResumenMovil from "./DiaResumenMovil.jsx";
 import BottomSheet from "../../ui/BottomSheet.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 import SyncStatus from "../../ui/SyncStatus.jsx";
+import HelpSheet from "../../ui/HelpSheet.jsx";
 import { useMobile } from "../../lib/useMobile.js";
+import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
+import { codigoRolFuncionario, esRolActivo } from "../../domain/roles.js";
+import { actividadesEnDia } from "../../domain/actividades.js";
 import { useT } from "../../i18n/useT.js";
 
 export default function DiaLayout(props) {
@@ -25,8 +30,26 @@ export default function DiaLayout(props) {
 
   const t = useT();
   const isMobile = useMobile();
-
   const [fabModal, setFabModal] = useState(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const [yearD, monthD, dayD] = String(diaVista || "").split("-").map(Number);
+  const monthIdx = (monthD || 1) - 1;
+  const feriados = useFeriadosDelAno(yearD || new Date().getFullYear());
+
+  const { enTurno, sinActividad } = useMemo(() => {
+    const activas = (personas || []).filter((p) => p.estado !== "Inactivo");
+    let turno = 0;
+    let sin = 0;
+    for (const p of activas) {
+      const rol = codigoRolFuncionario(personas, roleData, yearD, monthIdx, p.nombre, dayD, feriados);
+      if (!esRolActivo(rol)) continue;
+      turno += 1;
+      const acts = actividadesEnDia(actividadesPlan, diaVista).filter((a) => (a.funcionarios || []).includes(p.nombre));
+      if (acts.length === 0) sin += 1;
+    }
+    return { enTurno: turno, sinActividad: sin };
+  }, [personas, roleData, yearD, monthIdx, dayD, feriados, actividadesPlan, diaVista]);
 
   const [contextualVisible, setContextualVisible] = useState(false);
   useEffect(() => {
@@ -72,14 +95,20 @@ export default function DiaLayout(props) {
 
   return (
     <div className="relative mx-auto w-full max-w-md md:max-w-4xl lg:max-w-6xl xl:max-w-7xl">
-      {/* Indicador de guardado siempre visible en móvil (Topbar a menudo oculto). */}
       {isMobile && (
-        <div className="mb-3 md:hidden">
+        <div className="mb-3 space-y-3 md:hidden">
           <SyncStatus prominent />
+          <DiaResumenMovil
+            enTurno={enTurno}
+            sinActividad={sinActividad}
+            nAlertas={nAlertas}
+            onIrAlertas={() => typeof setView === "function" && setView("alertas")}
+            onAyuda={() => setHelpOpen(true)}
+          />
         </div>
       )}
 
-      <Dia {...props} nAlertas={nAlertas} setView={setView} />
+      <Dia {...props} />
 
       <button
         type="button"
@@ -133,6 +162,8 @@ export default function DiaLayout(props) {
           />
         )
       )}
+
+      <HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} topic="dia" />
     </div>
   );
 }
