@@ -27,17 +27,17 @@ afterEach(() => {
 });
 
 describe("AppContext — sincronización institucional de roles", () => {
-  it("aplica una revisión nueva de julio-agosto y conserva lo ajeno a la fuente", async () => {
+  it("aplica una revisión nueva de agosto-diciembre y conserva el pasado", async () => {
     storage.state = {
       personas: [{ id: "f1", nombre: "Diana Tencio" }],
       actividadesPlan: [],
       reposiciones: [],
       roleData: {
-        "2026-7-Puesto Quetzales-Diana Tencio-13": "T99",
-        "2026-7-Puesto Orosi-Monserrath Navarro-15": "T1",
+        "2026-8-Puesto Orosi-Errol Salazar-1": "T99",
         "2026-9-Puesto Orosi-Errol Salazar-15": "V3",
-        "CFG-2026-7-Puesto Orosi-Errol Salazar": "12x6",
-        "2026-7-Puesto Personal-Persona local-1": "T1",
+        "2026-7-Puesto Quetzales-Diana Tencio-13": "T99",
+        "CFG-2026-8-Puesto Orosi-Errol Salazar": "12x6",
+        "2026-8-Puesto Personal-Persona local-1": "T1",
       },
       reglas: {},
       migraciones: {
@@ -63,10 +63,12 @@ describe("AppContext — sincronización institucional de roles", () => {
     await waitFor(() => {
       expect(observado.migraciones.rolesFuenteJulAgo2026).toBe(ROLES_FUENTE_VERSION);
     });
-    expect(observado.roleData["2026-7-Puesto Quetzales-Diana Tencio-13"]).toBe("V1");
-    expect(observado.roleData["2026-7-Puesto Orosi-Monserrath Navarro-15"]).toBe("");
-    expect(observado.roleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("V3");
-    expect(observado.roleData["CFG-2026-7-Puesto Orosi-Errol Salazar"]).toBe("12x6");
-    expect(observado.roleData["2026-7-Puesto Personal-Persona local-1"]).toBe("T1");
+    // Agosto-diciembre: la fuente manda sobre lo que tuviera el usuario.
+    expect(observado.roleData["2026-8-Puesto Orosi-Errol Salazar-1"]).toBe("T2");
+    expect(observado.roleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("T1");
+    // Julio (pasado), CFG y claves ajenas a la fuente se conservan.
+    expect(observado.roleData["2026-7-Puesto Quetzales-Diana Tencio-13"]).toBe("T99");
+    expect(observado.roleData["CFG-2026-8-Puesto Orosi-Errol Salazar"]).toBe("12x6");
+    expect(observado.roleData["2026-8-Puesto Personal-Persona local-1"]).toBe("T1");
   });
 });
