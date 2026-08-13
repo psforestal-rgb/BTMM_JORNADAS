@@ -17,6 +17,8 @@ describe("BottomNav móvil", () => {
     render(<BottomNav view="reposicion" setView={vi.fn()} nAlertas={25} />);
     fireEvent.click(screen.getByRole("button", { name: /Más/ }));
     expect(screen.getByRole("dialog", { name: "Más módulos" })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Plan/ })).toBeDefined();
+    // Nombre exacto: el menú «Más» tiene dos entradas con "Plan" ("Plan" y
+    // "Plan/Func."), así que un regex laxo /Plan/ es ambiguo.
+    expect(screen.getByRole("button", { name: "Plan" })).toBeDefined();
   });
 });

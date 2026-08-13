@@ -12,6 +12,7 @@ import { act, render, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { AppProvider, useApp } from "../AppContext.jsx";
 import { __INTERNALS__, saveToDexie, getDb } from "../../lib/db.js";
+import { ROLES_FUENTE_VERSION } from "../../data/seedRoles.js";
 
 async function resetAll() {
   __INTERNALS__.resetSingleton();
@@ -107,7 +108,9 @@ describe("AppContext — hidratación async desde Dexie", () => {
     });
     expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-1"]).toBe("T99");
     expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-2"]).toBe("T11");
-    expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("");
+    // Setiembre entra en el refresco agosto-diciembre: la fuente impone su
+    // valor sobre el del snapshot ("T1" -> "T2").
+    expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("T2");
     expect(observedRoleData["2026-8-Puesto Orosi-Enzo Martini-1"]).toBeUndefined();
   });
 
@@ -123,7 +126,13 @@ describe("AppContext — hidratación async desde Dexie", () => {
         "2026-9-Puesto Orosi-Errol Salazar-15": "V3",
       },
       reglas: {},
-      migraciones: { limpiezaEnzoYSetDic2026: true },
+      // Instalación YA migrada por completo (limpieza + refresco de fuente al
+      // día): ninguna migración vuelve a correr, así que la edición real del
+      // usuario en setiembre se conserva en cargas posteriores.
+      migraciones: {
+        limpiezaEnzoYSetDic2026: true,
+        rolesFuenteJulAgo2026: ROLES_FUENTE_VERSION,
+      },
     });
 
     let observedRoleData = null;

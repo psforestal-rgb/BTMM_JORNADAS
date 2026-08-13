@@ -7,13 +7,13 @@ import {
 } from "../seedRoles.js";
 
 describe("seedRoles — Rol Bloque 2026", () => {
-  it("carga los códigos diarios normalizados de la fuente", () => {
+  it("carga los códigos diarios normalizados de la fuente (año completo)", () => {
     expect(baseRoleData["2026-5-Puesto Orosi-Errol Salazar-1"]).toBe("T10");
     expect(baseRoleData["2026-6-Puesto Quetzales-Pablo Sánchez-1"]).toBe("T1");
     expect(baseRoleData["2026-7-Puesto Quetzales-Diana Tencio-13"]).toBe("V1");
-    expect(baseRoleData["2026-7-Puesto Quetzales-Juan Pablo Granados-31"]).toBe("LA");
-    expect(baseRoleData["2026-8-Puesto Orosi-Monserrath Navarro-1"]).toBe("T1");
     expect(baseRoleData["2026-8-Puesto Orosi-Mayra Espinoza-3"]).toBe("V1");
+    expect(baseRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("T2");
+    expect(baseRoleData["2026-12-Puesto Orosi-Errol Salazar-1"]).toBe("T7");
   });
 
   it("conserva las categorías especiales dentro del modelo de la app", () => {
@@ -21,10 +21,13 @@ describe("seedRoles — Rol Bloque 2026", () => {
     expect(baseRoleData["2026-4-Puesto Orosi-Kenneth Mena-1"]).toBe("IN");
   });
 
-  it("deja en blanco los meses aún no incluidos en la fuente", () => {
-    expect(ROLES_FUENTE_HASTA).toBe("2026-08-31");
-    expect(ROLES_FUENTE_VERSION).toBe("2026-07-21T20:19:49.675Z");
-    expect(baseRoleData["2026-9-Puesto Quetzales-Pablo Sánchez-1"]).toBe("");
+  it("cubre el año completo de la fuente (enero-diciembre)", () => {
+    expect(ROLES_FUENTE_HASTA).toBe("2026-12-31");
+    expect(typeof ROLES_FUENTE_VERSION).toBe("string");
+    expect(ROLES_FUENTE_VERSION.length).toBeGreaterThan(0);
+    // Los meses antes en blanco (setiembre-diciembre) ahora traen datos.
+    expect(baseRoleData["2026-9-Puesto Quetzales-Pablo Sánchez-1"]).toBe("T2");
+    expect(baseRoleData["2026-12-Puesto Quetzales-Pablo Sánchez-1"]).toBe("T2");
   });
 
   it("refleja celdas retiradas y personas incorporadas en la revisión julio-agosto", () => {
@@ -32,24 +35,26 @@ describe("seedRoles — Rol Bloque 2026", () => {
     expect(baseRoleData["2026-8-Puesto Orosi-Kenneth Mena-1"]).toBe("L1");
   });
 
-  it("al reconciliar impone julio-agosto sin tocar otros meses ni claves CFG", () => {
-    const septiembre = "2026-9-Puesto Orosi-Errol Salazar-1";
+  it("al reconciliar impone agosto-diciembre sin tocar el pasado ni claves CFG", () => {
+    const agosto = "2026-8-Puesto Orosi-Errol Salazar-1";
+    const setiembre = "2026-9-Puesto Orosi-Errol Salazar-15";
     const julio = "2026-7-Puesto Quetzales-Diana Tencio-13";
-    const julioBlanco = "2026-7-Puesto Orosi-Monserrath Navarro-15";
-    const cfg = "CFG-2026-7-Puesto Orosi-Errol Salazar";
+    const cfg = "CFG-2026-8-Puesto Orosi-Errol Salazar";
     const resultado = reconciliarRoleDataConFuente({
-      [septiembre]: "V3",
+      [agosto]: "T99",
+      [setiembre]: "V3",
       [julio]: "T99",
-      [julioBlanco]: "T1",
       [cfg]: "12x6",
-      "2026-7-Puesto Personal-Persona local-1": "T1",
+      "2026-8-Puesto Personal-Persona local-1": "T1",
     });
 
-    expect(resultado[julio]).toBe("V1");
-    expect(resultado[julioBlanco]).toBe("");
-    expect(resultado[septiembre]).toBe("V3");
+    // Agosto-diciembre: la fuente (archivo) manda sobre lo que tenga el usuario.
+    expect(resultado[agosto]).toBe("T2");
+    expect(resultado[setiembre]).toBe("T1");
+    // El pasado (julio), las claves CFG y las ajenas a la fuente se conservan.
+    expect(resultado[julio]).toBe("T99");
     expect(resultado[cfg]).toBe("12x6");
-    expect(resultado["2026-7-Puesto Personal-Persona local-1"]).toBe("T1");
+    expect(resultado["2026-8-Puesto Personal-Persona local-1"]).toBe("T1");
   });
 
   it("no incluye personas que no son funcionarias", () => {
