@@ -11,13 +11,16 @@ import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
 import { useToast } from "../../context/ToastContext.jsx";
+import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
-  const { conDeshacer, exito } = useToast();
+  const { conDeshacer, exito, aviso, error } = useToast();
   const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
   const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
   const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
@@ -99,6 +102,29 @@ export default function Funcionarios({ personas, setPersonas }) {
     );
   };
 
+  /* Exporta LO QUE SE ESTÁ VIENDO, no la lista completa: el contador «N/M» está
+     justo encima, así que es lo que la persona espera. El orden de las columnas
+     es el del formulario, y es el que tendrá que respetar el import de RF4. */
+  const COLUMNAS_CSV = [
+    "nombre", "cedula", "email", "puesto", "puestoOperativo", "condicion",
+    "jornada", "modalidad", "resolucion", "contrato", "vencimiento", "ingreso",
+    "disponibilidad", "policia", "brigada", "ong", "estado", "obs",
+  ].map((clave) => ({ clave, titulo: t(`funcionarios.col.${clave}`) }));
+
+  const exportarCSV = () => {
+    if (filtrados.length === 0) {
+      aviso(t("funcionarios.exportadoVacio"));
+      return;
+    }
+    const ok = descargarArchivo(
+      `funcionarios-${toLocalFileTimestamp()}.csv`,
+      csvDescargable(filtrados, COLUMNAS_CSV),
+      TIPO_CSV,
+    );
+    if (ok) exito(t("funcionarios.exportado", { n: filtrados.length }));
+    else error(t("funcionarios.exportarError"));
+  };
+
   const filtros = [
     ["todos", t("funcionarios.filtroTodos")],
     ["guardas", t("funcionarios.filtroGuardas")],
@@ -137,6 +163,16 @@ export default function Funcionarios({ personas, setPersonas }) {
                 {t("funcionarios.vistaTarjetas")}
               </button>
             </div>
+            <button
+              type="button"
+              onClick={exportarCSV}
+              aria-label={t("funcionarios.exportarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Icon name="file" size={16} />
+              <span className="hidden sm:inline">{t("funcionarios.exportar")}</span>
+              <span className="sm:hidden">{t("funcionarios.exportarCorto")}</span>
+            </button>
             <button
               onClick={() => setModal(nuevo())}
               className="inline-flex min-h-touch items-center gap-1 rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"

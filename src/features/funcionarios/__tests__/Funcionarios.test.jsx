@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { afterEach, describe, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
 import { ToastProvider } from "../../../context/ToastContext.jsx";
@@ -180,5 +180,84 @@ describe("Funcionarios — visibilidad de los filtros", () => {
     fireEvent.click(within(grupo).getByRole("button", { name: /^Guardaparques$/ }));
     expect(within(grupo).getByRole("button", { name: /^Guardaparques$/ }).getAttribute("aria-pressed")).toBe("true");
     expect(within(grupo).getByRole("button", { name: /^Todos$/ }).getAttribute("aria-pressed")).toBe("false");
+  });
+});
+
+describe("Funcionarios — exportación CSV (RF5)", () => {
+  let capturado;
+  let BlobReal;
+
+  beforeEach(() => {
+    capturado = null;
+    BlobReal = global.Blob;
+    // El Blob de jsdom no expone su contenido ni implementa .text(), así que se
+    // sustituye por un doble que guarda lo que se le pasó.
+    global.Blob = class {
+      constructor(partes, opciones) {
+        capturado = { texto: (partes || []).join(""), tipo: opciones?.type };
+      }
+    };
+    global.URL.createObjectURL = vi.fn(() => "blob:fake");
+    global.URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    global.Blob = BlobReal;
+  });
+
+  const leerBlob = () => capturado?.texto ?? null;
+
+  it("exporta lo que se está viendo, no la lista completa", () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /^Guardaparques$/ }));
+    expect(screen.getByText("1/3")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    const texto = leerBlob().replace(/^\ufeff/, "");
+    const filas = texto.split("\r\n");
+    expect(filas).toHaveLength(2); // cabecera + Ana
+    expect(filas[1]).toMatch(/^Ana Pérez,/);
+    expect(texto).not.toMatch(/Bruno Salas/);
+  });
+
+  it("la cabecera lleva los nombres de columna en español", () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    const texto = leerBlob().replace(/^\ufeff/, "");
+    const cabecera = texto.split("\r\n")[0];
+    expect(cabecera).toContain("Nombre");
+    expect(cabecera).toContain("Cédula");
+    expect(cabecera).toContain("Puesto operativo");
+    expect(cabecera).toContain("Observaciones");
+  });
+
+  it("los booleanos salen como Sí/No", () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /^Con disponibilidad/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    const texto = leerBlob();
+    // Ana tiene disponibilidad y policía; brigada y ong en falso.
+    expect(texto.split("\r\n")[1]).toContain("Sí");
+    expect(texto.split("\r\n")[1]).toContain("No");
+  });
+
+  it("confirma con un aviso cuántos se exportaron", async () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    expect(screen.getByText("Se exportaron 3 funcionarios a CSV")).toBeDefined();
+  });
+
+  it("el archivo se marca como CSV y empieza con el BOM UTF-8", () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    expect(capturado.tipo).toMatch(/^text\/csv/);
+    expect(capturado.texto.charCodeAt(0)).toBe(0xfeff);
+  });
+
+  it("con el filtro sin resultados avisa en vez de descargar un archivo vacío", () => {
+    renderConProvider();
+    fireEvent.change(screen.getByPlaceholderText(/Buscar/i), { target: { value: "ZZZ_no_existe" } });
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    expect(screen.getByText(/No hay funcionarios que exportar/)).toBeDefined();
+    expect(leerBlob()).toBeNull();
   });
 });

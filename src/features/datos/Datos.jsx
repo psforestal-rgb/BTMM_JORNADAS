@@ -4,6 +4,7 @@ import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { useApp } from "../../context/AppContext.jsx";
 import { exportSnapshot, parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
+import { descargarArchivo } from "../../lib/descargas.js";
 import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
@@ -15,23 +16,6 @@ import Modal from "../../ui/Modal.jsx";
 // crecimiento (10-50x) sin permitir que un archivo manipulado o corrupto
 // fuerce un JSON.parse desproporcionado en el hilo principal.
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
-
-function descargarArchivo(nombre, contenido) {
-  try {
-    const blob = new Blob([contenido], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = nombre;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export default function Datos() {
   const t = useT();
