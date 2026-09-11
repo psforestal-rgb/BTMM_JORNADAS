@@ -59,6 +59,37 @@ const EXCEPCIONES = [
   },
 ];
 
+/**
+ * Constantes de módulo con clases (`const BTN = "min-h-touch ..."`). Un botón
+ * puede escribir `className={BTN_PRIMARIO}` en vez de la lista literal, y sin
+ * resolverlas el análisis daría un falso positivo. Se resuelven en varias
+ * pasadas porque unas se componen de otras con plantillas.
+ */
+function constantesDeClase(src) {
+  const mapa = new Map();
+  const decl = /^const\s+([A-Za-z_$][\w$]*)\s*=\s*(["'`])([\s\S]*?)\2\s*;?\s*$/gm;
+  for (const m of src.matchAll(decl)) mapa.set(m[1], m[3]);
+  for (let pasada = 0; pasada < 3; pasada += 1) {
+    for (const [nombre, valor] of mapa) {
+      if (!valor.includes("${")) continue;
+      mapa.set(
+        nombre,
+        valor.replace(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, (todo, ref) => mapa.get(ref) ?? todo),
+      );
+    }
+  }
+  return mapa;
+}
+
+/** Añade al texto de la etiqueta el valor de las constantes que menciona. */
+function expandir(plano, constantes) {
+  let salida = plano;
+  for (const [nombre, valor] of constantes) {
+    if (plano.includes(nombre)) salida += ` ${valor}`;
+  }
+  return salida;
+}
+
 /** Etiquetas `<button ...>` de apertura, respetando llaves JSX y cadenas. */
 function etiquetasBoton(src) {
   const out = [];
@@ -116,8 +147,9 @@ describe("objetivos táctiles — todo <button> alcanza el tamaño mínimo", () 
     for (const ruta of archivosJsx(SRC)) {
       const rel = relative(RAIZ, ruta).split("\\").join("/");
       const src = readFileSync(ruta, "utf8");
+      const constantes = constantesDeClase(src);
       for (const { linea, tag } of etiquetasBoton(src)) {
-        const plano = tag.split(/\s+/).join(" ");
+        const plano = expandir(tag.split(/\s+/).join(" "), constantes);
         if (SENALES.some((s) => plano.includes(s))) continue;
         if (alturaSuficiente(plano)) continue;
         const exenta = EXCEPCIONES.some((e) => e.archivo === rel && plano.includes(e.fragmento));

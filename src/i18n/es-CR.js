@@ -239,6 +239,15 @@ const dict = {
       contratacion: "Contratación y fechas",
       atributos: "Atributos",
     },
+    pasos: {
+      navAria: "Pasos del formulario",
+      indicador: "Paso {n} de {total}",
+      irA: "Ir al paso {n}: {titulo}",
+      uno: "Quién es",
+      dos: "Dónde y cómo trabaja",
+      tres: "Respaldo y atributos",
+      soloNombre: "Solo el nombre es obligatorio: puede guardar desde cualquier paso y completar el resto después.",
+    },
     // Textos tomados de docs/GLOSARIO.md; si cambia el glosario, cambian aquí.
     ayuda: {
       puesto:
@@ -817,6 +826,8 @@ const dict = {
     instalar: "Instalar",
     ahoraNo: "Ahora no",
     deshacer: "Deshacer",
+    atras: "Atrás",
+    siguiente: "Siguiente",
   },
   toast: {
     regionAria: "Avisos de la aplicación",
