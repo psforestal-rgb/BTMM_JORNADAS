@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { opcionesPuesto, opcionesCondicion, opcionesEstado, opcionesModalidad } from "../../data/opciones.js";
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
+import { validarCedula, validarCorreo, validarFuncionario, validarNombre } from "../../domain/validaciones.js";
 import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import Ayuda from "../../ui/Ayuda.jsx";
@@ -14,6 +15,38 @@ function Field({ label, children }) {
     <label>
       <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{label}</span>
       {children}
+    </label>
+  );
+}
+
+/* Campo que se valida al SALIR del foco, no al teclear (RF3): avisar mientras
+   alguien escribe su cédula es ruido, porque el valor está incompleto por
+   definición hasta el último carácter.
+
+   Reutiliza los validadores de `src/domain/validaciones.js`, cuya filosofía ya
+   escrita es que las validaciones guían pero NO bloquean el guardado: la
+   operación de campo siempre debe poder registrar el dato. Por eso el aviso es
+   ámbar (advertencia) y no rojo (error), y por eso nada aquí deshabilita
+   «Guardar». */
+function FieldValidado({ label, valor, onChange, validar, ...resto }) {
+  const idError = useId();
+  const [tocado, setTocado] = useState(false);
+  const aviso = tocado ? validar(valor) : null;
+  return (
+    <label>
+      <span className="mb-1 block text-xs font-bold uppercase text-slate-500">{label}</span>
+      <input
+        className={`${cls} ${aviso ? "border-amber-500 focus:border-amber-600 focus:ring-amber-100" : ""}`}
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => setTocado(true)}
+        aria-invalid={aviso ? "true" : undefined}
+        aria-describedby={aviso ? idError : undefined}
+        {...resto}
+      />
+      {aviso && (
+        <p id={idError} className="mt-1 text-xs font-semibold text-amber-800">{aviso}</p>
+      )}
     </label>
   );
 }
@@ -53,6 +86,10 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
   // convertir el formulario en "edición" a mitad de camino.
   const esEdicion = Boolean(valor.nombre);
   const titulo = esEdicion ? t("modalFuncionario.editar") : t("modalFuncionario.agregar");
+
+  // Advertencias de dominio, recalculadas en cada render sobre el borrador.
+  // No bloquean nada: `Funcionarios.jsx` sigue rechazando solo el nombre vacío.
+  const avisos = validarFuncionario(f);
 
   const [paso, setPaso] = useState(0);
   // Paso más lejano alcanzado: al crear, el indicador no deja saltar a un paso
@@ -140,9 +177,29 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
           {paso === 0 && (
             <>
               <Seccion id="sec-identificacion" titulo={t("modalFuncionario.sec.identificacion")}>
-                <Field label={t("modalFuncionario.nombre")}><input className={cls} value={f.nombre} onChange={(e) => set("nombre", e.target.value)} /></Field>
-                <Field label={t("modalFuncionario.cedula")}><input type="text" inputMode="numeric" autoComplete="off" className={cls} value={f.cedula} onChange={(e) => set("cedula", e.target.value)} /></Field>
-                <Field label={t("modalFuncionario.correo")}><input className={cls} value={f.email} onChange={(e) => set("email", e.target.value)} /></Field>
+                <FieldValidado
+                  label={t("modalFuncionario.nombre")}
+                  valor={f.nombre}
+                  onChange={(v) => set("nombre", v)}
+                  validar={validarNombre}
+                />
+                <FieldValidado
+                  label={t("modalFuncionario.cedula")}
+                  valor={f.cedula}
+                  onChange={(v) => set("cedula", v)}
+                  validar={validarCedula}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
+                <FieldValidado
+                  label={t("modalFuncionario.correo")}
+                  valor={f.email}
+                  onChange={(v) => set("email", v)}
+                  validar={validarCorreo}
+                  type="email"
+                  autoComplete="off"
+                />
               </Seccion>
               <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
                 {t("modalFuncionario.pasos.soloNombre")}
@@ -214,6 +271,21 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
               <Seccion id="sec-obs" titulo={t("modalFuncionario.obs")} cols="grid-cols-1">
                 <textarea className={`${cls} min-h-24`} value={f.obs} onChange={(e) => set("obs", e.target.value)} aria-label={t("modalFuncionario.obs")} />
               </Seccion>
+              {/* Resumen en el último paso: recoge también las advertencias que
+                  cruzan campos de pasos distintos (disponibilidad sin
+                  vencimiento, acumulativa sin resolución), que ningún aviso de
+                  campo suelto puede detectar. */}
+              {avisos.length > 0 && (
+                <section aria-labelledby="sec-revisar" className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+                  <h4 id="sec-revisar" className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                    {t("modalFuncionario.revisar.titulo")}
+                  </h4>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed text-amber-950">
+                    {avisos.map((aviso) => <li key={aviso}>{aviso}</li>)}
+                  </ul>
+                  <p className="mt-2 text-xs font-semibold text-amber-800">{t("modalFuncionario.revisar.nota")}</p>
+                </section>
+              )}
             </>
           )}
         </div>

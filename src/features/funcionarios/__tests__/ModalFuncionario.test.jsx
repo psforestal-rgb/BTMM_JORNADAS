@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import ModalFuncionario from "../ModalFuncionario.jsx";
 
 afterEach(cleanup);
@@ -242,5 +242,101 @@ describe("ModalFuncionario — formulario en tres pasos", () => {
     avanzar();
     expect(document.activeElement?.tagName).toBe("DIV");
     expect(document.activeElement?.textContent).toMatch(/Puesto y condición/);
+  });
+});
+
+describe("ModalFuncionario — validación en tiempo real (RF3)", () => {
+  it("no avisa nada antes de tocar los campos", () => {
+    renderModal();
+    expect(screen.queryByText(/formato inesperado/i)).toBeNull();
+    expect(screen.queryByText(/Nombre obligatorio/i)).toBeNull();
+  });
+
+  it("avisa al salir del campo, no mientras se teclea", () => {
+    renderModal();
+    const cedula = screen.getByLabelText("Cédula");
+    fireEvent.change(cedula, { target: { value: "12" } });
+    // A medio escribir todavía no molesta.
+    expect(screen.queryByText(/Cédula con formato inesperado/i)).toBeNull();
+    fireEvent.blur(cedula);
+    expect(screen.getByText(/Cédula con formato inesperado/i)).toBeDefined();
+  });
+
+  it("acepta los dos formatos válidos de cédula costarricense", () => {
+    renderModal();
+    const cedula = screen.getByLabelText("Cédula");
+    fireEvent.change(cedula, { target: { value: "1-0000-0001" } });
+    fireEvent.blur(cedula);
+    expect(screen.queryByText(/Cédula con formato inesperado/i)).toBeNull();
+    fireEvent.change(cedula, { target: { value: "100000001" } });
+    expect(screen.queryByText(/Cédula con formato inesperado/i)).toBeNull();
+  });
+
+  it("el aviso se retira en cuanto el valor se corrige", () => {
+    renderModal();
+    const correo = screen.getByLabelText("Correo");
+    fireEvent.change(correo, { target: { value: "no-es-correo" } });
+    fireEvent.blur(correo);
+    expect(screen.getByText(/Correo con formato inesperado/i)).toBeDefined();
+    fireEvent.change(correo, { target: { value: "ana@sinac.go.cr" } });
+    expect(screen.queryByText(/Correo con formato inesperado/i)).toBeNull();
+  });
+
+  it("marca el campo con aria-invalid y lo enlaza con su aviso", () => {
+    renderModal();
+    const cedula = screen.getByLabelText("Cédula");
+    expect(cedula.getAttribute("aria-invalid")).toBeNull();
+    fireEvent.change(cedula, { target: { value: "abc" } });
+    fireEvent.blur(cedula);
+    expect(cedula.getAttribute("aria-invalid")).toBe("true");
+    const idAviso = cedula.getAttribute("aria-describedby");
+    expect(idAviso).toBeTruthy();
+    expect(document.getElementById(idAviso).textContent).toMatch(/Cédula/i);
+  });
+
+  it("avisa del nombre vacío al salir del campo", () => {
+    renderModal();
+    fireEvent.blur(screen.getByLabelText("Nombre"));
+    expect(screen.getByText(/Nombre obligatorio/i)).toBeDefined();
+  });
+
+  // La regla de oro del módulo de dominio: guiar, nunca bloquear.
+  it("un dato con formato raro NO impide guardar", () => {
+    const { guardar } = renderModal();
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Juana Solís" } });
+    const cedula = screen.getByLabelText("Cédula");
+    fireEvent.change(cedula, { target: { value: "sin formato" } });
+    fireEvent.blur(cedula);
+    const boton = screen.getByRole("button", { name: "Guardar" });
+    expect(boton.disabled).toBe(false);
+    fireEvent.click(boton);
+    expect(guardar).toHaveBeenCalledTimes(1);
+    expect(guardar.mock.calls[0][0].cedula).toBe("sin formato");
+  });
+
+  it("el último paso resume las advertencias que cruzan pasos distintos", () => {
+    renderModal();
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Juana Solís" } });
+    avanzar();
+    fireEvent.change(screen.getByLabelText("Jornada"), { target: { value: "Acumulativa" } });
+    avanzar();
+    const resumen = screen.getByRole("region", { name: /Antes de guardar/i });
+    // Acumulativa sin resolución y sin ONG: ningún aviso de campo suelto lo ve.
+    expect(within(resumen).getByText(/sin número de resolución/i)).toBeDefined();
+    expect(within(resumen).getByText(/puede guardar igual/i)).toBeDefined();
+  });
+
+  it("el resumen desaparece cuando ya no hay nada que advertir", () => {
+    renderModal({ valor: { ...valorNuevo, nombre: "Juana Solís", jornada: "Ordinaria" } });
+    fireEvent.click(screen.getByRole("button", { name: /Ir al paso 3/ }));
+    expect(screen.queryByRole("region", { name: /Antes de guardar/i })).toBeNull();
+  });
+
+  it("disponibilidad marcada sin vencimiento aparece en el resumen", () => {
+    renderModal({ valor: { ...valorNuevo, nombre: "Juana Solís" } });
+    fireEvent.click(screen.getByRole("button", { name: /Ir al paso 3/ }));
+    fireEvent.click(screen.getByLabelText("Disponibilidad"));
+    const resumen = screen.getByRole("region", { name: /Antes de guardar/i });
+    expect(within(resumen).getByText(/sin fecha de vencimiento/i)).toBeDefined();
   });
 });

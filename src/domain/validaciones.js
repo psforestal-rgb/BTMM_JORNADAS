@@ -7,6 +7,16 @@
  * debe poder registrar el dato; las advertencias quedan visibles.
  */
 
+/**
+ * Nombre: único dato realmente obligatorio de un funcionario. Se expone
+ * aparte de `validarFuncionario` para poder avisar campo a campo en el
+ * formulario sin duplicar el texto del mensaje.
+ */
+export function validarNombre(s) {
+  if (String(s ?? "").trim()) return null
+  return "Nombre obligatorio."
+}
+
 /** Cédula CR formato 1-XXXX-XXXX (también acepta 9 dígitos sin guiones). */
 export function validarCedula(s) {
   if (!s) return null // opcional, no se exige aquí
@@ -58,7 +68,8 @@ export function detectarTraslape(actividadNueva, todas) {
  */
 export function validarFuncionario(f) {
   const w = []
-  if (!f?.nombre?.trim()) w.push("Nombre obligatorio.")
+  const n = validarNombre(f?.nombre)
+  if (n) w.push(n)
   const c = validarCedula(f?.cedula)
   if (c) w.push(c)
   const e = validarCorreo(f?.email)

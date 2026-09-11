@@ -239,6 +239,10 @@ const dict = {
       contratacion: "Contratación y fechas",
       atributos: "Atributos",
     },
+    revisar: {
+      titulo: "Antes de guardar, revise:",
+      nota: "Son advertencias, no errores: puede guardar igual y completar el dato después.",
+    },
     pasos: {
       navAria: "Pasos del formulario",
       indicador: "Paso {n} de {total}",

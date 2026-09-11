@@ -5,6 +5,7 @@ import {
   validarRangoFechas,
   detectarTraslape,
   validarFuncionario,
+  validarNombre,
   validarActividad,
 } from '../validaciones.js'
 
@@ -117,5 +118,19 @@ describe('validaciones.validarActividad — advertencias', () => {
     const a = { id: 'nueva', titulo: 'X', inicio: '2026-05-11', funcionarios: ['Pablo'] }
     const w = validarActividad(a, todas)
     expect(w.some((m) => /Traslape/i.test(m))).toBe(true)
+  })
+})
+
+describe('validaciones.validarNombre', () => {
+  it('acepta un nombre con contenido', () => {
+    expect(validarNombre('Ana Pérez')).toBeNull()
+  })
+  it('rechaza vacío, solo espacios, null e indefinido', () => {
+    for (const v of ['', '   ', null, undefined]) {
+      expect(validarNombre(v)).toMatch(/Nombre obligatorio/)
+    }
+  })
+  it('da el mismo mensaje que validarFuncionario, para no duplicar textos', () => {
+    expect(validarFuncionario({ nombre: '' })).toContain(validarNombre(''))
   })
 })
