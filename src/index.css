@@ -403,3 +403,78 @@ body {
 @media print {
   .pnlq-print-only { display: block !important; }
 }
+
+/* =====================================================================
+   AVISOS EFÍMEROS (toast / snackbar) — ver src/ui/Toast.jsx
+   ===================================================================== */
+
+/* z-index 60: por encima de los modales (z-50), para que un borrado hecho
+   dentro de un modal pueda ofrecer «Deshacer» sin quedar tapado. */
+.pnlq-toast-viewport {
+  position: fixed;
+  z-index: 60;
+  left: max(1rem, env(safe-area-inset-left));
+  right: max(1rem, env(safe-area-inset-right));
+  /* Valor por defecto seguro: deja libre la barra inferior. Si el navegador
+     no soporta :has(), esta es la posición que queda. */
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* El contenedor no debe interceptar toques; sí las tarjetas. */
+  pointer-events: none;
+}
+
+.pnlq-toast-region {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Sin barra inferior en el DOM (escritorio, o teclado virtual abierto):
+   el aviso baja al borde. Los navegadores sin :has() ignoran la regla y
+   conservan el margen amplio, que nunca tapa nada. */
+body:not(:has(.pnlq-bottom-nav)) .pnlq-toast-viewport {
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1024px) {
+  .pnlq-toast-viewport {
+    left: auto;
+    right: max(1.5rem, env(safe-area-inset-right));
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    width: min(26rem, calc(100vw - 3rem));
+  }
+}
+
+/* Landscape en móvil: la barra inferior pasa a ser un raíl a la izquierda
+   (ver bloque de orientación más arriba), así que el aviso baja al borde
+   y se aparta del raíl. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
+  .pnlq-toast-viewport {
+    left: calc(72px + env(safe-area-inset-left) + 1rem);
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes pnlq-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pnlq-toast {
+  pointer-events: auto;
+  animation: pnlq-toast-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pnlq-toast {
+    animation: none !important;
+  }
+}

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
+import { ToastProvider } from "./context/ToastContext.jsx";
 import { alertas } from "./domain/alertas.js";
 import { useT } from "./i18n/useT.js";
 import Sidebar from "./layout/Sidebar.jsx";
@@ -8,6 +9,7 @@ import BottomNav from "./layout/BottomNav.jsx";
 import { useAppNavigation } from "./lib/useAppNavigation.js";
 import { useVirtualKeyboard } from "./lib/useVirtualKeyboard.js";
 import ErrorBoundary from "./ui/ErrorBoundary.jsx";
+import ToastViewport from "./ui/Toast.jsx";
 import ImportadorPlanificacion2026 from "./features/planificacion/ImportadorPlanificacion2026.jsx";
 
 import DiaLayout from "./features/dia/DiaLayout.jsx";
@@ -167,10 +169,16 @@ function AppShell() {
 }
 
 export default function App() {
+  // ToastProvider por dentro de AppProvider: las vistas ya consumen `useApp()`
+  // y ahora también `useToast()`. El viewport va como hermano de AppShell para
+  // que un aviso sobreviva al cambio de vista.
   return (
     <ErrorBoundary>
       <AppProvider>
-        <AppShell />
+        <ToastProvider>
+          <AppShell />
+          <ToastViewport />
+        </ToastProvider>
       </AppProvider>
     </ErrorBoundary>
   );

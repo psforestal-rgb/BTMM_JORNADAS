@@ -215,6 +215,11 @@ const dict = {
     eliminarTitulo: "Eliminar funcionario",
     eliminarConfirma:
       "Se eliminará el registro de {nombre} en esta propuesta visual.",
+    eliminado: "Se eliminó a {nombre}",
+    eliminadoDetalle: "Puede deshacerlo mientras este aviso siga visible.",
+    restaurado: "Se restauró a {nombre}",
+    creado: "Se agregó a {nombre}",
+    guardado: "Se guardaron los cambios de {nombre}",
     ordenar: "Ordenar",
     atributoPolicia: "Policía",
     atributoBrigada: "Brigada",
@@ -806,6 +811,10 @@ const dict = {
     verLuego: "Ver luego",
     instalar: "Instalar",
     ahoraNo: "Ahora no",
+    deshacer: "Deshacer",
+  },
+  toast: {
+    regionAria: "Avisos de la aplicación",
   },
   estados: {
     activo: "Activo",

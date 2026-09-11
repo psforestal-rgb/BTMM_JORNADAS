@@ -9,12 +9,13 @@ import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
-import Modal from "../../ui/Modal.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
+  const { conDeshacer, exito } = useToast();
   const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
   const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
   const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
@@ -22,7 +23,6 @@ export default function Funcionarios({ personas, setPersonas }) {
   const isMobile = useIsMobile();
   const [vista, setVista] = useSessionState("btmm:funcionarios:vista", null);
   const vistaEfectiva = vista ?? (isMobile ? "tarjetas" : "tabla");
-  const [borrar, setBorrar] = useState(null);
   const filtrados = useMemo(
     () =>
       personas.filter((f) => {
@@ -67,8 +67,36 @@ export default function Funcionarios({ personas, setPersonas }) {
   });
   const guardar = (obj) => {
     if (!obj.nombre.trim()) return;
+    const esEdicion = personas.some((x) => x.id === obj.id);
     setPersonas((prev) => (prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev]));
     setModal(null);
+    exito(t(esEdicion ? "funcionarios.guardado" : "funcionarios.creado", { nombre: obj.nombre.trim() }));
+  };
+
+  /* Borrado reversible (F-P12): en vez de un modal de confirmación por clic,
+     se elimina de inmediato y el aviso ofrece «Deshacer» durante 10 s. La red
+     de seguridad no desaparece, solo deja de costar un paso en cada borrado. */
+  const eliminar = (id) => {
+    const indice = personas.findIndex((x) => x.id === id);
+    if (indice < 0) return;
+    const persona = personas[indice];
+    setPersonas((prev) => prev.filter((x) => x.id !== id));
+    conDeshacer(
+      t("funcionarios.eliminado", { nombre: persona.nombre }),
+      () => {
+        setPersonas((prev) => {
+          // Idempotente: si ya volvió por otra vía, no duplicar.
+          if (prev.some((x) => x.id === persona.id)) return prev;
+          const copia = [...prev];
+          // Se reinserta en su posición original, no al inicio: el orden de la
+          // lista base alimenta otras vistas y no debe cambiar al deshacer.
+          copia.splice(Math.min(indice, copia.length), 0, persona);
+          return copia;
+        });
+        exito(t("funcionarios.restaurado", { nombre: persona.nombre }));
+      },
+      { detalle: t("funcionarios.eliminadoDetalle") },
+    );
   };
 
   const filtros = [
@@ -171,7 +199,7 @@ export default function Funcionarios({ personas, setPersonas }) {
                 key={f.id}
                 f={f}
                 onEditar={() => setModal({ ...f })}
-                onBorrar={() => setBorrar(f.id)}
+                onBorrar={() => eliminar(f.id)}
               />
             ))}
           </div>
@@ -250,7 +278,7 @@ export default function Funcionarios({ personas, setPersonas }) {
                     <button onClick={() => setModal({ ...f })} className="rounded-lg px-2 py-1 font-semibold text-blue-800 hover:bg-blue-50">
                       {t("acciones.editar")}
                     </button>
-                    <button onClick={() => setBorrar(f.id)} className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50">
+                    <button onClick={() => eliminar(f.id)} className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50">
                       {t("acciones.eliminar")}
                     </button>
                   </td>
@@ -267,15 +295,6 @@ export default function Funcionarios({ personas, setPersonas }) {
         </div>
       </Card>
       {modal && <ModalFuncionario valor={modal} cerrar={() => setModal(null)} guardar={guardar} />}
-      {borrar && (
-        <Modal open onClose={() => setBorrar(null)} title={t("funcionarios.eliminarTitulo")} size="sm" actions={<><button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border px-4 py-2 text-sm font-semibold">{t("acciones.cancelar")}</button><button onClick={() => { setPersonas((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white">{t("acciones.eliminar")}</button></>}>
-            <p className="text-sm">
-              {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[0]}
-              <strong>{personas.find((x) => x.id === borrar)?.nombre}</strong>
-              {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[1]}
-            </p>
-        </Modal>
-      )}
     </section>
   );
 }

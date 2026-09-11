@@ -4,6 +4,8 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
+import ToastViewport from "../../../ui/Toast.jsx";
 import Funcionarios from "../Funcionarios.jsx";
 
 function renderConProvider(props = {}) {
@@ -19,7 +21,10 @@ function renderConProvider(props = {}) {
   }
   const utils = render(
     <AppProvider>
-      <Probe />
+      <ToastProvider>
+        <Probe />
+        <ToastViewport />
+      </ToastProvider>
     </AppProvider>,
   );
   return { ...utils, getSetPersonas: () => setPersonasRef };
@@ -99,16 +104,63 @@ describe("Funcionarios — toggle Tabla / Tarjetas", () => {
   });
 });
 
-describe("Funcionarios — eliminación con confirmación", () => {
-  it("muestra modal y solo elimina al confirmar", () => {
-    renderConProvider();
-    // Hacer clic en el primer botón "Eliminar".
+describe("Funcionarios — eliminación reversible con «Deshacer»", () => {
+  // La tabla ordena por nombre; la fila 0 es siempre Ana Pérez.
+  const clicEliminarPrimero = () => {
     const botones = screen.getAllByRole("button", { name: /^Eliminar$/i });
     fireEvent.click(botones[0]);
-    // Modal de confirmación
-    expect(screen.getByRole("heading", { name: /Eliminar funcionario/i })).toBeDefined();
-    // Cancelar no elimina
-    fireEvent.click(screen.getByRole("button", { name: /Cancelar/i }));
+  };
+
+  it("elimina de inmediato y anuncia el borrado con acción Deshacer", () => {
+    renderConProvider();
+    clicEliminarPrimero();
+    expect(screen.getByText("2/2")).toBeDefined();
+    expect(screen.queryByText("Ana Pérez")).toBeNull();
+    expect(screen.getByText("Se eliminó a Ana Pérez")).toBeDefined();
+    expect(screen.getByRole("button", { name: /^Deshacer$/ })).toBeDefined();
+  });
+
+  it("«Deshacer» restaura al funcionario en su posición original", () => {
+    renderConProvider();
+    clicEliminarPrimero();
+    fireEvent.click(screen.getByRole("button", { name: /^Deshacer$/ }));
     expect(screen.getByText("3/3")).toBeDefined();
+    expect(screen.getByText("Ana Pérez")).toBeDefined();
+    expect(screen.getByText("Se restauró a Ana Pérez")).toBeDefined();
+    // El aviso de borrado se cierra al activar su acción.
+    expect(screen.queryByText("Se eliminó a Ana Pérez")).toBeNull();
+  });
+
+  it("ya no hay modal bloqueante de confirmación", () => {
+    renderConProvider();
+    clicEliminarPrimero();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("el aviso se cierra sin restaurar al pulsar Cerrar", () => {
+    renderConProvider();
+    clicEliminarPrimero();
+    const aviso = screen.getByTestId("toast");
+    fireEvent.click(within(aviso).getByRole("button", { name: /^Cerrar$/ }));
+    expect(screen.queryByText("Se eliminó a Ana Pérez")).toBeNull();
+    expect(screen.getByText("2/2")).toBeDefined();
+  });
+});
+
+describe("Funcionarios — confirmación visual al guardar", () => {
+  it("avisa al editar un funcionario existente", () => {
+    renderConProvider();
+    fireEvent.click(screen.getAllByRole("button", { name: /^Editar$/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /^Guardar$/ }));
+    expect(screen.getByText("Se guardaron los cambios de Ana Pérez")).toBeDefined();
+  });
+
+  it("avisa al agregar uno nuevo", () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /Agregar/ }));
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Nuevo Funcionario" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Guardar$/ }));
+    expect(screen.getByText("Se agregó a Nuevo Funcionario")).toBeDefined();
+    expect(screen.getByText("4/4")).toBeDefined();
   });
 });
