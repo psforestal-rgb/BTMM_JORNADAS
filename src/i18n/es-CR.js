@@ -217,6 +217,7 @@ const dict = {
     creado: "Se agregó a {nombre}",
     guardado: "Se guardaron los cambios de {nombre}",
     ordenar: "Ordenar",
+    filtrosAria: "Filtrar funcionarios",
     atributoPolicia: "Policía",
     atributoBrigada: "Brigada",
     card: {

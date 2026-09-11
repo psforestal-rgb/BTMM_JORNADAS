@@ -7,6 +7,7 @@ import EmptyState from "../../ui/EmptyState.jsx";
 import { estadoCls } from "../../ui/styles.js";
 import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
+import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
 import { useToast } from "../../context/ToastContext.jsx";
@@ -22,6 +23,12 @@ export default function Funcionarios({ personas, setPersonas }) {
   const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
   const [modal, setModal] = useState(null);
   const isMobile = useIsMobile();
+  // Breakpoint `md` (768 px): por debajo, los filtros siguen colapsados; a
+  // partir de ahí hay sitio de sobra para dejarlos siempre a la vista.
+  const filtrosEstrechos = useMobile();
+  // null = sin elección manual; entonces manda el ancho de pantalla.
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(null);
+  const filtrosVisibles = filtrosAbiertos ?? !filtrosEstrechos;
   const [vista, setVista] = useSessionState("btmm:funcionarios:vista", null);
   const vistaEfectiva = vista ?? (isMobile ? "tarjetas" : "tabla");
   const filtrados = useMemo(
@@ -152,31 +159,43 @@ export default function Funcionarios({ personas, setPersonas }) {
             {filtrados.length}/{personas.length}
           </div>
         </div>
-        {/* Filtros y orden: colapsados por defecto para que el primer
-            funcionario aparezca antes en el viewport. */}
-        <details className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
-          <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600">
+        {/* Filtros y orden (F-P1). Por debajo de `md` siguen colapsados: en un
+            teléfono, una fila de seis chips empujaba al primer funcionario
+            fuera del viewport, que fue la razón de plegarlos en el sprint
+            móvil. Desde `md` quedan siempre desplegados y el resumen se
+            oculta, porque filtrar es la acción principal de esta vista y
+            esconderla tras un clic la vuelve invisible. */}
+        <details
+          open={filtrosVisibles}
+          onToggle={(e) => setFiltrosAbiertos(e.currentTarget.open)}
+          className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-1.5"
+        >
+          <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600 md:hidden">
             {t("funcionarios.verFiltros")}{filtro !== "todos" ? ` (${filtros.find(([id]) => id === filtro)?.[1]})` : ""}
           </summary>
-          <div className="flex flex-wrap gap-2 pb-2 pt-1">
-            {filtros.map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setFiltro(id)}
-                className={`min-h-touch rounded-full border px-3 py-2 text-xs font-bold ${
-                  filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="gap-2 pb-2 pt-1 md:flex md:items-center md:justify-between">
+            <div role="group" aria-label={t("funcionarios.filtrosAria")} className="flex flex-wrap gap-2">
+              {filtros.map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFiltro(id)}
+                  aria-pressed={filtro === id}
+                  className={`min-h-touch rounded-full border px-3 py-2 text-xs font-bold ${
+                    filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <label className="mt-2 flex shrink-0 items-center gap-2 text-sm font-semibold text-slate-600 md:mt-0">
+              {t("funcionarios.ordenar")}
+              <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
+                <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
+              </select>
+            </label>
           </div>
-          <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-slate-600">
-            {t("funcionarios.ordenar")}
-            <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
-              <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
-            </select>
-          </label>
         </details>
         {filtrados.length === 0 && (
           <EmptyState

@@ -164,3 +164,21 @@ describe("Funcionarios — confirmación visual al guardar", () => {
     expect(screen.getByText("4/4")).toBeDefined();
   });
 });
+
+describe("Funcionarios — visibilidad de los filtros", () => {
+  it("en pantalla ancha los filtros arrancan desplegados", () => {
+    const { container } = renderConProvider();
+    const detalles = container.querySelector("details");
+    expect(detalles).not.toBeNull();
+    expect(detalles.open).toBe(true);
+  });
+
+  it("los chips forman un grupo etiquetado y marcan el filtro activo", () => {
+    renderConProvider();
+    const grupo = screen.getByRole("group", { name: "Filtrar funcionarios" });
+    expect(within(grupo).getByRole("button", { name: /^Todos$/ }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(within(grupo).getByRole("button", { name: /^Guardaparques$/ }));
+    expect(within(grupo).getByRole("button", { name: /^Guardaparques$/ }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(grupo).getByRole("button", { name: /^Todos$/ }).getAttribute("aria-pressed")).toBe("false");
+  });
+});
