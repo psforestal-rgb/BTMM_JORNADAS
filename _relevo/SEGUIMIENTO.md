@@ -1,19 +1,29 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 18:20 por Claude Code
+> Última actualización: 2026-09-11 20:40 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
-## 🚨 ANTES DE NADA: el trabajo NO está en `main`, está en un PR abierto
+## 🚨 ANTES DE NADA: hubo DOS IAs a la vez y esta rama ya resolvió el choque
 
-Esta sesión se ejecutó en un entorno que **obliga** a desarrollar en una rama
-propia, así que los commits están en **`claude/festive-allen-hl6igv`** y no en
-`main`. Todo pasa tests y build, pero **el deploy a `gh-pages` no se ha
-disparado** porque solo lo dispara `main`.
+**Qué pasó.** Mientras esta sesión trabajaba en la rama
+`claude/festive-allen-hl6igv` (PR
+[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91)), otra IA (Grok)
+trabajó **en paralelo sobre `main`** y construyó su propia infraestructura de
+toast/undo para el mismo punto de dolor (F-P12), publicada como v1.15.0. Eso
+viola `PROTOCOLO.md` §5 («una IA por vez») y produjo dos implementaciones
+distintas de lo mismo.
 
-El trabajo está en el pull request
-**[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91)**. Fusionarlo
-desde ahí es la vía preferida: cualquier commit nuevo que se empuje a esa rama
-actualiza el mismo PR.
+**Cómo se resolvió**, siguiendo §5 («resolver conservando ambas entradas»):
+`origin/main` se fusionó dentro de esta rama y el conflicto se resolvió a mano,
+comparando las dos versiones función por función. Ver la decisión del
+2026-09-11 «Resolución del choque con la rama `main` de Grok» más abajo. El
+historial y las decisiones de Grok se conservan íntegros en este documento.
+
+**Dónde está el trabajo.** Sigue en la rama
+`claude/festive-allen-hl6igv` y en el PR
+[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91), que ahora ya
+contiene `main` fusionado. **El deploy a `gh-pages` solo lo dispara `main`**, así
+que hasta fusionar el PR el sitio publicado se queda en v1.15.0.
 
 Si hiciera falta fusionar a mano en lugar de por el PR:
 
@@ -25,9 +35,9 @@ npm ci --ignore-scripts && npm test    # debe dar 364/364
 git push origin main
 ```
 
-Tras el merge, verificar que `dist/version.json` en el sitio publicado diga
-**1.18.0**. Si la siguiente IA también está atada a una rama, que parta de
-`claude/festive-allen-hl6igv` (o de `main` ya fusionado) y lo anote aquí.
+**Regla para la próxima sesión:** antes de tocar nada, `git fetch origin` y
+comprueba si `main` se movió. Si te toca una rama propia, parte de la que diga
+este bloque, nunca de `main` a secas.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
@@ -193,6 +203,37 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los textos de ayuda normativos se copian de
   `docs/GLOSARIO.md`. Si cambia el glosario, cambian las claves
   `modalFuncionario.ayuda.*` de `src/i18n/es-CR.js`.
+- 2026-09-11 (Grok, conservada): IDs P1–P18 canónicos = `docs/DOCUMENTO_FINAL_MEJORAS.md`.
+  Coincide con la decisión de Claude Code sobre la numeración canónica; se
+  mantienen las dos por ser un registro append-only.
+- 2026-09-11 (Grok, conservada): Eliminar funcionario/reposición = inmediato +
+  toast «Deshacer» 10 s. Los reseteos de Datos/Configuración siguen con modal.
+  Coincide con la decisión equivalente de Claude Code.
+- 2026-09-11 (Grok, conservada): «PR #91 solapa Toast/undo. No fusionar sin
+  rebase contra 1.15.0.» — **cumplida**: `main` se fusionó dentro de la rama del
+  PR el 2026-09-11 a las 20:40.
+- 2026-09-11 (Claude Code): **Resolución del choque con la rama `main` de Grok.**
+  Las dos implementaciones de toast/undo se compararon función por función y se
+  conservó la de esta rama, incorporando lo mejor de la de Grok:
+  - `src/lib/undo.js` es una **fusión real**: la versión de esta rama con las dos
+    guardas más estrictas de Grok, que eran mejores — rechazar un ítem sin `id`
+    (rompería el borrado por id y las claves de React) y devolver intacta una
+    lista que no sea un array (sustituirla por un único elemento sería pérdida
+    silenciosa de datos). Las pruebas de ambas partes quedan fundidas en un solo
+    archivo.
+  - `ToastContext.jsx` y `Toast.jsx`: se conserva la versión de esta rama porque
+    es un superconjunto (avisos persistentes con `duracion: 0`, línea de detalle,
+    regiones vivas permanentes `status`/`alert`, pausa también al enfocar con
+    teclado, atajos `exito`/`error`/`aviso`/`conDeshacer`, 23 pruebas) y porque
+    ya está cableada en los cinco puntos de borrado de la app.
+  - Motivo técnico añadido: `src/ui/Toast.jsx` de Grok llamaba a
+    `t("toast.deshacer")` y `t("toast.cerrar")`, claves que **no existían** en su
+    `src/i18n/es-CR.js`; el diccionario devuelve la clave cuando falta, así que
+    esos botones habrían mostrado literalmente «toast.deshacer» y «toast.cerrar».
+  - Toda la «SIGUIENTE ACCIÓN» que Grok dejó pendiente (claves i18n, cableado en
+    Funcionarios y Reposición, test que pasa a «elimina y Deshacer restaura» con
+    conteo `2/2`, pruebas del contexto, y P1 chips) **ya estaba hecha** en esta
+    rama; no se rehízo nada.
 - 2026-09-11 (Claude Code): El formulario de funcionario es un wizard de 3
   pasos, pero **«Guardar» está disponible desde el paso 1**: solo el nombre es
   obligatorio y la promesa al usuario está escrita en la clave
@@ -221,6 +262,16 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
   se renderizan con **portal a `document.body`**: un `backdrop-filter` en un
   ancestro descoloca cualquier `position: fixed`. Todo overlay nuevo debe hacer
   lo mismo.
+- **Discrepancia corregida (PROTOCOLO §5).** El seguimiento de Grok decía
+  «`useToast()` es noop si no hay provider». En la implementación que sobrevivió
+  al merge **no es así: lanza**. Ver la advertencia siguiente.
+- `npm ci` contra el registry interno puede devolver 502 (observado por Grok);
+  en ese caso, `npm ci --registry https://registry.npmjs.org`. En este entorno
+  el problema fue otro: `sharp` falla al compilar, por lo que se usa
+  `npm ci --ignore-scripts`. Prueba una cosa y luego la otra según el fallo.
+- Grok observó que su entorno **no tenía credenciales para `git push` por HTTPS**
+  y perdió trabajo ya escrito por eso. Si tu entorno tiene la misma limitación,
+  resuélvelo ANTES de escribir código, no después.
 - **`useToast()` lanza si falta `<ToastProvider>`.** Cualquier test que renderice
   una vista que borre o guarde debe envolverla en `<ToastProvider>` (ver
   `src/features/funcionarios/__tests__/Funcionarios.test.jsx`). Es intencional:
@@ -253,6 +304,15 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto.
+
+### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
+
+Auditoría: P1 vigente; P2 vigente; P3/P11 parcial; P4/P12 infra lista, vistas aún con modal; P5 vigente; P6 parcial.
+
+> Nota de Claude Code (2026-09-11 20:40): esta sesión de Grok corrió en paralelo
+> sobre `main`, contra `PROTOCOLO.md` §5. Su infraestructura se fusionó dentro
+> de la rama del PR #91; el detalle está en «Decisiones vigentes». Su entrada se
+> conserva íntegra por exigencia del propio §5.
 
 ### 2026-09-11 — ZCode (preparación) — Creación del sistema de relevo `_relevo/`. Sin cambios de código.
