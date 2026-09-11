@@ -38,6 +38,22 @@ export function lugaresDeActividad(nombresPuestos = opcionesPuestoOperativo) {
   return [...base, LUGAR_SEDE];
 }
 
+/**
+ * Colores admitidos para un puesto operativo (RP1, RP6).
+ *
+ * El valor son clases de Tailwind que la cuadrícula de Roles aplica tal cual.
+ * Es una lista CERRADA a propósito: un valor libre saldría sin estilo o, peor,
+ * con un contraste ilegible bajo el sol, que es la condición real de uso.
+ */
+export const coloresPuesto = [
+  { id: "naranja-claro", clases: "bg-orange-100 text-orange-950" },
+  { id: "naranja", clases: "bg-orange-700 text-white" },
+  { id: "cielo", clases: "bg-sky-100 text-sky-950" },
+  { id: "esmeralda", clases: "bg-emerald-100 text-emerald-950" },
+  { id: "violeta", clases: "bg-violet-100 text-violet-950" },
+  { id: "pizarra", clases: "bg-slate-200 text-slate-900" },
+];
+
 export const actividadRutinariaVisitantes = "Atención rutinaria de visitantes";
 
 export const opcionesActividadBase = [actividadRutinariaVisitantes];

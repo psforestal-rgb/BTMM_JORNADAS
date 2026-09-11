@@ -10,6 +10,10 @@ import { exportSnapshot } from "./storage.js";
  * así que una importación que salga mal siempre se puede revertir por ahí.
  */
 export function crearRespaldo(ctx, prefijo = "pnlq-snapshot") {
+  // Esta lista se elige a mano, no se copia el estado entero, para dejar fuera
+  // la efímera de interfaz (vista actual, mes, día). Cada clave NUEVA del
+  // estado que deba sobrevivir a un respaldo hay que añadirla aquí: si se
+  // olvida, el respaldo parece completo y no lo es.
   const snapshot = exportSnapshot({
     personas: ctx.personas,
     actividadesPlan: ctx.actividadesPlan,
@@ -17,6 +21,8 @@ export function crearRespaldo(ctx, prefijo = "pnlq-snapshot") {
     roleData: ctx.roleData,
     reglas: ctx.reglas,
     migraciones: ctx.migraciones,
+    puestos: ctx.puestos,
+    historial: ctx.historial,
   });
   return {
     snapshot,

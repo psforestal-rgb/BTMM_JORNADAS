@@ -125,6 +125,90 @@ export function moverPuesto(lista, nombre, delta) {
   return copia;
 }
 
+/**
+ * Plan de importación de puestos (RP6).
+ *
+ * Decisiones, registradas en `_relevo/SEGUIMIENTO.md`:
+ *
+ *  - **Solo agrega y actualiza; nunca elimina.** Si un import pudiera borrar un
+ *    puesto, las fichas que lo referencian quedarían apuntando a algo
+ *    inexistente y la cobertura crítica dejaría de evaluarse en silencio. Un
+ *    archivo incompleto no puede vaciar la lista.
+ *  - **La identidad es el nombre**, igual que en el resto del sistema.
+ *  - **Una fila cuyo código ya usa OTRO puesto se omite y se informa.** Las dos
+ *    alternativas eran peores: pisar el código del otro rompería su
+ *    identificación en la cuadrícula, e inventar un código sería fabricar un
+ *    dato que nadie escribió.
+ *  - **Un color desconocido cae al primero de la paleta** en vez de omitir la
+ *    fila: el color es decoración, no un dato que justifique perder el puesto.
+ *
+ * @returns { resultado, nuevos, actualizados, omitidos, duplicados }
+ */
+export function planificarImportacionPuestos(puestos, filas, coloresValidos = []) {
+  const actuales = Array.isArray(puestos) ? puestos : [];
+  const resultado = [...actuales];
+  const nuevos = [];
+  const actualizados = [];
+  const omitidos = [];
+  const duplicados = [];
+  const vistos = new Map();
+  const clases = coloresValidos.map((c) => c.clases ?? c);
+  const colorPorDefecto = clases[0] ?? "";
+
+  const indiceDe = (nombre) =>
+    resultado.findIndex((x) => normalizar(x.nombre) === normalizar(nombre));
+
+  (Array.isArray(filas) ? filas : []).forEach((fila, i) => {
+    // `i + 2`: la fila 1 del archivo es la cabecera, así que esta es la cuenta
+    // que la persona ve en su hoja de cálculo.
+    const numeroDeFila = i + 2;
+    const nombre = String(fila?.nombre ?? "").trim();
+    if (!nombre) {
+      omitidos.push({ fila: numeroDeFila, motivo: "sinNombre" });
+      return;
+    }
+    if (vistos.has(normalizar(nombre))) {
+      duplicados.push({ fila: numeroDeFila, anterior: vistos.get(normalizar(nombre)) });
+    }
+    vistos.set(normalizar(nombre), numeroDeFila);
+
+    const tag = normalizarTag(fila?.tag);
+    const posicion = indiceDe(nombre);
+    // El código solo puede chocar con OTRO puesto; con el suyo propio no.
+    const choqueTag =
+      tag &&
+      resultado.some(
+        (x, j) => j !== posicion && normalizarTag(x.tag) === tag,
+      );
+    if (choqueTag) {
+      omitidos.push({ fila: numeroDeFila, motivo: "codigoOcupado", nombre, tag });
+      return;
+    }
+
+    const colorPedido = String(fila?.color ?? "").trim();
+    const color = clases.includes(colorPedido) ? colorPedido : null;
+
+    if (posicion < 0) {
+      const registro = { nombre, tag, color: color || colorPorDefecto };
+      resultado.push(registro);
+      nuevos.push({ fila: numeroDeFila, registro });
+      return;
+    }
+    const previo = resultado[posicion];
+    const fusionado = {
+      ...previo,
+      nombre,
+      ...(tag ? { tag } : {}),
+      ...(color ? { color } : {}),
+    };
+    const cambios = Object.keys(fusionado).filter((k) => previo[k] !== fusionado[k]);
+    resultado[posicion] = fusionado;
+    actualizados.push({ fila: numeroDeFila, registro: fusionado, previo, cambios });
+  });
+
+  return { resultado, nuevos, actualizados, omitidos, duplicados };
+}
+
 /** Cuántas fichas activas quedarían huérfanas si se elimina el puesto. */
 export function personasEnPuesto(personas, nombre) {
   return (Array.isArray(personas) ? personas : []).filter(
