@@ -1,10 +1,13 @@
 /**
  * @vitest-environment jsdom
  *
- * RF9 añade la clave `historial` al estado. Lo que estas pruebas protegen es
- * que ese añadido NO obligue a subir `SCHEMA_VERSION`: un snapshot guardado
- * antes de RF9 no la trae, y debe seguir cargando con el rastro vacío en vez
- * de ser rechazado por incompatible.
+ * RF9 y RP1–RP8 añaden claves nuevas al estado (`historial`, `puestos`). Lo que
+ * estas pruebas protegen es que añadir una clave NO obligue a subir
+ * `SCHEMA_VERSION`: un snapshot guardado antes no la trae, y debe seguir
+ * cargando con el valor por defecto en vez de ser rechazado por incompatible.
+ *
+ * Es la garantía que permite seguir ampliando el estado sin migraciones, así
+ * que conviene añadir aquí cada clave nueva que se incorpore.
  */
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -125,5 +128,50 @@ describe("AppContext — historial de cambios (RF9)", () => {
     });
     expect(ctx().historial).toHaveLength(MAX_ENTRADAS);
     expect(ctx().historial[0].funcionario.nombre).toBe("Nueva");
+  });
+});
+
+describe("AppContext — puestos operativos en el estado (RP1–RP8)", () => {
+  it("una instalación nueva arranca con los puestos de la semilla", async () => {
+    const { ctx } = await leerContexto();
+    expect(ctx().puestos.length).toBeGreaterThan(0);
+    expect(ctx().puestos.map((p) => p.nombre)).toContain("Puesto Orosi");
+    // La forma de la semilla se limpia: `funcionarios` es solo dato de ejemplo.
+    expect(ctx().puestos[0]).not.toHaveProperty("funcionarios");
+  });
+
+  it("un snapshot anterior a RP-PUESTOS carga con la semilla, sin migrar nada", async () => {
+    persistir(ESTADO_ANTERIOR_A_RF9);
+    const { ctx } = await leerContexto();
+    expect(ctx().puestos.map((p) => p.nombre)).toContain("Puesto Quetzales");
+  });
+
+  it("los puestos editados por el usuario se recuperan tal cual", async () => {
+    persistir({ ...ESTADO_ANTERIOR_A_RF9, puestos: [{ nombre: "Puesto Nuevo", tag: "PN", color: "x" }] });
+    const { ctx } = await leerContexto();
+    expect(ctx().puestos).toEqual([{ nombre: "Puesto Nuevo", tag: "PN", color: "x" }]);
+  });
+
+  it("una lista vacía o corrupta cae a la semilla en vez de dejar la app sin puestos", async () => {
+    persistir({ ...ESTADO_ANTERIOR_A_RF9, puestos: [] });
+    const { ctx } = await leerContexto();
+    expect(ctx().puestos.length).toBeGreaterThan(0);
+  });
+
+  it("descarta las entradas sin nombre, que romperían el agrupado de Roles", async () => {
+    persistir({
+      ...ESTADO_ANTERIOR_A_RF9,
+      puestos: [{ nombre: "Bueno", tag: "B" }, null, { tag: "SIN" }],
+    });
+    const { ctx } = await leerContexto();
+    expect(ctx().puestos).toEqual([{ nombre: "Bueno", tag: "B" }]);
+  });
+
+  it("setPuestos actualiza la lista viva", async () => {
+    const { ctx } = await leerContexto();
+    await act(async () => {
+      ctx().setPuestos([{ nombre: "Único", tag: "UN", color: "x" }]);
+    });
+    expect(ctx().puestos).toEqual([{ nombre: "Único", tag: "UN", color: "x" }]);
   });
 });

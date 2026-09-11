@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Badge from "../../ui/Badge.jsx";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
-import { opcionesLugarActividad, opcionesActividadBase, actividadRutinariaVisitantes } from "../../data/opciones.js";
+import { lugaresDeActividad, opcionesActividadBase, actividadRutinariaVisitantes } from "../../data/opciones.js";
 import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
@@ -18,6 +17,12 @@ import AsignacionLibreModal from "./AsignacionLibreModal.jsx";
 import OtrosParticipantes from "./OtrosParticipantes.jsx";
 
 export default function ModalActividad({ valor, personas, cerrar, guardar, eliminar, actividadesPlan = [] }) {
+  // Puestos vigentes desde el estado (RP1–RP8), no desde el módulo de datos.
+  const { puestos: puestosVigentes } = useApp();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
   const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const { roleData = {}, setRoleData, reposiciones = [], setReposiciones, reglas } = useApp();
@@ -48,6 +53,10 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
   const saldoDe = (nombre) => saldoFuncionario(reposiciones, nombre, hj);
   const cls = "w-full min-h-touch rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100";
   const porPuesto = opcionesPuestoOperativo.map((puesto) => ({ puesto, items: personas.filter((p) => p.puestoOperativo === puesto) }));
+  const opcionesLugarActividad = useMemo(
+    () => lugaresDeActividad(opcionesPuestoOperativo),
+    [opcionesPuestoOperativo],
+  );
   const lugarModo = opcionesLugarActividad.includes(a.lugar) ? a.lugar : "Otro";
   const esExistente = actividadesPlan.some((actividad) => actividad.id === a.id);
   const finActividad = a.unDia ? a.inicio : a.fin || a.inicio;

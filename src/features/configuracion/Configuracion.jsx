@@ -4,7 +4,6 @@ import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import ThemeToggle from "../../ui/ThemeToggle.jsx";
 import { useApp } from "../../context/AppContext.jsx";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { VIATICOS_OBJETIVO_OPCIONES, validarReglas, REGLAS_DEFAULT } from "../../config/reglas.js";
 import { FERIADOS_CR } from "../../data/feriadosCR.js";
 import { useT } from "../../i18n/useT.js";
@@ -16,6 +15,12 @@ import Modal from "../../ui/Modal.jsx";
  * confirma explícitamente para evitar apagar alertas por error.
  */
 export default function Configuracion() {
+  // Puestos vigentes desde el estado (RP1–RP8), no desde el módulo de datos.
+  const { puestos: puestosVigentes } = useApp();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
   const t = useT();
   const { reglas, setReglas, resetReglas, resetToSeed } = useApp();
   const [draft, setDraft] = useState(reglas);

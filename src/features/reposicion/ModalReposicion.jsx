@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
+import { useMemo, useState } from "react";
+import { useApp } from "../../context/AppContext.jsx";
 import { fecha } from "../../domain/fechas.js";
 import { TIPOS_DIA, MOTIVOS, cuotasDe, saldoHoras, HORAS_JORNADA_DEFAULT } from "../../domain/reposicion.js";
 import { useModalA11y } from "../../lib/a11y.js";
@@ -7,6 +7,12 @@ import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 
 export default function ModalReposicion({ valor, personas, cerrar, guardar, eliminar, reposiciones = [], hj = HORAS_JORNADA_DEFAULT }) {
+  // Puestos vigentes desde el estado (RP1–RP8), no desde el módulo de datos.
+  const { puestos: puestosVigentes } = useApp();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
   const { ref, titleId } = useModalA11y({ onClose: cerrar });
   const t = useT();
   const [r, setR] = useState(valor);

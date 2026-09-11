@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useApp } from "../../context/AppContext.jsx";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
@@ -6,7 +7,6 @@ import Icon from "../../ui/Icon.jsx";
 import BottomSheet from "../../ui/BottomSheet.jsx";
 import { codigoCls } from "../../ui/styles.js";
 import { meses, diasLargos } from "../../data/calendario.js";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { pad2, fecha } from "../../domain/fechas.js";
 import { codigoRolFuncionario, esRolActivo, categoriaDe } from "../../domain/roles.js";
 import { actividadesEnDia } from "../../domain/actividades.js";
@@ -75,6 +75,13 @@ function MarcasDia({ trabajada, reposicion, t }) {
 export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, setActividadesPlan, roleData, reposiciones = [], hj }) {
   const t = useT();
   const isMobile = useMobile();
+  // Los puestos son editables (RP1–RP8): se leen del estado, no del módulo de
+  // datos, o la vista se quedaría con la lista del arranque.
+  const { puestos: puestosVigentes } = useApp();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
   const { trabajadas, reposiciones: reposicionesDia } = indexarReposiciones(reposiciones, hj);
   const marcaDe = (nombre) => ({
     trabajada: trabajadas[`${nombre}|${diaVista}`],

@@ -81,13 +81,19 @@ export function mergeReglas(parcial = {}) {
  * Validación liviana de un objeto de reglas. Devuelve un arreglo de
  * mensajes de advertencia (no bloqueante). El llamador decide qué hacer.
  */
-export function validarReglas(r) {
+export function validarReglas(r, puestosConocidos = opcionesPuestoOperativo) {
   const w = [];
+  // Los puestos son editables (RP1–RP8): quien valide debe pasar la lista
+  // vigente. El valor por defecto es la semilla, para no romper llamadas
+  // antiguas ni las pruebas que validan reglas sin contexto.
+  const conocidos = Array.isArray(puestosConocidos) && puestosConocidos.length
+    ? puestosConocidos
+    : opcionesPuestoOperativo;
   if (!Array.isArray(r.puestosRequierenVisitantesDiario)) {
     w.push("La lista de puestos con Visit. diario debe ser un arreglo.");
   } else {
     const desconocidos = r.puestosRequierenVisitantesDiario.filter(
-      (p) => !opcionesPuestoOperativo.includes(p),
+      (p) => !conocidos.includes(p),
     );
     if (desconocidos.length) {
       w.push(`Puesto(s) no reconocido(s) en la lista de Visit. diaria: ${desconocidos.join(", ")}`);
