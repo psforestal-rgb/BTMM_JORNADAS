@@ -1,1 +1,0 @@
-import{ae as r}from"./index-W9h71rcm.js";function f(e,t){const[s,n]=r.useState(()=>{try{const o=window.sessionStorage.getItem(e);return o===null?typeof t=="function"?t():t:JSON.parse(o)}catch{return typeof t=="function"?t():t}});return r.useEffect(()=>{try{window.sessionStorage.setItem(e,JSON.stringify(s))}catch{}},[e,s]),[s,n]}export{f as u};
