@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 17:20 por Claude Code
+> Última actualización: 2026-09-11 18:20 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: el trabajo NO está en `main`, está en un PR abierto
@@ -21,54 +21,81 @@ Si hiciera falta fusionar a mano en lugar de por el PR:
 git fetch origin
 git checkout main && git pull --rebase origin main
 git merge --no-ff origin/claude/festive-allen-hl6igv
-npm ci --ignore-scripts && npm test    # debe dar 352/352
+npm ci --ignore-scripts && npm test    # debe dar 364/364
 git push origin main
 ```
 
 Tras el merge, verificar que `dist/version.json` en el sitio publicado diga
-**1.17.0**. Si la siguiente IA también está atada a una rama, que parta de
+**1.18.0**. Si la siguiente IA también está atada a una rama, que parta de
 `claude/festive-allen-hl6igv` (o de `main` ya fusionado) y lo anote aquí.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**FASE 1 · último quick win pendiente: `[F1][UX-WIZARD]`** — pasos en
-`src/features/funcionarios/ModalFuncionario.jsx` (A-P3 / F-P2 / F-P10).
-Es el único punto crítico de Fase 1 que sigue vigente y enlaza directamente con
-RF7 («Crear Rápido» de 3 pasos) de Fase 2, así que conviene diseñarlo una sola
-vez para las dos cosas.
+**FASE 1 ESTÁ CERRADA.** Arranca **FASE 2**, y el primer bloque es
+**`[F2][RF-DATOS]` completar el CRUD de funcionarios (RF1–RF9)**.
 
-Alcance propuesto, ya validado contra el código actual:
+Auditado contra el código actual, esto es lo que YA existe y lo que falta:
 
-1. El modal tiene 6 secciones y 18 campos en un scroll de `max-h-[70vh]`
-   (`ModalFuncionario.jsx:50`). Convertirlo en 3 pasos:
-   - Paso 1 «Quién»: nombre, cédula, correo (sección Identificación).
-   - Paso 2 «Dónde y cómo»: cargo, puesto operativo, condición, estado,
-     jornada, modalidad.
-   - Paso 3 «Respaldo»: resolución, contrato, vencimiento, ingreso, atributos,
-     observaciones.
-2. Solo el nombre es obligatorio hoy (`Funcionarios.jsx:69` descarta el guardado
-   si viene vacío). Mantener eso: el paso 1 basta para crear, los pasos 2 y 3
-   deben poder quedar a medias. **No** introducir validaciones nuevas en esta
-   tarea; F-P13/F-P14 (validación en tiempo real) van aparte.
-3. Indicador «Paso X de 3» + botones Atrás/Siguiente/Guardar, con `aria-current`
-   en el paso activo. Al editar un funcionario existente, permitir saltar
-   directo a cualquier paso (no obligar a recorrerlos).
-4. Conservar los 4 paneles de `<Ayuda>` ya existentes en sus secciones.
-5. `ModalFuncionario.test.jsx` comprueba que existen las 6 cabeceras de sección
-   y que el foco no se pierde al teclear en Nombre: **ambas pruebas deben
-   seguir pasando o adaptarse conscientemente**, no borrarse.
-6. Bump de `version` en `package.json`.
+| Req | Qué pide | Estado | Dónde |
+|-----|----------|--------|-------|
+| RF1 | Agregar funcionarios | ✅ existe | `Funcionarios.jsx` + `ModalFuncionario.jsx` |
+| RF2 | Eliminar funcionarios | ✅ existe, con «Deshacer» | `Funcionarios.jsx:79` |
+| RF6 | Búsqueda y filtrado | ✅ existe | `Funcionarios.jsx`, 6 filtros + orden + texto |
+| RF7 | Asistente «Crear Rápido» de 3 pasos | ✅ **hecho en esta sesión** | `ModalFuncionario.jsx`, wizard de 3 pasos |
+| RF5 | Exportar lista | 🟡 parcial | `Datos.jsx` exporta JSON completo; **falta CSV solo de funcionarios** |
+| RF8 | Confirmación con respaldo automático | 🟡 parcial | `Datos.jsx:102` ya descarga respaldo antes de restaurar; **falta antes de importar funcionarios** |
+| RF3 | Validación en tiempo real | 🔴 falta | `ModalFuncionario.jsx` solo rechaza nombre vacío (`Funcionarios.jsx:69`) |
+| RF4 | Importación masiva CSV con vista previa | 🔴 falta | no existe nada de CSV en `src/` |
+| RF9 | Historial de cambios | 🔴 falta | no existe |
 
-Después de esa tarea, Fase 1 queda cerrada y arranca Fase 2 (CRUD de
-funcionarios y puestos, rol `E` Teletrabajo).
+Orden sugerido, de menor a mayor riesgo:
+
+1. **RF3 — validación en tiempo real.** Es lo que menos toca y más se nota.
+   Validar al salir del campo (`onBlur`), no al teclear: cédula con formato
+   costarricense, correo, y la regla de negocio real de que jornada
+   Acumulativa sin resolución y sin ONG ya se marca en la tabla
+   (`Funcionarios.jsx:220`). Mostrar el error bajo el campo con
+   `aria-invalid` y `aria-describedby`. **No bloquear el guardado por nada que
+   no sea el nombre vacío**: la app es de campo y los datos llegan
+   incompletos; el wizard promete explícitamente que se puede guardar y
+   completar después (clave `modalFuncionario.pasos.soloNombre`).
+2. **RF5 — exportar CSV de funcionarios.** Reutilizar `descargarArchivo()` de
+   `Datos.jsx:19`; separar la función de serialización a `src/lib/csv.js` para
+   que RF4 la comparta. Cuidado con comas, comillas y tildes: exportar con BOM
+   UTF-8 o Excel en español lo abre mal.
+3. **RF4 + RF8 — importar CSV con vista previa y respaldo.** Reutilizar el
+   patrón ya probado de `Datos.jsx:252`: modal que muestra qué va a entrar y
+   qué reemplaza, y respaldo automático descargado ANTES de aplicar. Decidir y
+   registrar en «Decisiones» si el import añade o reemplaza, y cómo se
+   resuelven cédulas repetidas.
+4. **RF9 — historial de cambios.** Es el más caro y toca persistencia; dejarlo
+   para el final y leer antes la advertencia sobre la doble persistencia.
+
+Bloques siguientes de Fase 2, ya explorados para que no haya sorpresas:
+
+- **`[F2][RP-PUESTOS]` CRUD de puestos (RP1–RP8).** `src/data/puestos.js` son
+  29 líneas de datos fijos que importan **10 módulos**. Dos de esos importes
+  son el problema real: `src/data/opciones.js` y `src/config/reglas.js:14`
+  construyen constantes **en tiempo de importación**, así que no basta con
+  mover los puestos a estado: hay que convertir esos consumidores en funciones
+  o llevarlos al contexto. `REGLAS_DEFAULT.puestosRequierenVisitantesDiario`
+  (`reglas.js:22`) es donde vive hoy el «requiereVisit» de RP5, por nombre de
+  puesto: si los puestos pasan a ser editables, renombrar uno rompe esa lista.
+  Dexie está en `version(1)` y `SCHEMA_VERSION = 1` (`src/lib/schemaVersion.js`),
+  que debe subir a la vez que el esquema; los dos backends deben coincidir o
+  `loadFromDexie()` rechaza snapshots válidos.
+- **`[F2][RT-TELETRABAJO]` rol `E` (RT1–RT8).** Toca `src/domain/roles.js`,
+  `conflictos.js` y `cobertura.js`, que son dominio con 25, 3 y 3 pruebas
+  respectivamente. Añadir el código a las pruebas existentes, no crear un
+  módulo paralelo.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.17.0** — Rama: **`claude/festive-allen-hl6igv`** (6 commits por
-  delante de `main`) — Último commit: `22dfd87` «[F1][UX-TOOLTIP] ayuda
-  contextual en el formulario de funcionario»
-- Tests: ✅ **352/352** (45 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.17.0
+- Versión: **1.18.0** — Rama: **`claude/festive-allen-hl6igv`** (9 commits por
+  delante de `main`) — Último commit: `a4af5aa` «[F1][UX-WIZARD] el formulario
+  de funcionario pasa a tres pasos»
+- Tests: ✅ **364/364** (45 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.18.0
 
 ## ✅ Hecho en esta sesión
 
@@ -87,8 +114,10 @@ funcionarios y puestos, rol `E` Teletrabajo).
   test estático que impide que vuelvan a encogerse.
 - `22dfd87` `[F1][UX-TOOLTIP]` — `src/ui/Ayuda.jsx` y ayuda contextual por
   sección en el formulario de funcionario, con textos tomados del glosario.
+- `a4af5aa` `[F1][UX-WIZARD]` — el formulario de funcionario pasa a 3 pasos.
+  **Con esto Fase 1 queda cerrada** y de paso queda hecho RF7 de Fase 2.
 
-Tests: de 290 a 352 (+62). Ninguna función existente se eliminó.
+Tests: de 290 a 364 (+74). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -105,8 +134,8 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 | A-P2 | F-P1 | Filtros ocultos por defecto | ✅ **RESUELTO** | `Funcionarios.jsx`, visibles desde `md` |
 | A-P7 | F-P8 | Faltan tooltips contextuales | ✅ **RESUELTO** | `src/ui/Ayuda.jsx` + 4 secciones de `ModalFuncionario.jsx` |
 | A-P6 | F-P9 | Controles inconsistentes / demasiado pequeños | ✅ **RESUELTO** | 41 botones a 48 px + `src/lib/__tests__/objetivosTactiles.test.js` |
-| A-P3 | F-P2 / F-P10 | Modal de Funcionario demasiado largo, sin pasos | 🔴 **VIGENTE** | `ModalFuncionario.jsx`: 6 secciones, 18 campos → `[F1][UX-WIZARD]` |
-| A-P1 | — | Sobrecarga cognitiva en Funcionarios | 🟡 **PARCIAL** | mejora bastante al partir el modal en pasos |
+| A-P3 | F-P2 / F-P10 | Modal de Funcionario demasiado largo, sin pasos | ✅ **RESUELTO** | `ModalFuncionario.jsx`: 3 pasos con indicador y pestañas |
+| A-P1 | — | Sobrecarga cognitiva en Funcionarios | ✅ **RESUELTO** | filtros visibles + formulario en 3 pasos |
 | A-P14 | F-P13 / F-P14 | Validación solo al guardar, errores poco descriptivos | 🟡 **VIGENTE** | `ModalFuncionario.jsx` no valida nada salvo nombre vacío |
 | A-P8 | F-P5 | Tabla de Roles muy densa | 🟡 **VIGENTE** | `RolesMensualGrid.jsx` (873 líneas) → A1, Fase 3 |
 | A-P12 | F-P14 / F-P17 | Sin atajos de teclado | 🟡 **VIGENTE** | no hay `Ctrl+F` ni navegación por celdas |
@@ -120,16 +149,16 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F1][UX-WIZARD]` — ver «SIGUIENTE ACCIÓN». Cierra Fase 1.
-2. FASE 2 — CRUD de funcionarios (RF1–RF9, import CSV con preview y respaldo
-   automático), CRUD de puestos con versionado de schema Dexie (RP1–RP8),
-   asistente «Crear Rápido» (RF7, sale del wizard del punto 1), rol `E`
-   Teletrabajo (RT1–RT8).
-3. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
+1. `[F2][RF-DATOS]` — completar RF1–RF9 de funcionarios. Ver «SIGUIENTE ACCIÓN».
+2. `[F2][RP-PUESTOS]` — CRUD de puestos con versionado de schema Dexie y
+   migración con respaldo (RP1–RP8).
+3. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
+   cobertura (RT1–RT8).
+4. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
    de dominio existente para el Banco de Tiempo, virtualización de Roles (A1),
    estado de tablas y filtros en la URL, exportación CSV (B1).
-4. Sueltos de menor prioridad, ya auditados: validación en tiempo real
-   (F-P13/F-P14) y atajos de teclado (A-P12).
+5. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+   «cargando» en import/export (A-P17).
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
 
@@ -164,6 +193,16 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los textos de ayuda normativos se copian de
   `docs/GLOSARIO.md`. Si cambia el glosario, cambian las claves
   `modalFuncionario.ayuda.*` de `src/i18n/es-CR.js`.
+- 2026-09-11 (Claude Code): El formulario de funcionario es un wizard de 3
+  pasos, pero **«Guardar» está disponible desde el paso 1**: solo el nombre es
+  obligatorio y la promesa al usuario está escrita en la clave
+  `modalFuncionario.pasos.soloNombre`. Motivo: los datos llegan incompletos del
+  campo; obligar a recorrer 3 pasos para anotar un nombre es peor que el
+  formulario largo que se quiso arreglar. **RF3 (validación en tiempo real) no
+  debe bloquear el guardado** por nada que no sea el nombre vacío.
+- 2026-09-11 (Claude Code): Al **crear**, una pestaña de paso no visitada está
+  deshabilitada; al **editar** se puede saltar a cualquier paso desde el
+  inicio, porque quien edita viene a cambiar un campo concreto.
 - 2026-09-11 (Claude Code): Objetivo táctil mínimo = **48 px** (`min-h-touch`).
   Las dos excepciones vivas (cuadrícula de Roles a 40 px y tarjeta de actividad
   dentro de una celda del mes) están comentadas en el código y registradas en
@@ -192,6 +231,15 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - `src/lib/__tests__/objetivosTactiles.test.js` analiza el JSX como texto. Un
   botón escrito de forma inusual (por ejemplo con el `className` calculado en
   una variable aparte) se le escapa; no es una garantía absoluta, es una red.
+- **`src/data/puestos.js` no se puede volver dinámico sin tocar dos importes en
+  tiempo de carga**: `src/data/opciones.js` y `src/config/reglas.js:14`
+  construyen constantes al importar. Además
+  `REGLAS_DEFAULT.puestosRequierenVisitantesDiario` referencia puestos **por
+  nombre**, así que renombrar un puesto rompería la cobertura crítica.
+- Dexie está en `version(1)` y `SCHEMA_VERSION = 1`
+  (`src/lib/schemaVersion.js`). **Los dos backends deben coincidir siempre**: un
+  desajuste hace que `loadFromDexie()` rechace snapshots válidos. Subir el
+  esquema implica subir ambos y migrar con respaldo previo.
 - Dual persistence localStorage + Dexie sin política de conflicto definida:
   antes de tocar persistencia (A2/RP3), definir y documentar cuál gana.
 - En `ModalFuncionario.jsx`, `Field` y `Seccion` están definidos a nivel de
@@ -205,6 +253,6 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — Fase 0 cerrada (baseline 290/290 + auditoría de los 18 puntos de dolor) y 4 de los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, y ayuda contextual. De 290 a 352 tests. Commits `5a4c83f`…`22dfd87` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`.
 
 ### 2026-09-11 — ZCode (preparación) — Creación del sistema de relevo `_relevo/`. Sin cambios de código.
