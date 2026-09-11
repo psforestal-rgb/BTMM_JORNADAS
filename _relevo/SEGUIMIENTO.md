@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 22:35 por Claude Code
+> Última actualización: 2026-09-11 22:55 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: hubo DOS IAs a la vez y esta rama ya resolvió el choque
@@ -31,7 +31,7 @@ Si hiciera falta fusionar a mano en lugar de por el PR:
 git fetch origin
 git checkout main && git pull --rebase origin main
 git merge --no-ff origin/claude/festive-allen-hl6igv
-npm ci --ignore-scripts && npm test    # debe dar 442/442
+npm ci --ignore-scripts && npm test    # debe dar 484/484
 git push origin main
 ```
 
@@ -41,59 +41,59 @@ este bloque, nunca de `main` a secas.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**`[F2][RF9]` historial de cambios de funcionarios.** Es lo único que queda del
-bloque RF1–RF9, y el más caro: toca persistencia.
+**`[F2][RP-PUESTOS]` CRUD de puestos operativos (RP1–RP8).** El bloque RF1–RF9
+de funcionarios está **cerrado entero**.
 
-Estado del bloque tras esta sesión:
+Es la tarea más delicada de la Fase 2, y no por el CRUD en sí. El problema está
+en cómo se consumen hoy los puestos:
 
-| Req | Estado |
-|-----|--------|
-| RF1 agregar · RF2 eliminar · RF6 buscar y filtrar · RF7 asistente 3 pasos | ✅ |
-| RF3 validación en tiempo real | ✅ |
-| RF5 exportar CSV · RF4 importar CSV con vista previa · RF8 respaldo automático | ✅ |
-| **RF9 historial de cambios** | 🔴 **esta tarea** |
+1. `src/data/puestos.js` son **29 líneas de datos fijos que importan 10 módulos**.
+2. Dos de esos importes son el obstáculo real: `src/data/opciones.js` y
+   `src/config/reglas.js:14` construyen **constantes en tiempo de importación**.
+   No basta con mover los puestos a estado: hay que convertir esos consumidores
+   en funciones, o llevarlos al contexto, antes de que nada sea editable.
+3. `REGLAS_DEFAULT.puestosRequierenVisitantesDiario` (`src/config/reglas.js:22`)
+   referencia puestos **por nombre**. Si los puestos pasan a ser editables,
+   renombrar uno rompe en silencio la cobertura crítica de la vista Día. Hay que
+   decidir si se referencian por un `id` estable o si renombrar arrastra la
+   regla, y **registrarlo antes de codificar**.
 
-⚠️ **Antes de codificar, lee las advertencias sobre persistencia de este mismo
-archivo.** RF9 obliga a guardar datos nuevos, y ahí están las dos trampas: la
-doble persistencia localStorage + Dexie sin política de conflicto, y que
-`SCHEMA_VERSION` y la versión de Dexie deben subir a la vez o `loadFromDexie()`
-rechaza snapshots válidos.
+Sobre el esquema: **esta vez sí toca decidirlo con cuidado, pero puede que
+tampoco haga falta subirlo.** RF9 acaba de demostrar que añadir una clave nueva
+al estado NO obliga a tocar `SCHEMA_VERSION`, porque `mergePersistedWithSeed`
+completa desde la semilla lo que el snapshot no traiga (ver
+`src/context/__tests__/AppContext-historial.test.jsx`, que lo prueba). Migrar
+los puestos a estado es el mismo caso: clave nueva con valor por defecto. Solo
+haría falta subir el esquema si se cambiara la FORMA de datos ya persistidos,
+por ejemplo pasando `puestoOperativo` de nombre a id en cada ficha. Si se llega
+a eso, `SCHEMA_VERSION` (`src/lib/schemaVersion.js`) y la versión de Dexie
+(`src/lib/db.js:66`) suben **a la vez**, y con respaldo previo.
 
-Decisiones que hay que tomar y **registrar antes de escribir código**:
+Orden sugerido, de menor a mayor riesgo:
 
-1. **Qué se registra.** Alta, baja, edición e importación, como mínimo. ¿Se
-   guarda el valor anterior de cada campo, o solo qué campos cambiaron? Lo
-   primero permite deshacer de verdad; lo segundo ocupa mucho menos.
-2. **Cuánto se conserva.** Sin tope, el historial crece sin límite en
-   localStorage, que es pequeño y compartido con el resto del estado. Conviene
-   un tope por número de entradas o por antigüedad.
-3. **Si viaja en el respaldo.** `exportSnapshot` (`src/lib/storage.js:281`)
-   define qué entra en el JSON. Añadir el historial lo hace mucho más pesado.
-4. **Dónde se ve.** Lo más barato es una pestaña dentro de la vista Funcionarios
-   o una sección en «Datos · respaldo». Evitar una vista nueva por ahora.
+1. Convertir `opciones.js` y `reglas.js` para que **no** congelen la lista al
+   importar. Sin tocar nada más, y con los tests existentes en verde.
+2. Llevar `puestos` al estado con su valor por defecto, exactamente como se hizo
+   con `historial`, y hacer que los 10 consumidores lo lean de ahí.
+3. Solo entonces, la interfaz CRUD en «Configuración» (RP1, RP8), con validación
+   de unicidad de código (RP4) y el campo `requiereVisit` editable (RP5).
+4. Exportación e importación de puestos (RP6) reutilizando `src/lib/csv.js`, que
+   ya hace las dos direcciones.
 
-Piezas que ya existen y hay que reutilizar, no reescribir:
+Piezas reutilizables, **no reescribir ninguna**: `src/lib/csv.js` (serializa y
+parsea), `src/lib/respaldo.js`, `src/lib/descargas.js`, `src/lib/undo.js`,
+`src/domain/historial.js` (el rastro sirve igual para puestos), y el patrón de
+vista previa de `src/features/funcionarios/Funcionarios.jsx`.
 
-- `planificarImportacion` (`src/features/funcionarios/importarFuncionarios.js`)
-  ya calcula, por cada actualización, **qué campos cambian** (`cambios`). Es
-  exactamente la materia prima de una entrada de historial.
-- Los tres puntos que modifican la lista son `guardar`, `eliminar` y
-  `aplicarImportacion`, todos en `src/features/funcionarios/Funcionarios.jsx`.
-- `crearRespaldo` en `src/lib/respaldo.js` y `descargarArchivo` en
-  `src/lib/descargas.js`.
-
-Después de RF9 vienen `[F2][RP-PUESTOS]` y `[F2][RT-TELETRABAJO]`, descritos en
-«Pendiente». Si RF9 parece demasiado para el contexto disponible, **es preferible
-saltar a `[F2][RP-PUESTOS]` y dejar RF9 documentado** que dejarlo a medias: RF9
-toca persistencia y un estado intermedio ahí es peligroso.
+Después: `[F2][RT-TELETRABAJO]` (rol `E`) y la Fase 3.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.21.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
-  ya fusionado dentro — Último commit: `6dfe4f1` «[F2][RF4+RF8] importación CSV
-  de funcionarios con vista previa y respaldo»
-- Tests: ✅ **442/442** (47 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.21.0
+- Versión: **1.22.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
+  ya fusionado dentro — Último commit: `5580025` «[F2][RF9] historial de cambios
+  de funcionarios»
+- Tests: ✅ **484/484** (50 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.22.0
 
 ## ✅ Hecho en esta sesión
 
@@ -126,7 +126,11 @@ toca persistencia y un estado intermedio ahí es peligroso.
   automático, con `parsearCSV`/`filasAObjetos` en `src/lib/csv.js` y la lógica
   de fusión en `src/features/funcionarios/importarFuncionarios.js`.
 
-Tests: de 290 a 442 (+152). Ninguna función existente se eliminó.
+- `5580025` `[F2][RF9]` — historial de cambios: `src/domain/historial.js`, la
+  clave `historial` en el estado y la vista en «Datos · respaldo». **Con esto
+  el bloque RF1–RF9 queda cerrado entero.**
+
+Tests: de 290 a 484 (+194). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -158,15 +162,13 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F2][RF9]` — historial de cambios de funcionarios. Ver «SIGUIENTE ACCIÓN».
-2. `[F2][RP-PUESTOS]` — CRUD de puestos con versionado de schema Dexie y
-   migración con respaldo (RP1–RP8).
-3. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
+1. `[F2][RP-PUESTOS]` — CRUD de puestos (RP1–RP8). Ver «SIGUIENTE ACCIÓN».
+2. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
    cobertura (RT1–RT8).
-4. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
+3. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
    de dominio existente para el Banco de Tiempo, virtualización de Roles (A1),
    estado de tablas y filtros en la URL, exportación CSV (B1).
-5. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+4. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
    «cargando» en import/export (A-P17).
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
@@ -242,6 +244,24 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los avisos de campo se disparan **al salir del
   foco**, no al teclear: mientras alguien escribe, el valor está incompleto por
   definición y avisar es ruido.
+- 2026-09-11 (Claude Code): **El rastro de cambios guarda el valor anterior y el
+  nuevo** de cada campo modificado, no solo qué campos cambiaron: es lo que lo
+  hace útil para control interno. Tope de **200 entradas**, las más nuevas
+  primero, aplicado **dentro del reducer** para que ningún llamador pueda
+  saltárselo. **Viaja en el respaldo**, porque un rastro que desaparece al
+  restaurar no es un rastro. Se ve en «Datos · respaldo», no en una vista nueva.
+- 2026-09-11 (Claude Code): **Eliminar y deshacer dejan DOS entradas en el
+  rastro, no cero.** El historial cuenta lo que pasó; borrar la baja al deshacer
+  lo dejaría como si nunca hubiera ocurrido.
+- 2026-09-11 (Claude Code): **Una importación deja UNA entrada resumen**, no una
+  por fila: importar 200 fichas llenaría el rastro entero y expulsaría todo lo
+  anterior.
+- 2026-09-11 (Claude Code): **Añadir una clave nueva al estado NO obliga a subir
+  `SCHEMA_VERSION`.** `mergePersistedWithSeed` completa desde `seedState` lo que
+  el snapshot no traiga, así que un estado anterior carga con la clave en su
+  valor por defecto. Verificado en
+  `src/context/__tests__/AppContext-historial.test.jsx`. Subir el esquema solo
+  hace falta si cambia la FORMA de datos ya persistidos.
 - 2026-09-11 (Claude Code): **La importación CSV fusiona, nunca reemplaza.** Un
   archivo incompleto no puede borrar a quien no aparece en él; en una app de
   campo ese sería el peor fallo posible. La identidad es la **cédula comparada
@@ -320,6 +340,11 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
   una descarga hay que sustituir `global.Blob` por un doble que guarde lo que
   recibe; está hecho así en el bloque de exportación CSV de
   `src/features/funcionarios/__tests__/Funcionarios.test.jsx`.
+- Toda operación que modifique fichas debe **registrar su entrada en el rastro**
+  (`registrarCambio` del contexto). Los cuatro puntos que ya lo hacen están en
+  `src/features/funcionarios/Funcionarios.jsx`: `guardar`, `eliminar`, el
+  «Deshacer» de ese borrado y `aplicarImportacion`. Si se añade un quinto punto
+  de modificación y se olvida el registro, el rastro miente en silencio.
 - **`src/data/puestos.js` no se puede volver dinámico sin tocar dos importes en
   tiempo de carga**: `src/data/opciones.js` y `src/config/reglas.js:14`
   construyen constantes al importar. Además
@@ -342,7 +367,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) y RF4+RF8 (importación con vista previa y respaldo). Del bloque RF1–RF9 solo queda RF9. 442 tests, v1.21.0.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). **El bloque RF1–RF9 queda cerrado entero.** 484 tests, v1.22.0.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
