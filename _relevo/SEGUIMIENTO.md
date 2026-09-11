@@ -1,43 +1,31 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 23:10 por Claude Code
+> Última actualización: 2026-09-11 23:20 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
-## 🚨 ANTES DE NADA: hubo DOS IAs a la vez y esta rama ya resolvió el choque
+## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
 
-**Qué pasó.** Mientras esta sesión trabajaba en la rama
-`claude/festive-allen-hl6igv` (PR
-[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91)), otra IA (Grok)
-trabajó **en paralelo sobre `main`** y construyó su propia infraestructura de
-toast/undo para el mismo punto de dolor (F-P12), publicada como v1.15.0. Eso
-viola `PROTOCOLO.md` §5 («una IA por vez») y produjo dos implementaciones
-distintas de lo mismo.
+**Historia, porque explica la forma del repositorio.** Esta sesión trabajó en la
+rama `claude/festive-allen-hl6igv`. En paralelo, otra IA (Grok) trabajó **sobre
+`main`**, contra `PROTOCOLO.md` §5 («una IA por vez»), y publicó su propia
+infraestructura de toast/undo en v1.15.0. El choque se resolvió fusionando
+`main` dentro de esta rama y comparando las dos implementaciones función por
+función (ver «Decisiones»). El historial de Grok se conserva íntegro aquí.
 
-**Cómo se resolvió**, siguiendo §5 («resolver conservando ambas entradas»):
-`origin/main` se fusionó dentro de esta rama y el conflicto se resolvió a mano,
-comparando las dos versiones función por función. Ver la decisión del
-2026-09-11 «Resolución del choque con la rama `main` de Grok» más abajo. El
-historial y las decisiones de Grok se conservan íntegros en este documento.
+**Estado actual.** El PR
+[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) se fusionó
+**con squash** el 2026-09-11 a las 22:56. `main` quedó en **v1.22.0** con todo
+hasta RF9 incluido.
 
-**Dónde está el trabajo.** Sigue en la rama
-`claude/festive-allen-hl6igv` y en el PR
-[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91), que ahora ya
-contiene `main` fusionado. **El deploy a `gh-pages` solo lo dispara `main`**, así
-que hasta fusionar el PR el sitio publicado se queda en v1.15.0.
+El trabajo posterior —el bloque de puestos operativos, v1.25.0— sigue en la
+rama `claude/festive-allen-hl6igv`, ya **rebasada sobre el `main` fusionado**.
+Como el PR #91 está cerrado, ese trabajo necesita un **PR nuevo**; un PR
+fusionado no admite commits nuevos.
 
-Si hiciera falta fusionar a mano en lugar de por el PR:
-
-```bash
-git fetch origin
-git checkout main && git pull --rebase origin main
-git merge --no-ff origin/claude/festive-allen-hl6igv
-npm ci --ignore-scripts && npm test    # debe dar 526/526
-git push origin main
-```
-
-**Regla para la próxima sesión:** antes de tocar nada, `git fetch origin` y
-comprueba si `main` se movió. Si te toca una rama propia, parte de la que diga
-este bloque, nunca de `main` a secas.
+**Regla para la próxima sesión:** `git fetch origin` ANTES de nada y comprueba
+si `main` se movió. Si la rama de trabajo tiene commits que `main` no tiene,
+rebásalos sobre `main` en vez de fusionar: el merge con squash deja el
+historial divergente aunque el contenido sea idéntico.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
