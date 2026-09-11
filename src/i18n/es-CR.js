@@ -911,6 +911,9 @@ const dict = {
     guardado: "Se guardaron los cambios de «{nombre}»",
     renombrado: "«{antes}» pasa a llamarse «{despues}». Se actualizaron {n} ficha(s).",
     ultimoPuesto: "Debe quedar al menos un puesto operativo.",
+    subir: "Subir «{nombre}»",
+    bajar: "Bajar «{nombre}»",
+    ordenSub: "El orden se refleja en la cuadrícula de Roles, en los desplegables de las fichas y en el resumen de la vista Día.",
   },
   historial: {
     titulo: "Historial de cambios",

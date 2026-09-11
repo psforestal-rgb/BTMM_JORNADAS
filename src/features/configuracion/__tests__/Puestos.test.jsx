@@ -163,3 +163,24 @@ describe("Configuración — CRUD de puestos (RP1–RP8)", () => {
     expect(within(cobertura).getByRole("button", { name: /Puesto Cerro/ })).toBeDefined();
   });
 });
+
+describe("Configuración — orden de los puestos (RP7)", () => {
+  it("subir y bajar cambian el orden, que es el que ve el resto de la app", async () => {
+    const { ctx, panel } = await montar();
+    const inicial = ctx().puestos.map((p) => p.nombre);
+    const segundo = inicial[1];
+
+    fireEvent.click(within(panel()).getByRole("button", { name: `Subir «${segundo}»` }));
+    expect(ctx().puestos.map((p) => p.nombre)[0]).toBe(segundo);
+
+    fireEvent.click(within(panel()).getByRole("button", { name: `Bajar «${segundo}»` }));
+    expect(ctx().puestos.map((p) => p.nombre)).toEqual(inicial);
+  });
+
+  it("los extremos tienen el botón deshabilitado en vez de no hacer nada", async () => {
+    const { ctx, panel } = await montar();
+    const nombres = ctx().puestos.map((p) => p.nombre);
+    expect(within(panel()).getByRole("button", { name: `Subir «${nombres[0]}»` }).disabled).toBe(true);
+    expect(within(panel()).getByRole("button", { name: `Bajar «${nombres.at(-1)}»` }).disabled).toBe(true);
+  });
+});

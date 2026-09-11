@@ -105,6 +105,26 @@ export function renombrarPuesto({ puestos, personas, reglas, antes, despues }) {
   };
 }
 
+/**
+ * Mueve un puesto una posición arriba (`delta = -1`) o abajo (`delta = 1`).
+ *
+ * El orden importa: es el que se ve en la cuadrícula de Roles, en los
+ * desplegables de las fichas y en el resumen de la vista Día. Devuelve la
+ * misma lista sin tocar si el movimiento se sale de los extremos, para que la
+ * interfaz pueda llamar sin comprobar nada.
+ */
+export function moverPuesto(lista, nombre, delta) {
+  const base = Array.isArray(lista) ? lista : [];
+  const desde = base.findIndex((p) => normalizar(p.nombre) === normalizar(nombre));
+  if (desde < 0) return base;
+  const hasta = desde + delta;
+  if (hasta < 0 || hasta >= base.length) return base;
+  const copia = [...base];
+  const [movido] = copia.splice(desde, 1);
+  copia.splice(hasta, 0, movido);
+  return copia;
+}
+
 /** Cuántas fichas activas quedarían huérfanas si se elimina el puesto. */
 export function personasEnPuesto(personas, nombre) {
   return (Array.isArray(personas) ? personas : []).filter(

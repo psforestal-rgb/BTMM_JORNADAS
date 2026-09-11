@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   agregarPuesto,
+  moverPuesto,
   normalizarTag,
   personasEnPuesto,
   quitarPuesto,
@@ -133,5 +134,40 @@ describe("puestos.personasEnPuesto", () => {
 
   it("tolera una lista ausente", () => {
     expect(personasEnPuesto(null, "X")).toEqual([]);
+  });
+});
+
+describe("puestos.moverPuesto", () => {
+  const tres = [
+    { nombre: "A", tag: "A" },
+    { nombre: "B", tag: "B" },
+    { nombre: "C", tag: "C" },
+  ];
+  const nombres = (l) => l.map((p) => p.nombre);
+
+  it("sube un puesto una posición", () => {
+    expect(nombres(moverPuesto(tres, "B", -1))).toEqual(["B", "A", "C"]);
+  });
+
+  it("baja un puesto una posición", () => {
+    expect(nombres(moverPuesto(tres, "B", 1))).toEqual(["A", "C", "B"]);
+  });
+
+  it("en los extremos devuelve la lista intacta, sin que el llamador compruebe", () => {
+    expect(moverPuesto(tres, "A", -1)).toBe(tres);
+    expect(moverPuesto(tres, "C", 1)).toBe(tres);
+  });
+
+  it("un nombre inexistente no cambia nada", () => {
+    expect(moverPuesto(tres, "Z", 1)).toBe(tres);
+  });
+
+  it("no muta la lista original", () => {
+    moverPuesto(tres, "B", -1);
+    expect(nombres(tres)).toEqual(["A", "B", "C"]);
+  });
+
+  it("tolera una lista que no es un arreglo", () => {
+    expect(moverPuesto(null, "A", 1)).toEqual([]);
   });
 });

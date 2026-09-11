@@ -8,6 +8,7 @@ import { useToast } from "../../context/ToastContext.jsx";
 import {
   agregarPuesto,
   personasEnPuesto,
+  moverPuesto,
   quitarPuesto,
   reemplazarPuesto,
   renombrarPuesto,
@@ -125,6 +126,9 @@ export default function Configuracion() {
     );
   };
 
+  // RP7: el orden se guarda con la lista, no se recalcula.
+  const moverPuestoEn = (nombre, delta) => setPuestos((prev) => moverPuesto(prev, nombre, delta));
+
   const togglePuesto = (puesto) => {
     setDraft((prev) => {
       const incluye = prev.puestosRequierenVisitantesDiario.includes(puesto);
@@ -185,12 +189,33 @@ export default function Configuracion() {
           <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">
             {t("puestos.titulo")}
           </summary>
-          <p className="mb-3 text-xs text-ink-muted">{t("puestos.sub")}</p>
+          <p className="mb-1 text-xs text-ink-muted">{t("puestos.sub")}</p>
+          <p className="mb-3 text-xs text-ink-muted">{t("puestos.ordenSub")}</p>
           <ul className="space-y-2">
-            {puestosVigentes.map((p) => {
+            {puestosVigentes.map((p, i) => {
               const ocupantes = personasEnPuesto(personas, p.nombre);
               return (
                 <li key={p.nombre} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-2">
+                  <span className="flex shrink-0 flex-col">
+                    <button
+                      type="button"
+                      onClick={() => moverPuestoEn(p.nombre, -1)}
+                      disabled={i === 0}
+                      aria-label={t("puestos.subir", { nombre: p.nombre })}
+                      className="inline-flex min-h-6 min-w-touch items-center justify-center rounded-t-lg border border-line bg-surface text-ink-muted hover:bg-surface-alt disabled:opacity-30"
+                    >
+                      <Icon name="chevronUp" size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moverPuestoEn(p.nombre, 1)}
+                      disabled={i === puestosVigentes.length - 1}
+                      aria-label={t("puestos.bajar", { nombre: p.nombre })}
+                      className="inline-flex min-h-6 min-w-touch items-center justify-center rounded-b-lg border border-t-0 border-line bg-surface text-ink-muted hover:bg-surface-alt disabled:opacity-30"
+                    >
+                      <Icon name="chevronDown" size={14} />
+                    </button>
+                  </span>
                   <span className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-lg px-2 text-xs font-bold ${p.color || "bg-surface-alt text-ink"}`}>
                     {p.tag}
                   </span>
