@@ -705,6 +705,10 @@ function RowsGrupo({
               className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-r border-b border-line bg-surface p-0.5 align-top shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-2 lg:min-w-[13rem] lg:max-w-[13rem]"
             >
               <span className="pnlq-print-only font-semibold text-black">{nombre}</span>
+              {/* min-h-10 (40 px) en vez de min-h-touch: la cuadrícula de roles
+                  es densa a propósito —una fila por funcionario y una columna
+                  por día— y 48 px por fila la volverían ilegible. Sigue muy por
+                  encima del mínimo de 24 px de WCAG 2.5.8. */}
               <div className="pnlq-no-print space-y-1 sm:space-y-2">
                 <button
                   type="button"
@@ -737,7 +741,7 @@ function RowsGrupo({
                       <button
                         type="button"
                         onClick={() => abrirPatronModal(grupo, nombre)}
-                        className="rounded-lg bg-brand px-2 py-1 text-[10px] font-semibold text-brand-fg sm:text-[11px]"
+                        className="inline-flex min-h-10 items-center rounded-lg bg-brand px-2 text-[10px] font-semibold text-brand-fg sm:text-[11px]"
                       >
                         {t("roles.aplicarPatronAbrir")}
                       </button>

@@ -287,10 +287,10 @@ export default function Funcionarios({ personas, setPersonas }) {
                     <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
                   </td>
                   <td className="p-3 text-right">
-                    <button onClick={() => setModal({ ...f })} className="rounded-lg px-2 py-1 font-semibold text-blue-800 hover:bg-blue-50">
+                    <button onClick={() => setModal({ ...f })} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-blue-800 hover:bg-blue-50">
                       {t("acciones.editar")}
                     </button>
-                    <button onClick={() => eliminar(f.id)} className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50">
+                    <button onClick={() => eliminar(f.id)} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-red-800 hover:bg-red-50">
                       {t("acciones.eliminar")}
                     </button>
                   </td>

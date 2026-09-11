@@ -48,7 +48,7 @@ export default function ActividadesDiaModal({ funcionario, iso, allActividadesPl
           <p className="text-sm text-slate-600">
             {vaciaParts[0]}<strong>{funcionario}</strong>{vaciaParts[1]}
           </p>
-          <button onClick={cerrar} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          <button onClick={cerrar} className="mt-4 min-h-touch w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
             {t("acciones.cerrar")}
           </button>
         </div>
@@ -97,20 +97,20 @@ export default function ActividadesDiaModal({ funcionario, iso, allActividadesPl
                 {(act.funcionarios || []).includes(funcionario) && (
                   <button
                     onClick={() => quitarFuncionario(act.id)}
-                    className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                    className="inline-flex min-h-touch items-center rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-900 hover:bg-amber-100"
                   >
                     {t("actividadesDia.quitarDe", { nombre: funcionario.split(" ")[0] })}
                   </button>
                 )}
                 <button
                   onClick={() => setEditando({ ...act })}
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex min-h-touch items-center rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   {t("actividadesDia.editar")}
                 </button>
                 <button
                   onClick={() => eliminarActividad(act.id)}
-                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-100"
+                  className="inline-flex min-h-touch items-center rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-800 hover:bg-red-100"
                 >
                   {t("actividadesDia.eliminar")}
                 </button>

@@ -39,7 +39,7 @@ export default function DiaResumenMovil({
         <button
           type="button"
           onClick={onIrAlertas}
-          className={`rounded-xl border px-2 py-3 text-center active:scale-95 ${nAlertas > 0 ? "border-critical/40 bg-critical-soft" : "border-line bg-surface"}`}
+          className={`min-h-touch rounded-xl border px-2 py-3 text-center active:scale-95 ${nAlertas > 0 ? "border-critical/40 bg-critical-soft" : "border-line bg-surface"}`}
         >
           <div className={`text-3xl font-bold tabular-nums ${nAlertas > 0 ? "text-critical-fg" : "text-ink-muted"}`}>{nAlertas}</div>
           <div className={`mt-1 text-sm font-semibold leading-tight ${nAlertas > 0 ? "text-critical-fg" : "text-ink-muted"}`}>{t("dia.resumenAlertas")}</div>

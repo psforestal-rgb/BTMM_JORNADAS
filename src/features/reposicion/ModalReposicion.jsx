@@ -216,7 +216,7 @@ export default function ModalReposicion({ valor, personas, cerrar, guardar, elim
                       <button
                         type="button"
                         onClick={() => quitarCuota(c.id)}
-                        className="rounded-lg px-2 py-1 text-xs font-semibold text-red-800 hover:bg-red-100"
+                        className="inline-flex min-h-touch items-center rounded-lg px-3 text-xs font-semibold text-red-800 hover:bg-red-100"
                       >
                         {t("acciones.eliminar")}
                       </button>
@@ -248,7 +248,7 @@ export default function ModalReposicion({ valor, personas, cerrar, guardar, elim
             {esExistente && (
               <button
                 onClick={() => eliminar(r.id)}
-                className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50"
+                className="min-h-touch rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50"
               >
                 {t("acciones.eliminar")}
               </button>
@@ -257,14 +257,14 @@ export default function ModalReposicion({ valor, personas, cerrar, guardar, elim
           <div className="flex gap-2">
             <button
               onClick={cerrar}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+              className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
             >
               {t("acciones.cancelar")}
             </button>
             <button
               onClick={onGuardar}
               disabled={!r.funcionario || !r.fecha}
-              className="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("modalReposicion.guardar")}
             </button>

@@ -172,7 +172,7 @@ export default function Roles({
                   type="button"
                   onClick={() => setBusqueda("")}
                   aria-label={t("roles.limpiarBusqueda")}
-                  className="shrink-0 text-ink-subtle hover:text-ink"
+                  className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center text-ink-subtle hover:text-ink"
                 >
                   <Icon name="x" size={14} />
                 </button>

@@ -314,7 +314,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
                       {saldo > 0 && (
                         <button
                           onClick={() => setReponer(r)}
-                          className="rounded-lg px-2 py-1 font-semibold text-emerald-800 hover:bg-emerald-50"
+                          className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-emerald-800 hover:bg-emerald-50"
                         >
                           {t("reposicion.reponer")}
                         </button>
@@ -322,20 +322,20 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
                       {cuotas.length > 0 && (
                         <button
                           onClick={() => reabrir(r.id)}
-                          className="rounded-lg px-2 py-1 font-semibold text-amber-800 hover:bg-amber-50"
+                          className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-amber-800 hover:bg-amber-50"
                         >
                           {t("reposicion.reabrir")}
                         </button>
                       )}
                       <button
                         onClick={() => setModal({ ...r })}
-                        className="rounded-lg px-2 py-1 font-semibold text-blue-800 hover:bg-blue-50"
+                        className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-blue-800 hover:bg-blue-50"
                       >
                         {t("acciones.editar")}
                       </button>
                       <button
                         onClick={() => eliminar(r.id)}
-                        className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50"
+                        className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-red-800 hover:bg-red-50"
                       >
                         {t("acciones.eliminar")}
                       </button>

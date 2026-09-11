@@ -42,7 +42,7 @@ function SubgrupoPuesto({ label, n, children, defaultOpen = false }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="mb-1.5 flex w-full items-center gap-2 text-left active:scale-95"
+        className="mb-1.5 flex min-h-touch w-full items-center gap-2 text-left active:scale-95"
       >
         <Icon name={open ? "chevronDown" : "chevronRight"} size={14} className="shrink-0 text-ink-subtle" />
         <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{label}</span>
@@ -408,7 +408,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                     </div>
                     <button
                       onClick={() => setModalActividad({ ...act })}
-                      className="shrink-0 rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold text-ink transition-all hover:bg-surface-alt active:scale-95"
+                      className="inline-flex min-h-touch shrink-0 items-center rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink transition-all hover:bg-surface-alt active:scale-95"
                     >
                       {t("acciones.editar")}
                     </button>
