@@ -5,22 +5,20 @@ import { useEscapeClose } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 
 export default function ActividadesDiaModal({ funcionario, iso, allActividadesPlan, personas, setActividadesPlan, cerrar }) {
   useEscapeClose(cerrar);
   const t = useT();
   const [editando, setEditando] = useState(null);
-  const [confirmarEliminar, setConfirmarEliminar] = useState(null);
+  // Borrado reversible (F-P12): sustituye al bloque de confirmación en línea.
+  const eliminarActividad = useEliminarActividad(allActividadesPlan, setActividadesPlan);
   const personasActivas = personas.filter((p) => p.estado !== "Inactivo");
   const actividades = actividadesEnDia(allActividadesPlan, iso).filter((a) => (a.funcionarios || []).includes(funcionario));
   const quitarFuncionario = (actId) =>
     setActividadesPlan((prev) =>
       prev.map((a) => (a.id === actId ? { ...a, funcionarios: a.funcionarios.filter((n) => n !== funcionario) } : a))
     );
-  const eliminar = (actId) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== actId));
-    setConfirmarEliminar(null);
-  };
   const guardar = (act) => {
     if (!act.titulo.trim()) return;
     const normal = { ...act, fin: act.unDia ? act.inicio : act.fin || act.inicio };
@@ -36,8 +34,8 @@ export default function ActividadesDiaModal({ funcionario, iso, allActividadesPl
         cerrar={() => setEditando(null)}
         guardar={guardar}
         eliminar={(id) => {
-          setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
           setEditando(null);
+          eliminarActividad(id);
         }}
         actividadesPlan={allActividadesPlan}
       />
@@ -111,32 +109,12 @@ export default function ActividadesDiaModal({ funcionario, iso, allActividadesPl
                   {t("actividadesDia.editar")}
                 </button>
                 <button
-                  onClick={() => setConfirmarEliminar(act.id)}
+                  onClick={() => eliminarActividad(act.id)}
                   className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-100"
                 >
                   {t("actividadesDia.eliminar")}
                 </button>
               </div>
-              {confirmarEliminar === act.id && (
-                <div className="mt-3 rounded-xl border border-red-300 bg-red-50 p-3">
-                  <p className="text-sm font-semibold text-red-950">{t("actividadesDia.eliminarConfirma")}</p>
-                  <p className="mt-0.5 text-xs text-red-700">{t("actividadesDia.eliminarSub")}</p>
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      onClick={() => eliminar(act.id)}
-                      className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
-                    >
-                      {t("actividadesDia.confirmar")}
-                    </button>
-                    <button
-                      onClick={() => setConfirmarEliminar(null)}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-                    >
-                      {t("acciones.cancelar")}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
         </div>

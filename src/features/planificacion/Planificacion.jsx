@@ -10,6 +10,7 @@ import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
 import Modal from "../../ui/Modal.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 
 /** Tarjeta de actividad compartida por la cuadrícula y la agenda. */
 function ActividadItem({ a, conflictos, abrir, compacta }) {
@@ -61,6 +62,7 @@ export default function Planificacion({
   setDiaVista,
 }) {
   const t = useT();
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const [modal, setModal] = useState(null);
   // null = sin preferencia explícita: agenda en móvil, cuadrícula en escritorio.
   const [vistaManual, setVistaManual] = useSessionState("btmm:planificacion:vista", null);
@@ -112,9 +114,10 @@ export default function Planificacion({
     );
     setModal(null);
   };
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
   const eliminar = (id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setModal(null);
+    eliminarActividad(id);
   };
   const turnoEnDia = (d) =>
     personasActivas.filter((p) => esRolActivo(codigoRolFuncionario(personas, roleData, year, month, p.nombre, d, feriados))).length;

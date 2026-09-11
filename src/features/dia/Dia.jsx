@@ -19,6 +19,7 @@ import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
 import { magnitudLabel } from "../reposicion/etiquetas.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 
 function ColHead({ label }) {
   const [first, ...rest] = String(label).split(" ");
@@ -193,9 +194,11 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     );
     setModalActividad(null);
   };
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const eliminar = (id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setModalActividad(null);
+    eliminarActividad(id);
   };
   const nuevaAct = (funs = [], lugar = "") => ({
     id: `a${Date.now()}`,

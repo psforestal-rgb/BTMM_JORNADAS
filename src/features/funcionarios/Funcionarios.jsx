@@ -10,6 +10,7 @@ import { useIsMobile } from "../../lib/responsive.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
 import { useToast } from "../../context/ToastContext.jsx";
+import { reinsertarEn } from "../../lib/undo.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
@@ -84,18 +85,10 @@ export default function Funcionarios({ personas, setPersonas }) {
     conDeshacer(
       t("funcionarios.eliminado", { nombre: persona.nombre }),
       () => {
-        setPersonas((prev) => {
-          // Idempotente: si ya volvió por otra vía, no duplicar.
-          if (prev.some((x) => x.id === persona.id)) return prev;
-          const copia = [...prev];
-          // Se reinserta en su posición original, no al inicio: el orden de la
-          // lista base alimenta otras vistas y no debe cambiar al deshacer.
-          copia.splice(Math.min(indice, copia.length), 0, persona);
-          return copia;
-        });
+        setPersonas((prev) => reinsertarEn(prev, persona, indice));
         exito(t("funcionarios.restaurado", { nombre: persona.nombre }));
       },
-      { detalle: t("funcionarios.eliminadoDetalle") },
+      { detalle: t("toast.puedeDeshacer") },
     );
   };
 

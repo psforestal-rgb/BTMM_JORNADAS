@@ -17,6 +17,7 @@ import { actividadesEnDia } from "../../domain/actividades.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useT } from "../../i18n/useT.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 import ModificarRolModal from "./ModificarRolModal.jsx";
 import AsignarActividadModal from "./AsignarActividadModal.jsx";
 
@@ -47,9 +48,11 @@ export default function PlanificacionFuncionario({
     setModalActividad(null);
     setAsignar(null);
   };
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const eliminar = (id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setModalActividad(null);
+    eliminarActividad(id);
   };
   const nuevaActividad = (nombre, iso) => ({
     id: `a${Date.now()}`,

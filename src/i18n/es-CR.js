@@ -212,11 +212,7 @@ const dict = {
     leyendaPolicia: "🛡️ Autoridad de policía",
     leyendaBrigada: "🔥 Brigada forestal",
     leyendaPendiente: "🔵 Dato operativo por completar",
-    eliminarTitulo: "Eliminar funcionario",
-    eliminarConfirma:
-      "Se eliminará el registro de {nombre} en esta propuesta visual.",
     eliminado: "Se eliminó a {nombre}",
-    eliminadoDetalle: "Puede deshacerlo mientras este aviso siga visible.",
     restaurado: "Se restauró a {nombre}",
     creado: "Se agregó a {nombre}",
     guardado: "Se guardaron los cambios de {nombre}",
@@ -445,9 +441,6 @@ const dict = {
     quitarDe: "Quitar a {nombre}",
     editar: "Editar actividad",
     eliminar: "Eliminar",
-    eliminarConfirma: "¿Eliminar esta actividad?",
-    eliminarSub: "Desaparece para todos los funcionarios asignados.",
-    confirmar: "Confirmar",
   },
   modificarRol: {
     titulo: "Modificar rol",
@@ -636,8 +629,8 @@ const dict = {
     sinResultadosDesc: "Ajuste el filtro para ver los registros de reposición.",
     nota:
       "La herramienta solo registra y lleva el control; la reposición efectiva del tiempo la autoriza la administración según la normativa vigente.",
-    eliminarTitulo: "Eliminar registro",
-    eliminarConfirma: "Se eliminará este registro de reposición de tiempo. Esta acción no se puede deshacer.",
+    eliminado: "Se eliminó el registro {folio}",
+    restaurado: "Se restauró el registro {folio}",
   },
   modalReposicion: {
     editar: "Editar registro de reposición",
@@ -815,6 +808,14 @@ const dict = {
   },
   toast: {
     regionAria: "Avisos de la aplicación",
+    puedeDeshacer: "Puede deshacerlo mientras este aviso siga visible.",
+  },
+  actividad: {
+    sinTitulo: "actividad sin título",
+    eliminada: "Se eliminó «{titulo}»",
+    restaurada: "Se restauró «{titulo}»",
+    eliminadaDetalle:
+      "Desaparece para todos los funcionarios asignados. Puede deshacerlo mientras este aviso siga visible.",
   },
   estados: {
     activo: "Activo",

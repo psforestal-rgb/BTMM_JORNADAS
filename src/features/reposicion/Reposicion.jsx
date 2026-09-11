@@ -15,6 +15,8 @@ import {
   HORAS_JORNADA_DEFAULT,
 } from "../../domain/reposicion.js";
 import { useApp } from "../../context/AppContext.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import { reinsertarEn } from "../../lib/undo.js";
 import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 import ModalReposicion from "./ModalReposicion.jsx";
@@ -37,10 +39,10 @@ const ESTADO_CLS = {
 export default function Reposicion({ personas, reposiciones, setReposiciones }) {
   const t = useT();
   const { reglas } = useApp();
+  const { conDeshacer, exito } = useToast();
   const hj = reglas?.horasJornada ?? HORAS_JORNADA_DEFAULT;
   const [modal, setModal] = useState(null);
   const [reponer, setReponer] = useState(null);
-  const [borrar, setBorrar] = useState(null);
   const [filtro, setFiltro] = useState("todos");
   const [tab, setTab] = useState("registros");
   const [busqueda, setBusqueda] = useState("");
@@ -99,6 +101,24 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
       prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev],
     );
     setModal(null);
+  };
+
+  /* Borrado reversible (F-P12): sustituye al modal de confirmación. El aviso
+     ofrece «Deshacer» 10 s y reinserta el registro en su posición original,
+     conservando su folio: los folios son consecutivos y no deben reciclarse. */
+  const eliminar = (id) => {
+    const indice = reposiciones.findIndex((x) => x.id === id);
+    if (indice < 0) return;
+    const registro = reposiciones[indice];
+    setReposiciones((prev) => prev.filter((x) => x.id !== id));
+    conDeshacer(
+      t("reposicion.eliminado", { folio: registro.folio }),
+      () => {
+        setReposiciones((prev) => reinsertarEn(prev, registro, indice));
+        exito(t("reposicion.restaurado", { folio: registro.folio }));
+      },
+      { detalle: t("toast.puedeDeshacer") },
+    );
   };
 
   // Aplica una cuota de reposición al registro (desde ModalReponer).
@@ -231,7 +251,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             onReponer={setReponer}
             onEditar={(r) => setModal({ ...r })}
             onReabrir={reabrir}
-            onEliminar={setBorrar}
+            onEliminar={eliminar}
           />
           <div className="pnlq-reposicion-table hidden overflow-auto rounded-lg border border-slate-300 md:block">
             <table className="min-w-[940px] w-full border-collapse text-sm">
@@ -314,7 +334,7 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
                         {t("acciones.editar")}
                       </button>
                       <button
-                        onClick={() => setBorrar(r.id)}
+                        onClick={() => eliminar(r.id)}
                         className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50"
                       >
                         {t("acciones.eliminar")}
@@ -346,8 +366,8 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
           cerrar={() => setModal(null)}
           guardar={guardar}
           eliminar={(id) => {
-            setReposiciones((prev) => prev.filter((x) => x.id !== id));
             setModal(null);
+            eliminar(id);
           }}
         />
       )}
@@ -360,22 +380,6 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
           guardar={guardarCuota}
         />
       )}
-
-      <Modal
-        open={!!borrar}
-        onClose={() => setBorrar(null)}
-        title={t("reposicion.eliminarTitulo")}
-        description={t("reposicion.eliminarConfirma")}
-        size="sm"
-        actions={(
-          <div className="ml-auto flex gap-2">
-            <button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">{t("acciones.cancelar")}</button>
-            <button onClick={() => { setReposiciones((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-critical px-4 text-sm font-semibold text-ink-inverse">{t("acciones.eliminar")}</button>
-          </div>
-        )}
-      >
-        <p className="text-sm text-ink-muted">{t("reposicion.nota")}</p>
-      </Modal>
 
       <Modal
         open={filtrosOpen}
