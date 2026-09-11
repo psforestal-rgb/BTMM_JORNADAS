@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo } from "react";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
+import { ToastProvider } from "./context/ToastContext.jsx";
 import { alertas } from "./domain/alertas.js";
 import { useT } from "./i18n/useT.js";
 import Sidebar from "./layout/Sidebar.jsx";
@@ -170,7 +171,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AppProvider>
-        <AppShell />
+        <ToastProvider>
+          <AppShell />
+        </ToastProvider>
       </AppProvider>
     </ErrorBoundary>
   );
