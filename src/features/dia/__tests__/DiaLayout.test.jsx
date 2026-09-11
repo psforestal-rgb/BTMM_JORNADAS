@@ -3,6 +3,7 @@ import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
 import DiaLayout from "../DiaLayout.jsx";
 
 afterEach(() => {
@@ -42,16 +43,18 @@ beforeEach(() => {
 function renderDiaLayout() {
   return render(
     <AppProvider>
-      <DiaLayout
-        diaVista="2026-07-11"
-        setDiaVista={vi.fn()}
-        personas={[]}
-        actividadesPlan={[]}
-        setActividadesPlan={vi.fn()}
-        roleData={{}}
-        reposiciones={[]}
-        hj={8}
-      />
+      <ToastProvider>
+        <DiaLayout
+          diaVista="2026-07-11"
+          setDiaVista={vi.fn()}
+          personas={[]}
+          actividadesPlan={[]}
+          setActividadesPlan={vi.fn()}
+          roleData={{}}
+          reposiciones={[]}
+          hj={8}
+        />
+      </ToastProvider>
     </AppProvider>,
   );
 }

@@ -10,11 +10,16 @@ import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
 import Modal from "../../ui/Modal.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 
 /** Tarjeta de actividad compartida por la cuadrícula y la agenda. */
 function ActividadItem({ a, conflictos, abrir, compacta }) {
   const t = useT();
   return (
+    // Densidad deliberada: en la cuadrícula mensual caben varias
+    // actividades por celda; a 48 px de alto solo entrarían dos. En la
+    // agenda (compacta=false) la tarjeta ya supera los 48 px por su
+    // propio contenido, que es donde se toca con el dedo.
     <button
       onClick={abrir}
       className={`w-full rounded-lg px-2 py-1.5 text-left transition hover:brightness-95 ${
@@ -61,6 +66,7 @@ export default function Planificacion({
   setDiaVista,
 }) {
   const t = useT();
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const [modal, setModal] = useState(null);
   // null = sin preferencia explícita: agenda en móvil, cuadrícula en escritorio.
   const [vistaManual, setVistaManual] = useSessionState("btmm:planificacion:vista", null);
@@ -112,9 +118,10 @@ export default function Planificacion({
     );
     setModal(null);
   };
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
   const eliminar = (id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setModal(null);
+    eliminarActividad(id);
   };
   const turnoEnDia = (d) =>
     personasActivas.filter((p) => esRolActivo(codigoRolFuncionario(personas, roleData, year, month, p.nombre, d, feriados))).length;
@@ -327,7 +334,7 @@ export default function Planificacion({
                       <button
                         onClick={() => verDia(d)}
                         title={t("planificacion.titleDetalleDia")}
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-semibold shadow-sm hover:opacity-85 ${
+                        className={`flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl text-sm font-semibold shadow-sm hover:opacity-85 ${
                           d === diaActual ? "bg-brand text-brand-fg ring-2 ring-brand/40" : "bg-ink text-ink-inverse"
                         }`}
                       >

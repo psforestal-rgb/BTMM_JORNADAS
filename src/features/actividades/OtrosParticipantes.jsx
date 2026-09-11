@@ -12,7 +12,7 @@ export default function OtrosParticipantes({ participantes = [], onChange, input
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">Otros participantes</h4>
           <p className="mt-1 text-xs text-slate-500">Personas, organizaciones o grupos que no figuran en el rol institucional.</p>
         </div>
-        <button type="button" onClick={agregar} className="shrink-0 rounded-xl border border-emerald-700 bg-white px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50">
+        <button type="button" onClick={agregar} className="inline-flex min-h-touch shrink-0 items-center rounded-xl border border-emerald-700 bg-white px-3 text-xs font-bold text-emerald-800 hover:bg-emerald-50">
           + Agregar
         </button>
       </div>
@@ -37,7 +37,7 @@ export default function OtrosParticipantes({ participantes = [], onChange, input
                 placeholder="Contacto: teléfono o correo"
                 aria-label={`Contacto de otro participante ${indice + 1}`}
               />
-              <button type="button" onClick={() => eliminar(indice)} className="rounded-xl border border-red-300 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50">
+              <button type="button" onClick={() => eliminar(indice)} className="inline-flex min-h-touch items-center rounded-xl border border-red-300 px-3 text-xs font-bold text-red-800 hover:bg-red-50">
                 Eliminar
               </button>
             </div>

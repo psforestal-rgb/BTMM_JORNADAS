@@ -1,8 +1,11 @@
 /** @vitest-environment jsdom */
 import "fake-indexeddb/auto";
+import { useState } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
+import ToastViewport from "../../../ui/Toast.jsx";
 import Reposicion from "../Reposicion.jsx";
 
 afterEach(() => {
@@ -32,7 +35,9 @@ const reposiciones = [
 function setup() {
   return render(
     <AppProvider>
-      <Reposicion personas={personas} reposiciones={reposiciones} setReposiciones={vi.fn()} />
+      <ToastProvider>
+        <Reposicion personas={personas} reposiciones={reposiciones} setReposiciones={vi.fn()} />
+      </ToastProvider>
     </AppProvider>,
   );
 }
@@ -50,5 +55,56 @@ describe("Reposición móvil", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filtros" }));
     expect(screen.getByRole("dialog", { name: "Filtros de reposición" })).toBeDefined();
     expect(screen.getByLabelText("Periodo")).toBeDefined();
+  });
+});
+
+/** Variante con estado real para poder observar borrado y restauración. */
+function setupConEstado() {
+  function Probe() {
+    const [items, setItems] = useState([
+      ...reposiciones,
+      { ...reposiciones[0], id: "r2", folio: "REP-002", funcionario: "Carlos", fecha: "2026-07-04" },
+    ]);
+    return (
+      <>
+        <p data-testid="folios">{items.map((r) => r.folio).join(",")}</p>
+        <Reposicion personas={personas} reposiciones={items} setReposiciones={setItems} />
+      </>
+    );
+  }
+  return render(
+    <AppProvider>
+      <ToastProvider>
+        <Probe />
+        <ToastViewport />
+      </ToastProvider>
+    </AppProvider>,
+  );
+}
+
+describe("Reposición — eliminación reversible", () => {
+  // El folio afectado se lee del propio aviso: así la prueba no depende del
+  // orden en que la vista liste los registros.
+  const eliminarPrimero = () => {
+    fireEvent.click(screen.getAllByRole("button", { name: /^Eliminar$/ })[0]);
+    const aviso = screen.getByText(/^Se eliminó el registro REP-\d+$/);
+    return aviso.textContent.replace("Se eliminó el registro ", "");
+  };
+
+  it("elimina de inmediato y ofrece «Deshacer», sin modal bloqueante", () => {
+    setupConEstado();
+    const folio = eliminarPrimero();
+    expect(screen.getByTestId("folios").textContent).not.toContain(folio);
+    expect(screen.getByTestId("folios").textContent.split(",")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: /^Deshacer$/ })).toBeDefined();
+    expect(screen.queryByRole("dialog", { name: /Eliminar registro/ })).toBeNull();
+  });
+
+  it("«Deshacer» restaura el registro con su folio y su posición", () => {
+    setupConEstado();
+    const folio = eliminarPrimero();
+    fireEvent.click(screen.getByRole("button", { name: /^Deshacer$/ }));
+    expect(screen.getByTestId("folios").textContent).toBe("REP-001,REP-002");
+    expect(screen.getByText(`Se restauró el registro ${folio}`)).toBeDefined();
   });
 });

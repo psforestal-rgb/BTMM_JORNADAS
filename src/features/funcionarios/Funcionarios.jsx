@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
@@ -7,22 +7,47 @@ import EmptyState from "../../ui/EmptyState.jsx";
 import { estadoCls } from "../../ui/styles.js";
 import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
+import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
+import { useApp } from "../../context/AppContext.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { crearRespaldo } from "../../lib/respaldo.js";
+import { validarFuncionario } from "../../domain/validaciones.js";
+import { crearEntrada, entradaDeEdicion, TIPO } from "../../domain/historial.js";
+import { toLocalFileTimestamp } from "../../domain/fechas.js";
+import { reinsertarEn } from "../../lib/undo.js";
 import Modal from "../../ui/Modal.jsx";
+import { planificarImportacion } from "./importarFuncionarios.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
+/* Tope de tamaño, como el que ya protege la importación JSON de «Datos»: un
+   archivo enorme o corrupto no debe congelar el hilo principal. */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
+  const ctx = useApp();
+  const { registrarCambio } = ctx;
+  const { conDeshacer, exito, aviso, error } = useToast();
+  const archivoRef = useRef(null);
+  const [previa, setPrevia] = useState(null);
   const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
   const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
   const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
   const [modal, setModal] = useState(null);
   const isMobile = useIsMobile();
+  // Breakpoint `md` (768 px): por debajo, los filtros siguen colapsados; a
+  // partir de ahí hay sitio de sobra para dejarlos siempre a la vista.
+  const filtrosEstrechos = useMobile();
+  // null = sin elección manual; entonces manda el ancho de pantalla.
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(null);
+  const filtrosVisibles = filtrosAbiertos ?? !filtrosEstrechos;
   const [vista, setVista] = useSessionState("btmm:funcionarios:vista", null);
   const vistaEfectiva = vista ?? (isMobile ? "tarjetas" : "tabla");
-  const [borrar, setBorrar] = useState(null);
   const filtrados = useMemo(
     () =>
       personas.filter((f) => {
@@ -67,8 +92,150 @@ export default function Funcionarios({ personas, setPersonas }) {
   });
   const guardar = (obj) => {
     if (!obj.nombre.trim()) return;
+    const previo = personas.find((x) => x.id === obj.id);
+    const esEdicion = Boolean(previo);
     setPersonas((prev) => (prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev]));
     setModal(null);
+    // RF9: una edición que no cambió nada no deja rastro (`entradaDeEdicion`
+    // devuelve null), así que abrir y cerrar el formulario no ensucia nada.
+    registrarCambio(
+      esEdicion ? entradaDeEdicion(previo, obj) : crearEntrada({ tipo: TIPO.ALTA, funcionario: obj }),
+    );
+    exito(t(esEdicion ? "funcionarios.guardado" : "funcionarios.creado", { nombre: obj.nombre.trim() }));
+  };
+
+  /* Borrado reversible (F-P12): en vez de un modal de confirmación por clic,
+     se elimina de inmediato y el aviso ofrece «Deshacer» durante 10 s. La red
+     de seguridad no desaparece, solo deja de costar un paso en cada borrado. */
+  const eliminar = (id) => {
+    const indice = personas.findIndex((x) => x.id === id);
+    if (indice < 0) return;
+    const persona = personas[indice];
+    setPersonas((prev) => prev.filter((x) => x.id !== id));
+    registrarCambio(crearEntrada({ tipo: TIPO.BAJA, funcionario: persona }));
+    conDeshacer(
+      t("funcionarios.eliminado", { nombre: persona.nombre }),
+      () => {
+        setPersonas((prev) => reinsertarEn(prev, persona, indice));
+        // La restauración se registra aparte en vez de borrar la baja: el
+        // rastro debe contar lo que pasó, no dejarlo como si nunca hubiera
+        // ocurrido.
+        registrarCambio(crearEntrada({ tipo: TIPO.RESTAURACION, funcionario: persona }));
+        exito(t("funcionarios.restaurado", { nombre: persona.nombre }));
+      },
+      { detalle: t("toast.puedeDeshacer") },
+    );
+  };
+
+  /* Exporta LO QUE SE ESTÁ VIENDO, no la lista completa: el contador «N/M» está
+     justo encima, así que es lo que la persona espera. El orden de las columnas
+     es el del formulario, y es el que tendrá que respetar el import de RF4. */
+  const BOOLEANAS = new Set(["disponibilidad", "policia", "brigada", "ong"]);
+  const COLUMNAS_CSV = [
+    "nombre", "cedula", "email", "puesto", "puestoOperativo", "condicion",
+    "jornada", "modalidad", "resolucion", "contrato", "vencimiento", "ingreso",
+    "disponibilidad", "policia", "brigada", "ong", "estado", "obs",
+  ].map((clave) => ({
+    clave,
+    titulo: t(`funcionarios.col.${clave}`),
+    ...(BOOLEANAS.has(clave) ? { tipo: "bool" } : {}),
+  }));
+
+  const exportarCSV = () => {
+    if (filtrados.length === 0) {
+      aviso(t("funcionarios.exportadoVacio"));
+      return;
+    }
+    const ok = descargarArchivo(
+      `funcionarios-${toLocalFileTimestamp()}.csv`,
+      csvDescargable(filtrados, COLUMNAS_CSV),
+      TIPO_CSV,
+    );
+    if (ok) exito(t("funcionarios.exportado", { n: filtrados.length }));
+    else error(t("funcionarios.exportarError"));
+  };
+
+  /* ── Importación masiva (RF4) + respaldo automático (RF8) ──────────────
+     Se calcula el plan completo y se enseña ANTES de tocar la lista. Aplicar
+     es después un solo `setPersonas` con el resultado ya calculado. */
+  const elegirArchivo = () => archivoRef.current?.click();
+
+  const alElegirArchivo = (evento) => {
+    const archivo = evento.target.files?.[0];
+    // Se limpia el input siempre: si no, elegir el MISMO archivo dos veces
+    // seguidas no dispara `change` y parecería que el botón no responde.
+    evento.target.value = "";
+    if (!archivo) return;
+    if (archivo.size > MAX_CSV_BYTES) {
+      error(t("funcionarios.importa.demasiadoGrande", { mb: Math.round(MAX_CSV_BYTES / 1024 / 1024) }));
+      return;
+    }
+    const lector = new FileReader();
+    lector.onerror = () => error(t("funcionarios.importa.errorLectura"));
+    lector.onload = () => {
+      try {
+        prepararPrevia(String(lector.result ?? ""), archivo.name);
+      } catch {
+        error(t("funcionarios.importa.errorLectura"));
+      }
+    };
+    lector.readAsText(archivo, "UTF-8");
+  };
+
+  const prepararPrevia = (texto, nombreArchivo) => {
+    const lectura = filasAObjetos(parsearCSV(texto), COLUMNAS_CSV);
+    // Sin nombre ni cédula no hay forma de saber a quién se refiere cada fila.
+    const puedeIdentificar =
+      !lectura.faltantes.includes(t("funcionarios.col.nombre")) ||
+      !lectura.faltantes.includes(t("funcionarios.col.cedula"));
+    if (!puedeIdentificar) {
+      error(t("funcionarios.importa.sinIdentificar"));
+      return;
+    }
+    if (lectura.objetos.length === 0) {
+      aviso(t("funcionarios.importa.sinFilas"));
+      return;
+    }
+    const plan = planificarImportacion(personas, lectura.objetos, nuevo());
+    // Advertencias de dominio sobre el resultado, las mismas del formulario.
+    const avisosPorFila = [...plan.nuevos, ...plan.actualizados]
+      .map(({ fila, registro }) => ({ fila, mensajes: validarFuncionario(registro) }))
+      .filter((x) => x.mensajes.length > 0)
+      .sort((a, b) => a.fila - b.fila);
+    setPrevia({ archivo: nombreArchivo, lectura, plan, avisosPorFila });
+  };
+
+  const aplicarImportacion = () => {
+    if (!previa) return;
+    // RF8: el respaldo se descarga ANTES de tocar nada, y si falla no se
+    // importa. Es el mismo formato que acepta «Datos → Restaurar respaldo».
+    // `personas` viene por prop y es la lista que se va a reemplazar; se pasa
+    // explícitamente para que el respaldo sea exactamente lo que se pierde,
+    // sin depender de que el contexto traiga la misma referencia.
+    const backup = crearRespaldo({ ...ctx, personas }, "antes-de-importar-funcionarios");
+    if (!descargarArchivo(backup.name, backup.text)) {
+      error(t("funcionarios.importa.respaldoFallo"));
+      return;
+    }
+    const { plan } = previa;
+    setPersonas(plan.resultado);
+    setPrevia(null);
+    // Una entrada resumen y no una por fila: importar 200 fichas llenaría el
+    // rastro entero y expulsaría todo lo anterior.
+    registrarCambio(
+      crearEntrada({
+        tipo: TIPO.IMPORTACION,
+        detalle: {
+          archivo: previa.archivo,
+          altas: plan.nuevos.length,
+          cambios: plan.actualizados.length,
+        },
+      }),
+    );
+    exito(t("funcionarios.importa.hecho", {
+      altas: plan.nuevos.length,
+      cambios: plan.actualizados.length,
+    }));
   };
 
   const filtros = [
@@ -109,6 +276,35 @@ export default function Funcionarios({ personas, setPersonas }) {
                 {t("funcionarios.vistaTarjetas")}
               </button>
             </div>
+            <input
+              ref={archivoRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={alElegirArchivo}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={elegirArchivo}
+              aria-label={t("funcionarios.importarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Icon name="refresh" size={16} />
+              <span className="hidden sm:inline">{t("funcionarios.importar")}</span>
+              <span className="sm:hidden">{t("funcionarios.importarCorto")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={exportarCSV}
+              aria-label={t("funcionarios.exportarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Icon name="file" size={16} />
+              <span className="hidden sm:inline">{t("funcionarios.exportar")}</span>
+              <span className="sm:hidden">{t("funcionarios.exportarCorto")}</span>
+            </button>
             <button
               onClick={() => setModal(nuevo())}
               className="inline-flex min-h-touch items-center gap-1 rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
@@ -131,31 +327,43 @@ export default function Funcionarios({ personas, setPersonas }) {
             {filtrados.length}/{personas.length}
           </div>
         </div>
-        {/* Filtros y orden: colapsados por defecto para que el primer
-            funcionario aparezca antes en el viewport. */}
-        <details className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
-          <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600">
+        {/* Filtros y orden (F-P1). Por debajo de `md` siguen colapsados: en un
+            teléfono, una fila de seis chips empujaba al primer funcionario
+            fuera del viewport, que fue la razón de plegarlos en el sprint
+            móvil. Desde `md` quedan siempre desplegados y el resumen se
+            oculta, porque filtrar es la acción principal de esta vista y
+            esconderla tras un clic la vuelve invisible. */}
+        <details
+          open={filtrosVisibles}
+          onToggle={(e) => setFiltrosAbiertos(e.currentTarget.open)}
+          className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-1.5"
+        >
+          <summary className="min-h-touch cursor-pointer list-none py-1.5 text-xs font-semibold text-slate-600 md:hidden">
             {t("funcionarios.verFiltros")}{filtro !== "todos" ? ` (${filtros.find(([id]) => id === filtro)?.[1]})` : ""}
           </summary>
-          <div className="flex flex-wrap gap-2 pb-2 pt-1">
-            {filtros.map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setFiltro(id)}
-                className={`min-h-touch rounded-full border px-3 py-2 text-xs font-bold ${
-                  filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="gap-2 pb-2 pt-1 md:flex md:items-center md:justify-between">
+            <div role="group" aria-label={t("funcionarios.filtrosAria")} className="flex flex-wrap gap-2">
+              {filtros.map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFiltro(id)}
+                  aria-pressed={filtro === id}
+                  className={`min-h-touch rounded-full border px-3 py-2 text-xs font-bold ${
+                    filtro === id ? "border-emerald-800 bg-emerald-800 text-white" : "border-slate-300 bg-white text-slate-700"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <label className="mt-2 flex shrink-0 items-center gap-2 text-sm font-semibold text-slate-600 md:mt-0">
+              {t("funcionarios.ordenar")}
+              <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
+                <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
+              </select>
+            </label>
           </div>
-          <label className="flex items-center gap-2 pb-2 text-sm font-semibold text-slate-600">
-            {t("funcionarios.ordenar")}
-            <select value={orden} onChange={(e) => setOrden(e.target.value)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-3 font-normal text-slate-900">
-              <option value="nombre">Nombre</option><option value="puesto">Puesto</option><option value="estado">Estado</option><option value="antiguedad">Antigüedad</option><option value="disponibilidad">Disponibilidad</option>
-            </select>
-          </label>
         </details>
         {filtrados.length === 0 && (
           <EmptyState
@@ -171,7 +379,7 @@ export default function Funcionarios({ personas, setPersonas }) {
                 key={f.id}
                 f={f}
                 onEditar={() => setModal({ ...f })}
-                onBorrar={() => setBorrar(f.id)}
+                onBorrar={() => eliminar(f.id)}
               />
             ))}
           </div>
@@ -247,10 +455,10 @@ export default function Funcionarios({ personas, setPersonas }) {
                     <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
                   </td>
                   <td className="p-3 text-right">
-                    <button onClick={() => setModal({ ...f })} className="rounded-lg px-2 py-1 font-semibold text-blue-800 hover:bg-blue-50">
+                    <button onClick={() => setModal({ ...f })} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-blue-800 hover:bg-blue-50">
                       {t("acciones.editar")}
                     </button>
-                    <button onClick={() => setBorrar(f.id)} className="rounded-lg px-2 py-1 font-semibold text-red-800 hover:bg-red-50">
+                    <button onClick={() => eliminar(f.id)} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-red-800 hover:bg-red-50">
                       {t("acciones.eliminar")}
                     </button>
                   </td>
@@ -267,13 +475,76 @@ export default function Funcionarios({ personas, setPersonas }) {
         </div>
       </Card>
       {modal && <ModalFuncionario valor={modal} cerrar={() => setModal(null)} guardar={guardar} />}
-      {borrar && (
-        <Modal open onClose={() => setBorrar(null)} title={t("funcionarios.eliminarTitulo")} size="sm" actions={<><button onClick={() => setBorrar(null)} className="min-h-touch rounded-xl border px-4 py-2 text-sm font-semibold">{t("acciones.cancelar")}</button><button onClick={() => { setPersonas((p) => p.filter((x) => x.id !== borrar)); setBorrar(null); }} className="min-h-touch rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white">{t("acciones.eliminar")}</button></>}>
-            <p className="text-sm">
-              {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[0]}
-              <strong>{personas.find((x) => x.id === borrar)?.nombre}</strong>
-              {t("funcionarios.eliminarConfirma", { nombre: personas.find((x) => x.id === borrar)?.nombre || "" }).split(personas.find((x) => x.id === borrar)?.nombre || "—")[1]}
+      {previa && (
+        <Modal
+          open
+          onClose={() => setPrevia(null)}
+          title={t("funcionarios.importa.titulo")}
+          description={previa.archivo}
+          size="md"
+          actions={
+            <div className="ml-auto flex flex-wrap gap-2">
+              <button type="button" onClick={() => setPrevia(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
+                {t("acciones.cancelar")}
+              </button>
+              <button type="button" onClick={aplicarImportacion} className="min-h-touch rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg">
+                {t("funcionarios.importa.confirmar")}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-sm">
+            <p className="text-ink-muted">{t("funcionarios.importa.sub")}</p>
+            <dl className="grid grid-cols-3 gap-2 rounded-xl bg-surface-alt p-3 text-center">
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.altas")}</dt>
+                <dd className="text-2xl font-bold text-ok">{previa.plan.nuevos.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.cambios")}</dt>
+                <dd className="text-2xl font-bold text-info">{previa.plan.actualizados.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.intactos")}</dt>
+                <dd className="text-2xl font-bold text-ink">
+                  {personas.length - previa.plan.actualizados.length}
+                </dd>
+              </div>
+            </dl>
+            <ul className="space-y-1 text-xs text-ink-muted">
+              {previa.plan.omitidos.length > 0 && (
+                <li>{t("funcionarios.importa.omitidas", { n: previa.plan.omitidos.length })}</li>
+              )}
+              {previa.lectura.filasVacias > 0 && (
+                <li>{t("funcionarios.importa.vacias", { n: previa.lectura.filasVacias })}</li>
+              )}
+              {previa.plan.duplicados.length > 0 && (
+                <li>{t("funcionarios.importa.duplicadas", { n: previa.plan.duplicados.length })}</li>
+              )}
+              {previa.lectura.faltantes.length > 0 && (
+                <li>{t("funcionarios.importa.faltantes", { cols: previa.lectura.faltantes.join(", ") })}</li>
+              )}
+              {previa.lectura.desconocidas.length > 0 && (
+                <li>{t("funcionarios.importa.desconocidas", { cols: previa.lectura.desconocidas.join(", ") })}</li>
+              )}
+            </ul>
+            {previa.avisosPorFila.length > 0 && (
+              <section aria-labelledby="importa-avisos" className="rounded-xl border border-amber-300 bg-amber-50 p-3">
+                <h4 id="importa-avisos" className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                  {t("funcionarios.importa.avisosTitulo")}
+                </h4>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-amber-950">
+                  {previa.avisosPorFila.map(({ fila, mensajes }) => (
+                    <li key={fila}>{`${fila}: ${mensajes.join(" ")}`}</li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-xs font-semibold text-amber-800">{t("funcionarios.importa.avisosNota")}</p>
+              </section>
+            )}
+            <p className="rounded-xl border border-line bg-surface-alt p-3 text-xs text-ink">
+              {t("funcionarios.importa.respaldo")}
             </p>
+          </div>
         </Modal>
       )}
     </section>

@@ -23,7 +23,7 @@ export default function ModificarRolModal({ data, cerrar, aplicar }) {
               {data.funcionario} · {fecha(data.iso)} · {t("modificarRol.sub", { funcionario: "", fecha: "", rol: data.rol || "—" }).match(/rol actual: .*/)?.[0] || `rol actual: ${data.rol || "—"}`}
             </p>
           </div>
-          <button onClick={cerrar} aria-label={t("acciones.cerrar")} className="rounded-xl px-3 py-2 font-semibold hover:bg-slate-100">✕</button>
+          <button onClick={cerrar} aria-label={t("acciones.cerrar")} className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl font-semibold hover:bg-slate-100">✕</button>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {opciones.map(([cat, label, cls]) => (
@@ -39,7 +39,7 @@ export default function ModificarRolModal({ data, cerrar, aplicar }) {
         </div>
         <button
           onClick={() => aplicar({ ...data, categoria: "" })}
-          className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="mt-3 min-h-touch w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           {t("modificarRol.limpiar")}
         </button>

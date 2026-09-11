@@ -20,7 +20,7 @@ export default function AsignacionLibreModal({ data, hj, cerrar, onModificarRol,
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-2xl border px-4 py-3 text-left shadow-sm hover:brightness-95 ${tono}`}
+      className={`min-h-touch w-full rounded-2xl border px-4 py-3 text-left shadow-sm hover:brightness-95 ${tono}`}
     >
       <span className="block text-sm font-semibold">{titulo}</span>
       <span className="mt-0.5 block text-xs opacity-80">{desc}</span>
@@ -81,7 +81,7 @@ export default function AsignacionLibreModal({ data, hj, cerrar, onModificarRol,
         </div>
 
         <div className="flex justify-end border-t border-slate-200 bg-slate-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button onClick={cerrar} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+          <button onClick={cerrar} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
             {t("acciones.cancelar")}
           </button>
         </div>

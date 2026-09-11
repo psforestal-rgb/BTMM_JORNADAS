@@ -5,6 +5,7 @@ import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
 import Planificacion from "../Planificacion.jsx";
 
 afterEach(() => {
@@ -49,7 +50,9 @@ function renderPlanificacion(props = {}) {
   };
   return render(
     <AppProvider>
-      <Planificacion {...base} {...props} />
+      <ToastProvider>
+        <Planificacion {...base} {...props} />
+      </ToastProvider>
     </AppProvider>,
   );
 }

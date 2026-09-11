@@ -1,93 +1,175 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import ToastViewport from "../ui/Toast.jsx";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { t } from "../i18n/es-CR.js";
+
+/**
+ * Sistema de avisos efímeros (toast / snackbar) de la app.
+ *
+ * Resuelve dos puntos de dolor del diagnóstico UX:
+ *  - F-P4 «falta de feedback visual»: toda acción relevante confirma qué pasó.
+ *  - F-P12 «falta de deshacer»: un aviso puede llevar una acción («Deshacer»)
+ *    que sustituye al modal de confirmación en los borrados reversibles.
+ *
+ * El proveedor solo gestiona la cola y los temporizadores; el render vive en
+ * `src/ui/Toast.jsx` para que la lógica sea testeable sin DOM de presentación.
+ */
 
 const ToastContext = createContext(null);
-let seq = 0;
-const MAX_DEFAULT = 3;
-const DURACION_DEFAULT = 5000;
-const DURACION_UNDO = 10000;
 
-function noopToast() {
-  return { show: () => "", dismiss: () => {}, toasts: [] };
+/** ms que vive un aviso simple (sin acción). */
+export const DURACION_DEFECTO = 5000;
+/** ms que vive un aviso con acción: hay que dar tiempo real a reaccionar. */
+export const DURACION_CON_ACCION = 10000;
+/** Máximo de avisos simultáneos; al superarlo se descartan los más antiguos. */
+export const MAX_TOASTS = 3;
+/** Tipos admitidos. Cualquier otro valor cae a "info". */
+export const TIPOS = ["info", "exito", "aviso", "error"];
+
+let secuencia = 0;
+function nuevoId() {
+  secuencia += 1;
+  return `toast-${secuencia}`;
 }
 
-export function ToastProvider({ children, max = MAX_DEFAULT }) {
+// Export solo para tests: reinicia el contador de ids entre casos.
+export function _resetToastId() {
+  secuencia = 0;
+}
+
+export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  // id -> { timeoutId, restanteMs, iniciadoEn }. Fuera del estado: cambiarlos
+  // no debe provocar render.
   const timers = useRef(new Map());
+  const pausado = useRef(false);
 
-  const clearTimer = useCallback((id) => {
-    const entry = timers.current.get(id);
-    if (entry?.id) clearTimeout(entry.id);
-    timers.current.delete(id);
-  }, []);
-
-  const dismiss = useCallback((id) => {
-    clearTimer(id);
+  const cerrar = useCallback((id) => {
     setToasts((prev) => prev.filter((x) => x.id !== id));
-  }, [clearTimer]);
-
-  const armTimer = useCallback((toast) => {
-    const duracion = toast.duracion ?? (toast.onAccion ? DURACION_UNDO : DURACION_DEFAULT);
-    const entry = { remaining: duracion, started: Date.now(), id: null };
-    const start = () => {
-      entry.started = Date.now();
-      entry.id = setTimeout(() => dismiss(toast.id), entry.remaining);
-      timers.current.set(toast.id, entry);
-    };
-    start();
-    timers.current.set(toast.id, {
-      ...entry,
-      pause() {
-        if (!entry.id) return;
-        clearTimeout(entry.id);
-        entry.id = null;
-        entry.remaining = Math.max(0, entry.remaining - (Date.now() - entry.started));
-      },
-      resume() {
-        if (entry.id || entry.remaining <= 0) return;
-        start();
-      },
-    });
-  }, [dismiss]);
-
-  const show = useCallback((opts = {}) => {
-    const id = opts.id || `toast-${++seq}`;
-    const toast = {
-      id,
-      tipo: opts.tipo || "info",
-      mensaje: opts.mensaje || "",
-      accionLabel: opts.accionLabel,
-      onAccion: typeof opts.onAccion === "function" ? opts.onAccion : undefined,
-      duracion: opts.duracion,
-    };
-    setToasts((prev) => {
-      const dropped = prev.length >= max ? prev.slice(0, prev.length - max + 1) : [];
-      dropped.forEach((old) => clearTimer(old.id));
-      const kept = prev.length >= max ? prev.slice(prev.length - max + 1) : prev;
-      return [...kept, toast];
-    });
-    armTimer(toast);
-    return id;
-  }, [armTimer, clearTimer, max]);
-
-  const pause = useCallback((id) => {
-    timers.current.get(id)?.pause?.();
   }, []);
 
-  const resume = useCallback((id) => {
-    timers.current.get(id)?.resume?.();
-  }, []);
-
-  const value = useMemo(() => ({ show, dismiss, toasts }), [show, dismiss, toasts]);
-
-  return (
-    <ToastContext.Provider value={value}>
-      {children}
-      <ToastViewport toasts={toasts} onDismiss={dismiss} onPause={pause} onResume={resume} />
-    </ToastContext.Provider>
+  const programar = useCallback(
+    (id, ms) => {
+      // duracion 0 o no finita => aviso persistente (se cierra a mano).
+      if (!Number.isFinite(ms) || ms <= 0) return;
+      const previo = timers.current.get(id);
+      if (previo?.timeoutId) clearTimeout(previo.timeoutId);
+      const entrada = { restanteMs: ms, iniciadoEn: Date.now(), timeoutId: null };
+      if (!pausado.current) entrada.timeoutId = setTimeout(() => cerrar(id), ms);
+      timers.current.set(id, entrada);
+    },
+    [cerrar],
   );
+
+  const mostrar = useCallback(
+    (opciones) => {
+      const o = typeof opciones === "string" ? { mensaje: opciones } : opciones || {};
+      const mensaje = typeof o.mensaje === "string" ? o.mensaje.trim() : "";
+      if (!mensaje) return null;
+      const tipo = TIPOS.includes(o.tipo) ? o.tipo : "info";
+      // accion: { etiqueta, onAccion, cerrarAlActivar } — onAccion es obligatorio.
+      const accion =
+        o.accion && typeof o.accion.onAccion === "function"
+          ? {
+              etiqueta: o.accion.etiqueta || t("acciones.deshacer"),
+              onAccion: o.accion.onAccion,
+              cerrarAlActivar: o.accion.cerrarAlActivar !== false,
+            }
+          : null;
+      const duracion = o.duracion === undefined ? (accion ? DURACION_CON_ACCION : DURACION_DEFECTO) : o.duracion;
+      const id = nuevoId();
+      setToasts((prev) => {
+        const siguiente = [...prev, { id, mensaje, detalle: o.detalle || "", tipo, accion, duracion }];
+        const sobran = siguiente.length - MAX_TOASTS;
+        return sobran > 0 ? siguiente.slice(sobran) : siguiente;
+      });
+      programar(id, duracion);
+      return id;
+    },
+    [programar],
+  );
+
+  const pausar = useCallback(() => {
+    if (pausado.current) return;
+    pausado.current = true;
+    const ahora = Date.now();
+    for (const entrada of timers.current.values()) {
+      if (!entrada.timeoutId) continue;
+      clearTimeout(entrada.timeoutId);
+      entrada.restanteMs = Math.max(0, entrada.restanteMs - (ahora - entrada.iniciadoEn));
+      entrada.timeoutId = null;
+    }
+  }, []);
+
+  const reanudar = useCallback(() => {
+    if (!pausado.current) return;
+    pausado.current = false;
+    const ahora = Date.now();
+    for (const [id, entrada] of timers.current) {
+      if (entrada.timeoutId) continue;
+      entrada.iniciadoEn = ahora;
+      entrada.timeoutId = setTimeout(() => cerrar(id), Math.max(0, entrada.restanteMs));
+    }
+  }, [cerrar]);
+
+  const activarAccion = useCallback(
+    (id) => {
+      const item = toasts.find((x) => x.id === id);
+      if (!item?.accion) return;
+      item.accion.onAccion();
+      if (item.accion.cerrarAlActivar) cerrar(id);
+    },
+    [toasts, cerrar],
+  );
+
+  // Atajos de uso frecuente.
+  const exito = useCallback((mensaje, opciones) => mostrar({ ...opciones, mensaje, tipo: "exito" }), [mostrar]);
+  const error = useCallback((mensaje, opciones) => mostrar({ ...opciones, mensaje, tipo: "error" }), [mostrar]);
+  const aviso = useCallback((mensaje, opciones) => mostrar({ ...opciones, mensaje, tipo: "aviso" }), [mostrar]);
+  /** Aviso con «Deshacer»: sustituye al modal de confirmación en borrados reversibles. */
+  const conDeshacer = useCallback(
+    (mensaje, onDeshacer, opciones) =>
+      mostrar({
+        ...opciones,
+        mensaje,
+        tipo: opciones?.tipo || "info",
+        accion: { etiqueta: t("acciones.deshacer"), onAccion: onDeshacer },
+      }),
+    [mostrar],
+  );
+
+  // Los avisos descartados por exceso de cola dejan su temporizador huérfano:
+  // se reconcilia el mapa con la lista viva en cada cambio.
+  useEffect(() => {
+    const vivos = new Set(toasts.map((x) => x.id));
+    for (const [id, entrada] of timers.current) {
+      if (vivos.has(id)) continue;
+      if (entrada.timeoutId) clearTimeout(entrada.timeoutId);
+      timers.current.delete(id);
+    }
+  }, [toasts]);
+
+  // Al desmontar: ningún timeout debe sobrevivir al proveedor.
+  useEffect(() => {
+    const mapa = timers.current;
+    return () => {
+      for (const entrada of mapa.values()) {
+        if (entrada.timeoutId) clearTimeout(entrada.timeoutId);
+      }
+      mapa.clear();
+    };
+  }, []);
+
+  const value = useMemo(
+    () => ({ toasts, mostrar, cerrar, pausar, reanudar, activarAccion, exito, error, aviso, conDeshacer }),
+    [toasts, mostrar, cerrar, pausar, reanudar, activarAccion, exito, error, aviso, conDeshacer],
+  );
+
+  return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
 }
 
 export function useToast() {
-  return useContext(ToastContext) || noopToast();
+  const ctx = useContext(ToastContext);
+  if (!ctx) {
+    throw new Error("useToast() requiere que el árbol esté envuelto en <ToastProvider>.");
+  }
+  return ctx;
 }

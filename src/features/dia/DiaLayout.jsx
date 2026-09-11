@@ -6,6 +6,7 @@ import Dia from "./Dia.jsx";
 import DiaResumenMovil from "./DiaResumenMovil.jsx";
 import BottomSheet from "../../ui/BottomSheet.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 import SyncStatus from "../../ui/SyncStatus.jsx";
 import HelpSheet from "../../ui/HelpSheet.jsx";
 import { useMobile } from "../../lib/useMobile.js";
@@ -88,10 +89,12 @@ export default function DiaLayout(props) {
     setFabModal(null);
   }, [setActividadesPlan]);
 
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const eliminarFab = useCallback((id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setFabModal(null);
-  }, [setActividadesPlan]);
+    eliminarActividad(id);
+  }, [eliminarActividad]);
 
   return (
     <div className="relative mx-auto w-full max-w-md md:max-w-4xl lg:max-w-6xl xl:max-w-7xl">

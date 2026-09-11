@@ -3,7 +3,10 @@ import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { useApp } from "../../context/AppContext.jsx";
-import { exportSnapshot, parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
+import { parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { crearRespaldo as crearRespaldoDe } from "../../lib/respaldo.js";
+import HistorialCambios from "./HistorialCambios.jsx";
 import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
@@ -15,23 +18,6 @@ import Modal from "../../ui/Modal.jsx";
 // crecimiento (10-50x) sin permitir que un archivo manipulado o corrupto
 // fuerce un JSON.parse desproporcionado en el hilo principal.
 const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
-
-function descargarArchivo(nombre, contenido) {
-  try {
-    const blob = new Blob([contenido], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = nombre;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export default function Datos() {
   const t = useT();
@@ -47,17 +33,7 @@ export default function Datos() {
   const totalRoleEntries = Object.keys(ctx.roleData || {}).length;
   const totalReposiciones = (ctx.reposiciones || []).length;
 
-  const crearRespaldo = () => {
-    const snapshot = exportSnapshot({
-      personas: ctx.personas,
-      actividadesPlan: ctx.actividadesPlan,
-      reposiciones: ctx.reposiciones,
-      roleData: ctx.roleData,
-      reglas: ctx.reglas,
-      migraciones: ctx.migraciones,
-    });
-    return { snapshot, name: `pnlq-snapshot-${toLocalFileTimestamp()}.json`, text: JSON.stringify(snapshot, null, 2) };
-  };
+  const crearRespaldo = () => crearRespaldoDe(ctx);
   const onExport = () => { const backup = crearRespaldo(); descargarArchivo(backup.name, backup.text); };
   const onShare = async () => {
     const backup = crearRespaldo();
@@ -252,6 +228,10 @@ export default function Datos() {
         <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
           {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
         </Modal>
+      </Card>
+
+      <Card title={t("historial.titulo")} icon="📜">
+        <HistorialCambios historial={ctx.historial} />
       </Card>
 
       <Card title={t("datos.porQueTitulo")} icon="ℹ️">

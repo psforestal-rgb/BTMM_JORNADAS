@@ -17,6 +17,7 @@ import { actividadesEnDia } from "../../domain/actividades.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useT } from "../../i18n/useT.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
+import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
 import ModificarRolModal from "./ModificarRolModal.jsx";
 import AsignarActividadModal from "./AsignarActividadModal.jsx";
 
@@ -47,9 +48,11 @@ export default function PlanificacionFuncionario({
     setModalActividad(null);
     setAsignar(null);
   };
+  // Borrado reversible: el modal se cierra y el aviso ofrece «Deshacer».
+  const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const eliminar = (id) => {
-    setActividadesPlan((prev) => prev.filter((a) => a.id !== id));
     setModalActividad(null);
+    eliminarActividad(id);
   };
   const nuevaActividad = (nombre, iso) => ({
     id: `a${Date.now()}`,
@@ -213,7 +216,7 @@ export default function PlanificacionFuncionario({
                               <button
                                 key={a.id}
                                 onClick={() => setModalActividad({ ...a })}
-                                className={`block w-full rounded-xl border px-3 py-2 text-left text-sm font-semibold ${
+                                className={`block min-h-touch w-full rounded-xl border px-3 py-2 text-left text-sm font-semibold ${
                                   f.conflicto ? "border-red-300 bg-white text-red-950" : "border-emerald-200 bg-emerald-50 text-emerald-950"
                                 }`}
                               >
@@ -237,13 +240,13 @@ export default function PlanificacionFuncionario({
                             <>
                               <button
                                 onClick={() => setModalActividad({ ...f.acts[0] })}
-                                className="rounded-xl bg-red-700 px-3 py-2 text-xs font-bold text-white hover:bg-red-800"
+                                className="inline-flex min-h-touch items-center rounded-xl bg-red-700 px-3 text-xs font-bold text-white hover:bg-red-800"
                               >
                                 {t("planFuncionario.modificarActividad")}
                               </button>
                               <button
                                 onClick={() => setModalRol({ funcionario: p.nombre, dia: f.d, iso: f.iso, rol: f.rol })}
-                                className="rounded-xl border border-red-300 bg-white px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50"
+                                className="inline-flex min-h-touch items-center rounded-xl border border-red-300 bg-white px-3 text-xs font-bold text-red-800 hover:bg-red-50"
                               >
                                 {t("planFuncionario.modificarRol")}
                               </button>
@@ -251,14 +254,14 @@ export default function PlanificacionFuncionario({
                           ) : f.turno && !f.acts.length ? (
                             <button
                               onClick={() => setAsignar({ funcionario: p.nombre, iso: f.iso })}
-                              className="rounded-xl bg-yellow-600 px-3 py-2 text-xs font-bold text-white hover:bg-yellow-700"
+                              className="inline-flex min-h-touch items-center rounded-xl bg-yellow-600 px-3 text-xs font-bold text-white hover:bg-yellow-700"
                             >
                               {t("planFuncionario.asignar")}
                             </button>
                           ) : (
                             <button
                               onClick={() => setModalActividad(nuevaActividad(p.nombre, f.iso))}
-                              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                              className="inline-flex min-h-touch items-center rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
                             >
                               {t("planFuncionario.nueva")}
                             </button>

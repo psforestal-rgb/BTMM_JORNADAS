@@ -125,7 +125,7 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
               <p className="text-xs font-bold uppercase tracking-wider text-amber-800">{t("modalActividad.libresAsignados")}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {a.funcionarios.filter((nombre) => esLibreDe(nombre)).map((nombre) => (
-                  <button key={nombre} type="button" onClick={() => setAsignLibre({ funcionario: nombre, iso: a.inicio, rol: rolDe(nombre), categoria: categoriaDe(rolDe(nombre)), saldo: saldoDe(nombre) })} className="inline-flex items-center gap-1 rounded-xl border border-amber-400 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100">
+                  <button key={nombre} type="button" onClick={() => setAsignLibre({ funcionario: nombre, iso: a.inicio, rol: rolDe(nombre), categoria: categoriaDe(rolDe(nombre)), saldo: saldoDe(nombre) })} className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-amber-400 bg-white px-3 text-xs font-bold text-amber-900 hover:bg-amber-100">
                     {nombre} · {t("modalActividad.resolver")}
                   </button>
                 ))}
@@ -225,7 +225,7 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
                               <div className="mt-2 rounded-lg border border-yellow-300 bg-yellow-100 p-2 text-[11px] leading-snug text-yellow-950">
                                 <div className="font-bold">{t("modalActividad.avisoTraslape")}</div>
                                 <div className="mt-1 font-bold">{avisos.map((actividad) => actividad.titulo).join(" · ")}</div>
-                                <button type="button" onClick={() => agregarFuncionario(funcionario.nombre)} className="mt-2 rounded-lg bg-yellow-700 px-2 py-1 text-[10px] font-bold text-white hover:bg-yellow-800">{t("modalActividad.agregarAunAsi")}</button>
+                                <button type="button" onClick={() => agregarFuncionario(funcionario.nombre)} className="mt-2 inline-flex min-h-touch items-center rounded-lg bg-yellow-700 px-3 text-[10px] font-bold text-white hover:bg-yellow-800">{t("modalActividad.agregarAunAsi")}</button>
                               </div>
                             )}
                           </div>
@@ -247,10 +247,10 @@ export default function ModalActividad({ valor, personas, cerrar, guardar, elimi
         </div>
 
         <div className="flex flex-wrap justify-between gap-2 border-t border-slate-200 bg-slate-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div>{esExistente && <button onClick={() => eliminar(a.id)} className="rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50">{t("acciones.eliminar")}</button>}</div>
+          <div>{esExistente && <button onClick={() => eliminar(a.id)} className="min-h-touch rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50">{t("acciones.eliminar")}</button>}</div>
           <div className="flex gap-2">
-            <button onClick={cerrar} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">{t("acciones.cancelar")}</button>
-            <button onClick={guardarNormalizado} className="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t("modalActividad.guardarActividad")}</button>
+            <button onClick={cerrar} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">{t("acciones.cancelar")}</button>
+            <button onClick={guardarNormalizado} className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t("modalActividad.guardarActividad")}</button>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ import {
 } from "../lib/storage.js";
 import { REGLAS_DEFAULT, mergeReglas } from "../config/reglas.js";
 import { toLocalISODate } from "../domain/fechas.js";
+import { agregarEntrada } from "../domain/historial.js";
 
 const AppContext = createContext(null);
 
@@ -55,6 +56,10 @@ const seedState = {
   actividadesPlan: baseActividadesPlan,
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
+  // Rastro de cambios sobre las fichas (RF9). Al vivir en `seedState`, un
+  // snapshot anterior que no lo traiga lo recibe vacío en
+  // `mergePersistedWithSeed`, así que NO hace falta subir `SCHEMA_VERSION`.
+  historial: [],
   reglas: { ...REGLAS_DEFAULT },
   migraciones: {
     [MIGRACION_LIMPIEZA_2026]: true,
@@ -141,6 +146,7 @@ function mergePersistedWithSeed(stored) {
     personas,
     actividadesPlan,
     reposiciones,
+    historial: Array.isArray(stored?.historial) ? stored.historial : [],
     roleData: { ...baseRoleData, ...storedRoleData },
     reglas: mergeReglas(stored?.reglas),
     migraciones: {
@@ -188,6 +194,10 @@ function reducer(state, action) {
       return { ...state, reposiciones: resolveUpdater(action.payload, state.reposiciones) };
     case "SET_ROLE_DATA":
       return { ...state, roleData: resolveUpdater(action.payload, state.roleData) };
+    case "REGISTRAR_CAMBIO":
+      // El tope del rastro se aplica aquí y solo aquí: ningún llamador puede
+      // saltárselo por descuido.
+      return { ...state, historial: agregarEntrada(state.historial, action.payload) };
     case "SYNC_ROLES_FUENTE":
       if (state.migraciones?.[MIGRACION_ROLES_FUENTE_2026] === action.version) return state;
       return {
@@ -418,6 +428,7 @@ export function AppProvider({ children }) {
   const setActividadesPlan = useCallback((v) => dispatch({ type: "SET_ACTIVIDADES_PLAN", payload: v }), []);
   const setReposiciones = useCallback((v) => dispatch({ type: "SET_REPOSICIONES", payload: v }), []);
   const setRoleData = useCallback((v) => dispatch({ type: "SET_ROLE_DATA", payload: v }), []);
+  const registrarCambio = useCallback((entrada) => dispatch({ type: "REGISTRAR_CAMBIO", payload: entrada }), []);
   const setReglas = useCallback((v) => dispatch({ type: "SET_REGLAS", payload: v }), []);
 
   const replaceState = useCallback((next) => {
@@ -456,6 +467,7 @@ export function AppProvider({ children }) {
       setActividadesPlan,
       setReposiciones,
       setRoleData,
+      registrarCambio,
       setReglas,
       resetReglas,
       replaceState,
@@ -480,6 +492,7 @@ export function AppProvider({ children }) {
       setActividadesPlan,
       setReposiciones,
       setRoleData,
+      registrarCambio,
       setReglas,
       resetReglas,
       replaceState,

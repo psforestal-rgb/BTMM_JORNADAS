@@ -141,13 +141,13 @@ export default function ModalReponer({ registro, hj, cerrar, guardar }) {
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button onClick={cerrar} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+          <button onClick={cerrar} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">
             {t("acciones.cancelar")}
           </button>
           <button
             onClick={onGuardar}
             disabled={cuotaInvalida}
-            className="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-touch rounded-xl bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("reponer.registrar")}
           </button>
