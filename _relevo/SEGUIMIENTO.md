@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 20:40 por Claude Code
+> Última actualización: 2026-09-11 20:55 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: hubo DOS IAs a la vez y esta rama ya resolvió el choque
@@ -31,7 +31,7 @@ Si hiciera falta fusionar a mano en lugar de por el PR:
 git fetch origin
 git checkout main && git pull --rebase origin main
 git merge --no-ff origin/claude/festive-allen-hl6igv
-npm ci --ignore-scripts && npm test    # debe dar 364/364
+npm ci --ignore-scripts && npm test    # debe dar 397/397
 git push origin main
 ```
 
@@ -41,71 +41,55 @@ este bloque, nunca de `main` a secas.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**FASE 1 ESTÁ CERRADA.** Arranca **FASE 2**, y el primer bloque es
-**`[F2][RF-DATOS]` completar el CRUD de funcionarios (RF1–RF9)**.
+**`[F2][RF4+RF8]` importación masiva de funcionarios desde CSV, con vista previa
+y respaldo automático.** Es lo único que queda del bloque RF1–RF9 salvo RF9.
 
-Auditado contra el código actual, esto es lo que YA existe y lo que falta:
+Estado del bloque tras esta sesión:
 
-| Req | Qué pide | Estado | Dónde |
-|-----|----------|--------|-------|
-| RF1 | Agregar funcionarios | ✅ existe | `Funcionarios.jsx` + `ModalFuncionario.jsx` |
-| RF2 | Eliminar funcionarios | ✅ existe, con «Deshacer» | `Funcionarios.jsx:79` |
-| RF6 | Búsqueda y filtrado | ✅ existe | `Funcionarios.jsx`, 6 filtros + orden + texto |
-| RF7 | Asistente «Crear Rápido» de 3 pasos | ✅ **hecho en esta sesión** | `ModalFuncionario.jsx`, wizard de 3 pasos |
-| RF5 | Exportar lista | 🟡 parcial | `Datos.jsx` exporta JSON completo; **falta CSV solo de funcionarios** |
-| RF8 | Confirmación con respaldo automático | 🟡 parcial | `Datos.jsx:102` ya descarga respaldo antes de restaurar; **falta antes de importar funcionarios** |
-| RF3 | Validación en tiempo real | 🔴 falta | `ModalFuncionario.jsx` solo rechaza nombre vacío (`Funcionarios.jsx:69`) |
-| RF4 | Importación masiva CSV con vista previa | 🔴 falta | no existe nada de CSV en `src/` |
-| RF9 | Historial de cambios | 🔴 falta | no existe |
+| Req | Estado |
+|-----|--------|
+| RF1 agregar · RF2 eliminar · RF6 buscar y filtrar · RF7 asistente 3 pasos | ✅ hechos |
+| RF3 validación en tiempo real | ✅ hecho (cablea `src/domain/validaciones.js`) |
+| RF5 exportar CSV | ✅ hecho (`src/lib/csv.js` + botón en Funcionarios) |
+| **RF4 importar CSV con vista previa** | 🔴 **esta tarea** |
+| **RF8 respaldo automático antes de importar** | 🔴 **esta tarea** |
+| RF9 historial de cambios | 🔴 pendiente, el más caro; toca persistencia |
 
-Orden sugerido, de menor a mayor riesgo:
+Cómo hacerlo, con lo que ya existe:
 
-1. **RF3 — validación en tiempo real.** Es lo que menos toca y más se nota.
-   Validar al salir del campo (`onBlur`), no al teclear: cédula con formato
-   costarricense, correo, y la regla de negocio real de que jornada
-   Acumulativa sin resolución y sin ONG ya se marca en la tabla
-   (`Funcionarios.jsx:220`). Mostrar el error bajo el campo con
-   `aria-invalid` y `aria-describedby`. **No bloquear el guardado por nada que
-   no sea el nombre vacío**: la app es de campo y los datos llegan
-   incompletos; el wizard promete explícitamente que se puede guardar y
-   completar después (clave `modalFuncionario.pasos.soloNombre`).
-2. **RF5 — exportar CSV de funcionarios.** Reutilizar `descargarArchivo()` de
-   `Datos.jsx:19`; separar la función de serialización a `src/lib/csv.js` para
-   que RF4 la comparta. Cuidado con comas, comillas y tildes: exportar con BOM
-   UTF-8 o Excel en español lo abre mal.
-3. **RF4 + RF8 — importar CSV con vista previa y respaldo.** Reutilizar el
-   patrón ya probado de `Datos.jsx:252`: modal que muestra qué va a entrar y
-   qué reemplaza, y respaldo automático descargado ANTES de aplicar. Decidir y
-   registrar en «Decisiones» si el import añade o reemplaza, y cómo se
-   resuelven cédulas repetidas.
-4. **RF9 — historial de cambios.** Es el más caro y toca persistencia; dejarlo
-   para el final y leer antes la advertencia sobre la doble persistencia.
+1. **Parsear, en `src/lib/csv.js`.** Ahí ya está la serialización; añadir
+   `parsearCSV(texto)` en el MISMO módulo para que el ida y vuelta no se
+   desincronice. Tiene que aguantar lo que genera `serializarCSV`: BOM inicial,
+   CRLF **y** LF, campos entrecomillados con comas, saltos de línea y comillas
+   dobladas dentro. Y «Sí»/«No» de vuelta a booleano. Hay 15 pruebas de
+   serialización en `src/lib/__tests__/csv.test.js`; la prueba que más vale es
+   la de ida y vuelta: serializar y volver a parsear debe devolver lo mismo.
+2. **Mapear columnas.** La cabecera que exporta la app son los títulos en
+   español de `funcionarios.col.*` (`src/i18n/es-CR.js`). Mapear por título, no
+   por posición, y decidir qué hacer con una columna desconocida o ausente.
+3. **Vista previa + respaldo.** Copiar el patrón ya probado de
+   `src/features/datos/Datos.jsx:236` (modal que muestra qué entra y qué
+   reemplaza) y `Datos.jsx:87` (descarga un respaldo ANTES de aplicar).
+   `descargarArchivo` ya está extraído en `src/lib/descargas.js`.
+4. **Decidir y registrar en «Decisiones»** dos cosas que no están decididas:
+   si el import **añade o reemplaza** la lista, y cómo se resuelven **cédulas
+   repetidas** (¿se actualiza el existente, se omite, se crea duplicado?).
+   No improvisar: queda por escrito antes de codificar.
+5. Cada fila importada debería pasar por `validarFuncionario()` y mostrar sus
+   advertencias en la vista previa, sin bloquear la importación: es la misma
+   filosofía del módulo de dominio y la que ya sigue el formulario.
+6. Bump de `version` en `package.json`.
 
-Bloques siguientes de Fase 2, ya explorados para que no haya sorpresas:
-
-- **`[F2][RP-PUESTOS]` CRUD de puestos (RP1–RP8).** `src/data/puestos.js` son
-  29 líneas de datos fijos que importan **10 módulos**. Dos de esos importes
-  son el problema real: `src/data/opciones.js` y `src/config/reglas.js:14`
-  construyen constantes **en tiempo de importación**, así que no basta con
-  mover los puestos a estado: hay que convertir esos consumidores en funciones
-  o llevarlos al contexto. `REGLAS_DEFAULT.puestosRequierenVisitantesDiario`
-  (`reglas.js:22`) es donde vive hoy el «requiereVisit» de RP5, por nombre de
-  puesto: si los puestos pasan a ser editables, renombrar uno rompe esa lista.
-  Dexie está en `version(1)` y `SCHEMA_VERSION = 1` (`src/lib/schemaVersion.js`),
-  que debe subir a la vez que el esquema; los dos backends deben coincidir o
-  `loadFromDexie()` rechaza snapshots válidos.
-- **`[F2][RT-TELETRABAJO]` rol `E` (RT1–RT8).** Toca `src/domain/roles.js`,
-  `conflictos.js` y `cobertura.js`, que son dominio con 25, 3 y 3 pruebas
-  respectivamente. Añadir el código a las pruebas existentes, no crear un
-  módulo paralelo.
+Después de RF4/RF8 quedan RF9 (historial) y luego `[F2][RP-PUESTOS]` y
+`[F2][RT-TELETRABAJO]`, descritos en «Pendiente».
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.18.0** — Rama: **`claude/festive-allen-hl6igv`** (9 commits por
-  delante de `main`) — Último commit: `a4af5aa` «[F1][UX-WIZARD] el formulario
-  de funcionario pasa a tres pasos»
-- Tests: ✅ **364/364** (45 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.18.0
+- Versión: **1.20.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
+  ya fusionado dentro — Último commit: `fa456ab` «[F2][RF5] exportación CSV de
+  funcionarios»
+- Tests: ✅ **397/397** (46 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.20.0
 
 ## ✅ Hecho en esta sesión
 
@@ -127,7 +111,14 @@ Bloques siguientes de Fase 2, ya explorados para que no haya sorpresas:
 - `a4af5aa` `[F1][UX-WIZARD]` — el formulario de funcionario pasa a 3 pasos.
   **Con esto Fase 1 queda cerrada** y de paso queda hecho RF7 de Fase 2.
 
-Tests: de 290 a 364 (+74). Ninguna función existente se eliminó.
+- `e236c08` **merge de `origin/main`** — resuelve el choque con la sesión
+  paralela de Grok (ver el bloque de arriba y «Decisiones»).
+- `2b36a52` `[F2][RF3]` — validación en tiempo real cableando los validadores de
+  dominio, que existían con 22 pruebas y **no los usaba nadie**.
+- `fa456ab` `[F2][RF5]` — exportación CSV (`src/lib/csv.js`), y
+  `descargarArchivo` extraído a `src/lib/descargas.js` para no duplicarlo.
+
+Tests: de 290 a 397 (+107). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -159,15 +150,18 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F2][RF-DATOS]` — completar RF1–RF9 de funcionarios. Ver «SIGUIENTE ACCIÓN».
-2. `[F2][RP-PUESTOS]` — CRUD de puestos con versionado de schema Dexie y
+1. `[F2][RF4+RF8]` — importar CSV con vista previa y respaldo. Ver «SIGUIENTE ACCIÓN».
+2. `[F2][RF9]` — historial de cambios de funcionarios. El más caro del bloque:
+   toca persistencia, así que leer antes las advertencias sobre la doble
+   persistencia y sobre `SCHEMA_VERSION`.
+3. `[F2][RP-PUESTOS]` — CRUD de puestos con versionado de schema Dexie y
    migración con respaldo (RP1–RP8).
-3. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
+4. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
    cobertura (RT1–RT8).
-4. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
+5. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
    de dominio existente para el Banco de Tiempo, virtualización de Roles (A1),
    estado de tablas y filtros en la URL, exportación CSV (B1).
-5. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+6. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
    «cargando» en import/export (A-P17).
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
@@ -234,6 +228,24 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
     Funcionarios y Reposición, test que pasa a «elimina y Deshacer restaura» con
     conteo `2/2`, pruebas del contexto, y P1 chips) **ya estaba hecha** en esta
     rama; no se rehízo nada.
+- 2026-09-11 (Claude Code): **Las validaciones guían, nunca bloquean.** Es la
+  filosofía que ya traía escrita `src/domain/validaciones.js` y que el
+  formulario ahora respeta: avisos en ámbar, nada deshabilita «Guardar», y lo
+  único que impide guardar sigue siendo el nombre vacío. Motivo: en campo los
+  datos llegan incompletos y el registro no puede quedar bloqueado por una
+  cédula mal tecleada. **RF4 debe seguir la misma regla** al importar.
+- 2026-09-11 (Claude Code): Los avisos de campo se disparan **al salir del
+  foco**, no al teclear: mientras alguien escribe, el valor está incompleto por
+  definición y avisar es ruido.
+- 2026-09-11 (Claude Code): **Formato del CSV** (`src/lib/csv.js`): separador
+  coma y comillas dobles según RFC 4180, fin de línea CRLF, y **BOM UTF-8**
+  delante. Sin BOM, Excel en español abre «Pérez» como «PÃ©rez», que es el
+  fallo que más se ve. Los booleanos se escriben «Sí»/«No», no «true»/«false».
+  El orden de columnas es el del formulario y es el contrato que debe respetar
+  el import de RF4.
+- 2026-09-11 (Claude Code): El botón de exportar manda **lo que se está
+  viendo** (lista filtrada y ordenada), no la lista completa, porque el
+  contador «N/M» está justo encima y es lo que la persona espera.
 - 2026-09-11 (Claude Code): El formulario de funcionario es un wizard de 3
   pasos, pero **«Guardar» está disponible desde el paso 1**: solo el nombre es
   obligatorio y la promesa al usuario está escrita en la clave
@@ -282,6 +294,10 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - `src/lib/__tests__/objetivosTactiles.test.js` analiza el JSX como texto. Un
   botón escrito de forma inusual (por ejemplo con el `className` calculado en
   una variable aparte) se le escapa; no es una garantía absoluta, es una red.
+- El `Blob` de jsdom no expone su contenido ni implementa `.text()`. Para probar
+  una descarga hay que sustituir `global.Blob` por un doble que guarde lo que
+  recibe; está hecho así en el bloque de exportación CSV de
+  `src/features/funcionarios/__tests__/Funcionarios.test.jsx`.
 - **`src/data/puestos.js` no se puede volver dinámico sin tocar dos importes en
   tiempo de carga**: `src/data/opciones.js` y `src/config/reglas.js:14`
   construyen constantes al importar. Además
@@ -304,7 +320,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se arrancó Fase 2 con RF3 (validación en tiempo real) y RF5 (exportación CSV). 397 tests, v1.20.0.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
