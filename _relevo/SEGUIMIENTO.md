@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 22:55 por Claude Code
+> Última actualización: 2026-09-11 23:10 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: hubo DOS IAs a la vez y esta rama ya resolvió el choque
@@ -31,7 +31,7 @@ Si hiciera falta fusionar a mano en lugar de por el PR:
 git fetch origin
 git checkout main && git pull --rebase origin main
 git merge --no-ff origin/claude/festive-allen-hl6igv
-npm ci --ignore-scripts && npm test    # debe dar 484/484
+npm ci --ignore-scripts && npm test    # debe dar 526/526
 git push origin main
 ```
 
@@ -41,59 +41,55 @@ este bloque, nunca de `main` a secas.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**`[F2][RP-PUESTOS]` CRUD de puestos operativos (RP1–RP8).** El bloque RF1–RF9
-de funcionarios está **cerrado entero**.
+**`[F2][RP6]` exportar e importar puestos operativos.** Es lo único que queda
+del bloque RP1–RP8, y es la tarea **más pequeña de toda la Fase 2**: la
+maquinaria ya existe entera.
 
-Es la tarea más delicada de la Fase 2, y no por el CRUD en sí. El problema está
-en cómo se consumen hoy los puestos:
+Estado del bloque tras esta sesión:
 
-1. `src/data/puestos.js` son **29 líneas de datos fijos que importan 10 módulos**.
-2. Dos de esos importes son el obstáculo real: `src/data/opciones.js` y
-   `src/config/reglas.js:14` construyen **constantes en tiempo de importación**.
-   No basta con mover los puestos a estado: hay que convertir esos consumidores
-   en funciones, o llevarlos al contexto, antes de que nada sea editable.
-3. `REGLAS_DEFAULT.puestosRequierenVisitantesDiario` (`src/config/reglas.js:22`)
-   referencia puestos **por nombre**. Si los puestos pasan a ser editables,
-   renombrar uno rompe en silencio la cobertura crítica de la vista Día. Hay que
-   decidir si se referencian por un `id` estable o si renombrar arrastra la
-   regla, y **registrarlo antes de codificar**.
+| Req | Estado |
+|-----|--------|
+| RP1 interfaz CRUD · RP8 integración en Configuración | ✅ |
+| RP2 persistencia · RP3 migración de datos existentes | ✅ sin migrar nada: la clave nueva se completa desde la semilla |
+| RP4 unicidad de nombre y código · RP5 `requiereVisit` editable | ✅ |
+| RP7 ordenamiento personalizable | ✅ |
+| **RP6 exportar e importar puestos** | 🔴 **esta tarea** |
 
-Sobre el esquema: **esta vez sí toca decidirlo con cuidado, pero puede que
-tampoco haga falta subirlo.** RF9 acaba de demostrar que añadir una clave nueva
-al estado NO obliga a tocar `SCHEMA_VERSION`, porque `mergePersistedWithSeed`
-completa desde la semilla lo que el snapshot no traiga (ver
-`src/context/__tests__/AppContext-historial.test.jsx`, que lo prueba). Migrar
-los puestos a estado es el mismo caso: clave nueva con valor por defecto. Solo
-haría falta subir el esquema si se cambiara la FORMA de datos ya persistidos,
-por ejemplo pasando `puestoOperativo` de nombre a id en cada ficha. Si se llega
-a eso, `SCHEMA_VERSION` (`src/lib/schemaVersion.js`) y la versión de Dexie
-(`src/lib/db.js:66`) suben **a la vez**, y con respaldo previo.
+Cómo hacerlo con lo que ya está construido:
 
-Orden sugerido, de menor a mayor riesgo:
+1. `src/lib/csv.js` ya serializa **y** parsea. Las columnas de un puesto son
+   tres: nombre, código y color. El color es una pareja de clases de Tailwind,
+   así que al importar hay que **validarlo contra `PALETA`** de
+   `src/features/configuracion/ModalPuesto.jsx` y caer al primer color si llega
+   algo desconocido; un valor libre saldría sin estilo en la cuadrícula.
+2. La vista previa y el respaldo previo ya están resueltos en
+   `src/features/funcionarios/Funcionarios.jsx` (`prepararPrevia`,
+   `aplicarImportacion`). Copiar ese patrón, no inventar otro.
+3. **La decisión que hay que tomar y registrar**: qué pasa al importar un
+   puesto cuyo nombre no existe pero cuyo código sí, y al revés. `validarPuesto`
+   ya detecta ambos choques; falta decidir si se omite la fila, se renombra el
+   código o se pisa el existente.
+4. **Cuidado con la baja implícita.** La importación de funcionarios fusiona y
+   nunca borra. Con los puestos hay que hacer lo mismo, y además **no permitir
+   que un import deje sin puesto a fichas existentes**: si un puesto
+   desapareciera, las fichas quedarían apuntando a algo inexistente. Lo más
+   seguro es que el import solo agregue y actualice, nunca elimine.
+5. Bump de `version` en `package.json`.
 
-1. Convertir `opciones.js` y `reglas.js` para que **no** congelen la lista al
-   importar. Sin tocar nada más, y con los tests existentes en verde.
-2. Llevar `puestos` al estado con su valor por defecto, exactamente como se hizo
-   con `historial`, y hacer que los 10 consumidores lo lean de ahí.
-3. Solo entonces, la interfaz CRUD en «Configuración» (RP1, RP8), con validación
-   de unicidad de código (RP4) y el campo `requiereVisit` editable (RP5).
-4. Exportación e importación de puestos (RP6) reutilizando `src/lib/csv.js`, que
-   ya hace las dos direcciones.
-
-Piezas reutilizables, **no reescribir ninguna**: `src/lib/csv.js` (serializa y
-parsea), `src/lib/respaldo.js`, `src/lib/descargas.js`, `src/lib/undo.js`,
-`src/domain/historial.js` (el rastro sirve igual para puestos), y el patrón de
-vista previa de `src/features/funcionarios/Funcionarios.jsx`.
-
-Después: `[F2][RT-TELETRABAJO]` (rol `E`) y la Fase 3.
+Después de RP6, Fase 2 cierra con **`[F2][RT-TELETRABAJO]`** (rol `E`,
+RT1–RT8): toca `src/domain/roles.js`, `conflictos.js` y `cobertura.js`, que
+tienen 25, 3 y 3 pruebas. Añadir el código a las pruebas existentes, no crear un
+módulo paralelo. `RT4` (el rol `E` es incompatible con un puesto que requiere
+visitantes a diario) ya tiene dónde apoyarse: la lista
+`reglas.puestosRequierenVisitantesDiario`, ahora editable desde Configuración.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.22.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
-  ya fusionado dentro — Último commit: `5580025` «[F2][RF9] historial de cambios
-  de funcionarios»
-- Tests: ✅ **484/484** (50 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.22.0
+- Versión: **1.25.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
+  ya fusionado dentro — Último commit: `e5fc8c2` «[F2][RP7] orden personalizable
+  de los puestos, y una guarda táctil más estricta»
+- Tests: ✅ **526/526** (52 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.25.0
 
 ## ✅ Hecho en esta sesión
 
@@ -130,7 +126,14 @@ Después: `[F2][RT-TELETRABAJO]` (rol `E`) y la Fase 3.
   clave `historial` en el estado y la vista en «Datos · respaldo». **Con esto
   el bloque RF1–RF9 queda cerrado entero.**
 
-Tests: de 290 a 484 (+194). Ninguna función existente se eliminó.
+- `a26a10c` `[F2][RP-PUESTOS]` — los puestos pasan a ser estado editable. Era
+  el obstáculo real: dos módulos congelaban la lista al importarse.
+- `aaa06a7` `[F2][RP-PUESTOS]` — CRUD en Configuración, con cascada al
+  renombrar y bloqueo de la baja cuando hay fichas asignadas.
+- `e5fc8c2` `[F2][RP7]` — orden personalizable, y una guarda táctil más
+  estricta al descubrir que `min-w-touch` dejaba pasar botones de 24 px de alto.
+
+Tests: de 290 a 526 (+236). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -162,7 +165,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F2][RP-PUESTOS]` — CRUD de puestos (RP1–RP8). Ver «SIGUIENTE ACCIÓN».
+1. `[F2][RP6]` — exportar e importar puestos. Ver «SIGUIENTE ACCIÓN».
 2. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
    cobertura (RT1–RT8).
 3. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
@@ -244,6 +247,25 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los avisos de campo se disparan **al salir del
   foco**, no al teclear: mientras alguien escribe, el valor está incompleto por
   definición y avisar es ruido.
+- 2026-09-11 (Claude Code): **Un puesto se identifica por su NOMBRE, no por un
+  id.** Las fichas guardan `puestoOperativo` y las reglas de cobertura guardan
+  nombres; introducir ids obligaría a migrar datos ya persistidos y a subir el
+  esquema. El coste es que **renombrar tiene que arrastrar las referencias**, y
+  de eso se encarga `renombrarPuesto` en `src/domain/puestos.js`, que devuelve
+  puestos, personas y reglas a la vez para que no puedan aplicarse a medias.
+- 2026-09-11 (Claude Code): **En los puestos SÍ se bloquea el guardado** ante un
+  nombre o un código repetido, a diferencia de las fichas de funcionario. Un
+  duplicado rompería el agrupado de Roles y la cobertura, y no hay una lectura
+  razonable de «guardar igual». **Eliminar un puesto con fichas asignadas
+  también se bloquea**, porque dejaría registros apuntando a algo inexistente.
+- 2026-09-11 (Claude Code): **El color de un puesto se elige de una paleta
+  cerrada** (`PALETA` en `src/features/configuracion/ModalPuesto.jsx`): el valor
+  son clases de Tailwind que la cuadrícula aplica tal cual, y un valor libre
+  saldría sin estilo o con un contraste ilegible bajo el sol.
+- 2026-09-11 (Claude Code): **La guarda de objetivos táctiles solo admite
+  señales de ALTO.** Admitía `min-w-touch`, que es de ancho, y dejaba pasar
+  botones de 24 px de alto por ser anchos. Para añadir una excepción hay que
+  registrarla en `src/lib/__tests__/objetivosTactiles.test.js` con su motivo.
 - 2026-09-11 (Claude Code): **El rastro de cambios guarda el valor anterior y el
   nuevo** de cada campo modificado, no solo qué campos cambiaron: es lo que lo
   hace útil para control interno. Tope de **200 entradas**, las más nuevas
@@ -345,11 +367,11 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
   `src/features/funcionarios/Funcionarios.jsx`: `guardar`, `eliminar`, el
   «Deshacer» de ese borrado y `aplicarImportacion`. Si se añade un quinto punto
   de modificación y se olvida el registro, el rastro miente en silencio.
-- **`src/data/puestos.js` no se puede volver dinámico sin tocar dos importes en
-  tiempo de carga**: `src/data/opciones.js` y `src/config/reglas.js:14`
-  construyen constantes al importar. Además
-  `REGLAS_DEFAULT.puestosRequierenVisitantesDiario` referencia puestos **por
-  nombre**, así que renombrar un puesto rompería la cobertura crítica.
+- `src/data/puestos.js` es ahora **solo la semilla**: la lista viva está en el
+  estado. Quien necesite los puestos debe leerlos de `useApp()`, nunca importar
+  el módulo de datos, o se quedará con la lista del arranque.
+- El orden de los puestos **es un dato**, no algo que se recalcule: se guarda con
+  la lista y se ve en Roles, en los desplegables de las fichas y en la vista Día.
 - Dexie está en `version(1)` y `SCHEMA_VERSION = 1`
   (`src/lib/schemaVersion.js`). **Los dos backends deben coincidir siempre**: un
   desajuste hace que `loadFromDexie()` rechace snapshots válidos. Subir el
@@ -367,7 +389,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). **El bloque RF1–RF9 queda cerrado entero.** 484 tests, v1.22.0.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 salvo RP6: los puestos operativos pasan a ser editables, con cascada al renombrar. 526 tests, v1.25.0.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
