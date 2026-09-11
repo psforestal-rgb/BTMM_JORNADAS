@@ -16,6 +16,7 @@ import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/c
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo } from "../../lib/respaldo.js";
 import { validarFuncionario } from "../../domain/validaciones.js";
+import { crearEntrada, entradaDeEdicion, TIPO } from "../../domain/historial.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
 import Modal from "../../ui/Modal.jsx";
@@ -30,6 +31,7 @@ const MAX_CSV_BYTES = 5 * 1024 * 1024;
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
   const ctx = useApp();
+  const { registrarCambio } = ctx;
   const { conDeshacer, exito, aviso, error } = useToast();
   const archivoRef = useRef(null);
   const [previa, setPrevia] = useState(null);
@@ -90,9 +92,15 @@ export default function Funcionarios({ personas, setPersonas }) {
   });
   const guardar = (obj) => {
     if (!obj.nombre.trim()) return;
-    const esEdicion = personas.some((x) => x.id === obj.id);
+    const previo = personas.find((x) => x.id === obj.id);
+    const esEdicion = Boolean(previo);
     setPersonas((prev) => (prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev]));
     setModal(null);
+    // RF9: una edición que no cambió nada no deja rastro (`entradaDeEdicion`
+    // devuelve null), así que abrir y cerrar el formulario no ensucia nada.
+    registrarCambio(
+      esEdicion ? entradaDeEdicion(previo, obj) : crearEntrada({ tipo: TIPO.ALTA, funcionario: obj }),
+    );
     exito(t(esEdicion ? "funcionarios.guardado" : "funcionarios.creado", { nombre: obj.nombre.trim() }));
   };
 
@@ -104,10 +112,15 @@ export default function Funcionarios({ personas, setPersonas }) {
     if (indice < 0) return;
     const persona = personas[indice];
     setPersonas((prev) => prev.filter((x) => x.id !== id));
+    registrarCambio(crearEntrada({ tipo: TIPO.BAJA, funcionario: persona }));
     conDeshacer(
       t("funcionarios.eliminado", { nombre: persona.nombre }),
       () => {
         setPersonas((prev) => reinsertarEn(prev, persona, indice));
+        // La restauración se registra aparte en vez de borrar la baja: el
+        // rastro debe contar lo que pasó, no dejarlo como si nunca hubiera
+        // ocurrido.
+        registrarCambio(crearEntrada({ tipo: TIPO.RESTAURACION, funcionario: persona }));
         exito(t("funcionarios.restaurado", { nombre: persona.nombre }));
       },
       { detalle: t("toast.puedeDeshacer") },
@@ -207,6 +220,18 @@ export default function Funcionarios({ personas, setPersonas }) {
     const { plan } = previa;
     setPersonas(plan.resultado);
     setPrevia(null);
+    // Una entrada resumen y no una por fila: importar 200 fichas llenaría el
+    // rastro entero y expulsaría todo lo anterior.
+    registrarCambio(
+      crearEntrada({
+        tipo: TIPO.IMPORTACION,
+        detalle: {
+          archivo: previa.archivo,
+          altas: plan.nuevos.length,
+          cambios: plan.actualizados.length,
+        },
+      }),
+    );
     exito(t("funcionarios.importa.hecho", {
       altas: plan.nuevos.length,
       cambios: plan.actualizados.length,

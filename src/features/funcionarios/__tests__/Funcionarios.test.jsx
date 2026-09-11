@@ -3,12 +3,12 @@
  */
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
-import { AppProvider } from "../../../context/AppContext.jsx";
+import { AppProvider, useApp } from "../../../context/AppContext.jsx";
 import { ToastProvider } from "../../../context/ToastContext.jsx";
 import ToastViewport from "../../../ui/Toast.jsx";
 import Funcionarios from "../Funcionarios.jsx";
 
-function renderConProvider(props = {}) {
+function renderConProvider(props = {}, extra = null) {
   let setPersonasRef;
   function Probe() {
     const [personas, setPersonas] = require("react").useState([
@@ -23,6 +23,7 @@ function renderConProvider(props = {}) {
     <AppProvider>
       <ToastProvider>
         <Probe />
+        {extra}
         <ToastViewport />
       </ToastProvider>
     </AppProvider>,
@@ -389,5 +390,57 @@ describe("Funcionarios — importación CSV con vista previa y respaldo (RF4+RF8
     fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
     expect(screen.getByText("3/3")).toBeDefined();
     expect(screen.getByText("Ana Pérez")).toBeDefined();
+  });
+});
+
+describe("Funcionarios — rastro de cambios (RF9)", () => {
+  /** Igual que renderConProvider, pero con una sonda que lee el historial. */
+  function renderConEspia() {
+    let historial = [];
+    function Espia() {
+      historial = useApp().historial;
+      return null;
+    }
+    const utils = renderConProvider({}, <Espia />);
+    return { ...utils, getHistorial: () => historial };
+  }
+
+  it("dar de alta deja una entrada", () => {
+    const { getHistorial } = renderConEspia();
+    fireEvent.click(screen.getByRole("button", { name: /Agregar/ }));
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Dora Nueva" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    const h = getHistorial();
+    expect(h).toHaveLength(1);
+    expect(h[0].tipo).toBe("alta");
+    expect(h[0].funcionario.nombre).toBe("Dora Nueva");
+  });
+
+  it("editar registra qué campo cambió, con su valor anterior", () => {
+    const { getHistorial } = renderConEspia();
+    fireEvent.click(screen.getAllByRole("button", { name: /^Editar$/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: /Ir al paso 3/ }));
+    fireEvent.change(screen.getByLabelText("Resolución"), { target: { value: "RES-99" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    const h = getHistorial();
+    expect(h[0].tipo).toBe("edicion");
+    expect(h[0].cambios).toEqual([{ campo: "resolucion", antes: "RES-1", despues: "RES-99" }]);
+  });
+
+  it("abrir y guardar sin cambiar nada no ensucia el rastro", () => {
+    const { getHistorial } = renderConEspia();
+    fireEvent.click(screen.getAllByRole("button", { name: /^Editar$/i })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(getHistorial()).toHaveLength(0);
+  });
+
+  it("eliminar y deshacer dejan dos entradas, no cero", () => {
+    const { getHistorial } = renderConEspia();
+    fireEvent.click(screen.getAllByRole("button", { name: /^Eliminar$/i })[0]);
+    expect(getHistorial()[0].tipo).toBe("baja");
+    fireEvent.click(screen.getByRole("button", { name: /^Deshacer$/ }));
+    const h = getHistorial();
+    expect(h.map((e) => e.tipo)).toEqual(["restauracion", "baja"]);
+    expect(h[0].funcionario.nombre).toBe("Ana Pérez");
   });
 });
