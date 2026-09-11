@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
@@ -10,17 +10,29 @@ import { useIsMobile } from "../../lib/responsive.js";
 import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
+import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
-import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/csv.js";
 import { descargarArchivo } from "../../lib/descargas.js";
+import { crearRespaldo } from "../../lib/respaldo.js";
+import { validarFuncionario } from "../../domain/validaciones.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
+import Modal from "../../ui/Modal.jsx";
+import { planificarImportacion } from "./importarFuncionarios.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
+/* Tope de tamaño, como el que ya protege la importación JSON de «Datos»: un
+   archivo enorme o corrupto no debe congelar el hilo principal. */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
 export default function Funcionarios({ personas, setPersonas }) {
   const t = useT();
+  const ctx = useApp();
   const { conDeshacer, exito, aviso, error } = useToast();
+  const archivoRef = useRef(null);
+  const [previa, setPrevia] = useState(null);
   const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
   const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
   const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
@@ -105,11 +117,16 @@ export default function Funcionarios({ personas, setPersonas }) {
   /* Exporta LO QUE SE ESTÁ VIENDO, no la lista completa: el contador «N/M» está
      justo encima, así que es lo que la persona espera. El orden de las columnas
      es el del formulario, y es el que tendrá que respetar el import de RF4. */
+  const BOOLEANAS = new Set(["disponibilidad", "policia", "brigada", "ong"]);
   const COLUMNAS_CSV = [
     "nombre", "cedula", "email", "puesto", "puestoOperativo", "condicion",
     "jornada", "modalidad", "resolucion", "contrato", "vencimiento", "ingreso",
     "disponibilidad", "policia", "brigada", "ong", "estado", "obs",
-  ].map((clave) => ({ clave, titulo: t(`funcionarios.col.${clave}`) }));
+  ].map((clave) => ({
+    clave,
+    titulo: t(`funcionarios.col.${clave}`),
+    ...(BOOLEANAS.has(clave) ? { tipo: "bool" } : {}),
+  }));
 
   const exportarCSV = () => {
     if (filtrados.length === 0) {
@@ -123,6 +140,77 @@ export default function Funcionarios({ personas, setPersonas }) {
     );
     if (ok) exito(t("funcionarios.exportado", { n: filtrados.length }));
     else error(t("funcionarios.exportarError"));
+  };
+
+  /* ── Importación masiva (RF4) + respaldo automático (RF8) ──────────────
+     Se calcula el plan completo y se enseña ANTES de tocar la lista. Aplicar
+     es después un solo `setPersonas` con el resultado ya calculado. */
+  const elegirArchivo = () => archivoRef.current?.click();
+
+  const alElegirArchivo = (evento) => {
+    const archivo = evento.target.files?.[0];
+    // Se limpia el input siempre: si no, elegir el MISMO archivo dos veces
+    // seguidas no dispara `change` y parecería que el botón no responde.
+    evento.target.value = "";
+    if (!archivo) return;
+    if (archivo.size > MAX_CSV_BYTES) {
+      error(t("funcionarios.importa.demasiadoGrande", { mb: Math.round(MAX_CSV_BYTES / 1024 / 1024) }));
+      return;
+    }
+    const lector = new FileReader();
+    lector.onerror = () => error(t("funcionarios.importa.errorLectura"));
+    lector.onload = () => {
+      try {
+        prepararPrevia(String(lector.result ?? ""), archivo.name);
+      } catch {
+        error(t("funcionarios.importa.errorLectura"));
+      }
+    };
+    lector.readAsText(archivo, "UTF-8");
+  };
+
+  const prepararPrevia = (texto, nombreArchivo) => {
+    const lectura = filasAObjetos(parsearCSV(texto), COLUMNAS_CSV);
+    // Sin nombre ni cédula no hay forma de saber a quién se refiere cada fila.
+    const puedeIdentificar =
+      !lectura.faltantes.includes(t("funcionarios.col.nombre")) ||
+      !lectura.faltantes.includes(t("funcionarios.col.cedula"));
+    if (!puedeIdentificar) {
+      error(t("funcionarios.importa.sinIdentificar"));
+      return;
+    }
+    if (lectura.objetos.length === 0) {
+      aviso(t("funcionarios.importa.sinFilas"));
+      return;
+    }
+    const plan = planificarImportacion(personas, lectura.objetos, nuevo());
+    // Advertencias de dominio sobre el resultado, las mismas del formulario.
+    const avisosPorFila = [...plan.nuevos, ...plan.actualizados]
+      .map(({ fila, registro }) => ({ fila, mensajes: validarFuncionario(registro) }))
+      .filter((x) => x.mensajes.length > 0)
+      .sort((a, b) => a.fila - b.fila);
+    setPrevia({ archivo: nombreArchivo, lectura, plan, avisosPorFila });
+  };
+
+  const aplicarImportacion = () => {
+    if (!previa) return;
+    // RF8: el respaldo se descarga ANTES de tocar nada, y si falla no se
+    // importa. Es el mismo formato que acepta «Datos → Restaurar respaldo».
+    // `personas` viene por prop y es la lista que se va a reemplazar; se pasa
+    // explícitamente para que el respaldo sea exactamente lo que se pierde,
+    // sin depender de que el contexto traiga la misma referencia.
+    const backup = crearRespaldo({ ...ctx, personas }, "antes-de-importar-funcionarios");
+    if (!descargarArchivo(backup.name, backup.text)) {
+      error(t("funcionarios.importa.respaldoFallo"));
+      return;
+    }
+    const { plan } = previa;
+    setPersonas(plan.resultado);
+    setPrevia(null);
+    exito(t("funcionarios.importa.hecho", {
+      altas: plan.nuevos.length,
+      cambios: plan.actualizados.length,
+    }));
   };
 
   const filtros = [
@@ -163,6 +251,25 @@ export default function Funcionarios({ personas, setPersonas }) {
                 {t("funcionarios.vistaTarjetas")}
               </button>
             </div>
+            <input
+              ref={archivoRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={alElegirArchivo}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={elegirArchivo}
+              aria-label={t("funcionarios.importarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Icon name="refresh" size={16} />
+              <span className="hidden sm:inline">{t("funcionarios.importar")}</span>
+              <span className="sm:hidden">{t("funcionarios.importarCorto")}</span>
+            </button>
             <button
               type="button"
               onClick={exportarCSV}
@@ -343,6 +450,78 @@ export default function Funcionarios({ personas, setPersonas }) {
         </div>
       </Card>
       {modal && <ModalFuncionario valor={modal} cerrar={() => setModal(null)} guardar={guardar} />}
+      {previa && (
+        <Modal
+          open
+          onClose={() => setPrevia(null)}
+          title={t("funcionarios.importa.titulo")}
+          description={previa.archivo}
+          size="md"
+          actions={
+            <div className="ml-auto flex flex-wrap gap-2">
+              <button type="button" onClick={() => setPrevia(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
+                {t("acciones.cancelar")}
+              </button>
+              <button type="button" onClick={aplicarImportacion} className="min-h-touch rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg">
+                {t("funcionarios.importa.confirmar")}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-sm">
+            <p className="text-ink-muted">{t("funcionarios.importa.sub")}</p>
+            <dl className="grid grid-cols-3 gap-2 rounded-xl bg-surface-alt p-3 text-center">
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.altas")}</dt>
+                <dd className="text-2xl font-bold text-ok">{previa.plan.nuevos.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.cambios")}</dt>
+                <dd className="text-2xl font-bold text-info">{previa.plan.actualizados.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("funcionarios.importa.intactos")}</dt>
+                <dd className="text-2xl font-bold text-ink">
+                  {personas.length - previa.plan.actualizados.length}
+                </dd>
+              </div>
+            </dl>
+            <ul className="space-y-1 text-xs text-ink-muted">
+              {previa.plan.omitidos.length > 0 && (
+                <li>{t("funcionarios.importa.omitidas", { n: previa.plan.omitidos.length })}</li>
+              )}
+              {previa.lectura.filasVacias > 0 && (
+                <li>{t("funcionarios.importa.vacias", { n: previa.lectura.filasVacias })}</li>
+              )}
+              {previa.plan.duplicados.length > 0 && (
+                <li>{t("funcionarios.importa.duplicadas", { n: previa.plan.duplicados.length })}</li>
+              )}
+              {previa.lectura.faltantes.length > 0 && (
+                <li>{t("funcionarios.importa.faltantes", { cols: previa.lectura.faltantes.join(", ") })}</li>
+              )}
+              {previa.lectura.desconocidas.length > 0 && (
+                <li>{t("funcionarios.importa.desconocidas", { cols: previa.lectura.desconocidas.join(", ") })}</li>
+              )}
+            </ul>
+            {previa.avisosPorFila.length > 0 && (
+              <section aria-labelledby="importa-avisos" className="rounded-xl border border-amber-300 bg-amber-50 p-3">
+                <h4 id="importa-avisos" className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                  {t("funcionarios.importa.avisosTitulo")}
+                </h4>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-amber-950">
+                  {previa.avisosPorFila.map(({ fila, mensajes }) => (
+                    <li key={fila}>{`${fila}: ${mensajes.join(" ")}`}</li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-xs font-semibold text-amber-800">{t("funcionarios.importa.avisosNota")}</p>
+              </section>
+            )}
+            <p className="rounded-xl border border-line bg-surface-alt p-3 text-xs text-ink">
+              {t("funcionarios.importa.respaldo")}
+            </p>
+          </div>
+        </Modal>
+      )}
     </section>
   );
 }

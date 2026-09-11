@@ -261,3 +261,133 @@ describe("Funcionarios — exportación CSV (RF5)", () => {
     expect(leerBlob()).toBeNull();
   });
 });
+
+describe("Funcionarios — importación CSV con vista previa y respaldo (RF4+RF8)", () => {
+  let descargas;
+  let BlobReal;
+
+  beforeEach(() => {
+    descargas = [];
+    BlobReal = global.Blob;
+    global.Blob = class {
+      constructor(partes, opciones) {
+        descargas.push({ texto: (partes || []).join(""), tipo: opciones?.type });
+      }
+    };
+    global.URL.createObjectURL = vi.fn(() => "blob:fake");
+    global.URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    global.Blob = BlobReal;
+  });
+
+  /** Simula elegir un archivo: jsdom sí implementa FileReader sobre un File real. */
+  const elegir = async (texto, nombre = "personal.csv") => {
+    const input = document.querySelector('input[type="file"]');
+    const archivo = new BlobReal([texto], { type: "text/csv" });
+    archivo.name = nombre;
+    Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+    fireEvent.change(input);
+    // El FileReader es asíncrono: esperar a que la previa aparezca.
+    return screen.findByRole("dialog", { name: /Revisar antes de importar/i });
+  };
+
+  const CABECERA = "Nombre,Cédula,Observaciones";
+
+  it("no toca nada hasta confirmar: primero enseña la vista previa", async () => {
+    renderConProvider();
+    await elegir(`${CABECERA}\r\nDora Nueva,1-0000-0009,`);
+    expect(screen.getByText("3/3")).toBeDefined();
+    expect(screen.queryByText("Dora Nueva")).toBeNull();
+    expect(descargas).toHaveLength(0);
+  });
+
+  it("cuenta altas, cambios e intactos por separado", async () => {
+    renderConProvider();
+    const dialogo = await elegir(
+      `${CABECERA}\r\nDora Nueva,1-0000-0009,\r\nAna Pérez,1-0000-0001,nota nueva`,
+    );
+    const altas = within(dialogo).getByText("Se agregan").parentElement;
+    const cambios = within(dialogo).getByText("Se actualizan").parentElement;
+    expect(within(altas).getByText("1")).toBeDefined();
+    expect(within(cambios).getByText("1")).toBeDefined();
+  });
+
+  it("al confirmar descarga primero el respaldo y luego aplica", async () => {
+    renderConProvider();
+    await elegir(`${CABECERA}\r\nDora Nueva,1-0000-0009,`);
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(descargas).toHaveLength(1);
+    expect(descargas[0].tipo).toBe("application/json");
+    expect(JSON.parse(descargas[0].texto).state.personas).toHaveLength(3);
+    expect(screen.getByText("4/4")).toBeDefined();
+    expect(screen.getByText("Dora Nueva")).toBeDefined();
+  });
+
+  it("fusiona: quien no viene en el archivo sigue estando", async () => {
+    renderConProvider();
+    await elegir(`${CABECERA}\r\nAna Pérez,1-0000-0001,solo ana`);
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(screen.getByText("3/3")).toBeDefined();
+    expect(screen.getByText("Bruno Salas")).toBeDefined();
+    expect(screen.getByText("Carla Mora")).toBeDefined();
+  });
+
+  it("cancelar no importa ni descarga respaldo", async () => {
+    renderConProvider();
+    await elegir(`${CABECERA}\r\nDora Nueva,1-0000-0009,`);
+    fireEvent.click(screen.getByRole("button", { name: /^Cancelar$/ }));
+    expect(screen.getByText("3/3")).toBeDefined();
+    expect(descargas).toHaveLength(0);
+  });
+
+  it("avisa de las columnas que faltan y de las que sobran", async () => {
+    renderConProvider();
+    const dialogo = await elegir("Nombre,Sueldo\r\nDora Nueva,999");
+    expect(within(dialogo).getByText(/Columnas que no venían/)).toBeDefined();
+    expect(within(dialogo).getByText(/Columnas del archivo que se ignoran: Sueldo/)).toBeDefined();
+  });
+
+  it("cuenta las filas omitidas por no traer nombre ni cédula", async () => {
+    renderConProvider();
+    const dialogo = await elegir(`${CABECERA}\r\n,,solo observaciones\r\nDora,1-0000-0009,`);
+    expect(within(dialogo).getByText(/Filas omitidas por no traer nombre ni cédula: 1/)).toBeDefined();
+  });
+
+  it("muestra las advertencias de dominio de las filas importadas", async () => {
+    renderConProvider();
+    const dialogo = await elegir("Nombre,Cédula,Jornada\r\nDora Nueva,no-es-cedula,Acumulativa");
+    const avisos = within(dialogo).getByRole("region", { name: /Advertencias sobre los datos/i });
+    expect(within(avisos).getByText(/Cédula con formato inesperado/)).toBeDefined();
+    expect(within(avisos).getByText(/sin número de resolución/)).toBeDefined();
+  });
+
+  it("rechaza un archivo sin Nombre ni Cédula, que no permite identificar a nadie", () => {
+    renderConProvider();
+    const input = document.querySelector('input[type="file"]');
+    const archivo = new BlobReal(["Observaciones\r\nalgo"], { type: "text/csv" });
+    archivo.name = "malo.csv";
+    Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+    fireEvent.change(input);
+    return screen.findByText(/no trae ni «Nombre» ni «Cédula»/).then(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+  });
+
+  it("lo exportado se puede volver a importar sin cambiar nada", async () => {
+    renderConProvider();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar a CSV/ }));
+    const csv = descargas[0].texto;
+    descargas.length = 0;
+    const dialogo = await elegir(csv, "reimportado.csv");
+    const altas = within(dialogo).getByText("Se agregan").parentElement;
+    const cambios = within(dialogo).getByText("Se actualizan").parentElement;
+    expect(within(altas).getByText("0")).toBeDefined();
+    // Se reconocen los 3 como existentes; ningún campo cambia de valor.
+    expect(within(cambios).getByText("3")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(screen.getByText("3/3")).toBeDefined();
+    expect(screen.getByText("Ana Pérez")).toBeDefined();
+  });
+});

@@ -3,8 +3,9 @@ import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { useApp } from "../../context/AppContext.jsx";
-import { exportSnapshot, parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
+import { parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
 import { descargarArchivo } from "../../lib/descargas.js";
+import { crearRespaldo as crearRespaldoDe } from "../../lib/respaldo.js";
 import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
@@ -31,17 +32,7 @@ export default function Datos() {
   const totalRoleEntries = Object.keys(ctx.roleData || {}).length;
   const totalReposiciones = (ctx.reposiciones || []).length;
 
-  const crearRespaldo = () => {
-    const snapshot = exportSnapshot({
-      personas: ctx.personas,
-      actividadesPlan: ctx.actividadesPlan,
-      reposiciones: ctx.reposiciones,
-      roleData: ctx.roleData,
-      reglas: ctx.reglas,
-      migraciones: ctx.migraciones,
-    });
-    return { snapshot, name: `pnlq-snapshot-${toLocalFileTimestamp()}.json`, text: JSON.stringify(snapshot, null, 2) };
-  };
+  const crearRespaldo = () => crearRespaldoDe(ctx);
   const onExport = () => { const backup = crearRespaldo(); descargarArchivo(backup.name, backup.text); };
   const onShare = async () => {
     const backup = crearRespaldo();
