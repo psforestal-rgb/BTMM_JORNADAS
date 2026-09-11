@@ -1,16 +1,21 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 17:10 por Claude Code
+> Última actualización: 2026-09-11 17:20 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
-## 🚨 ANTES DE NADA: el trabajo NO está en `main`
+## 🚨 ANTES DE NADA: el trabajo NO está en `main`, está en un PR abierto
 
 Esta sesión se ejecutó en un entorno que **obliga** a desarrollar en una rama
-propia, así que los 6 commits están en **`claude/festive-allen-hl6igv`**, no en
+propia, así que los commits están en **`claude/festive-allen-hl6igv`** y no en
 `main`. Todo pasa tests y build, pero **el deploy a `gh-pages` no se ha
 disparado** porque solo lo dispara `main`.
 
-Acción del usuario (o de la siguiente IA, si tiene permiso de escritura en `main`):
+El trabajo está en el pull request
+**[#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91)**. Fusionarlo
+desde ahí es la vía preferida: cualquier commit nuevo que se empuje a esa rama
+actualiza el mismo PR.
+
+Si hiciera falta fusionar a mano en lugar de por el PR:
 
 ```bash
 git fetch origin
@@ -20,9 +25,9 @@ npm ci --ignore-scripts && npm test    # debe dar 352/352
 git push origin main
 ```
 
-Tras el push, verificar que `dist/version.json` en el sitio publicado diga
+Tras el merge, verificar que `dist/version.json` en el sitio publicado diga
 **1.17.0**. Si la siguiente IA también está atada a una rama, que parta de
-`claude/festive-allen-hl6igv` y lo anote aquí.
+`claude/festive-allen-hl6igv` (o de `main` ya fusionado) y lo anote aquí.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
@@ -167,8 +172,9 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## ⚠️ Advertencias / trampas conocidas
 
-- **El trabajo de esta sesión vive en `claude/festive-allen-hl6igv`**, no en
-  `main`; hasta que se fusione, el sitio publicado sigue en 1.14.17.
+- **El trabajo de esta sesión vive en `claude/festive-allen-hl6igv`** y en el PR
+  [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91), no en `main`;
+  hasta que se fusione, el sitio publicado sigue en 1.14.17.
 - `npm ci` normal falla por el proxy al compilar `sharp`; usar
   `npm ci --ignore-scripts`.
 - Base path `/BTMM_JORNADAS/` en `vite.config.js` — no tocar.
@@ -199,6 +205,6 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — Fase 0 cerrada (baseline 290/290 + auditoría de los 18 puntos de dolor) y 4 de los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, y ayuda contextual. De 290 a 352 tests. Commits `5a4c83f`…`22dfd87` en la rama `claude/festive-allen-hl6igv`, pendientes de fusionar en `main`.
+### 2026-09-11 — Claude Code — Fase 0 cerrada (baseline 290/290 + auditoría de los 18 puntos de dolor) y 4 de los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, y ayuda contextual. De 290 a 352 tests. Commits `5a4c83f`…`22dfd87` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`.
 
 ### 2026-09-11 — ZCode (preparación) — Creación del sistema de relevo `_relevo/`. Sin cambios de código.
