@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-11 23:20 por Claude Code
+> Última actualización: 2026-09-11 23:45 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
@@ -17,10 +17,9 @@ función (ver «Decisiones»). El historial de Grok se conserva íntegro aquí.
 **con squash** el 2026-09-11 a las 22:56. `main` quedó en **v1.22.0** con todo
 hasta RF9 incluido.
 
-El trabajo posterior —el bloque de puestos operativos, v1.25.0— sigue en la
-rama `claude/festive-allen-hl6igv`, ya **rebasada sobre el `main` fusionado**.
-Como el PR #91 está cerrado, ese trabajo necesita un **PR nuevo**; un PR
-fusionado no admite commits nuevos.
+El trabajo posterior —el bloque de puestos operativos, v1.26.0— está en la rama
+`claude/festive-allen-hl6igv`, rebasada sobre el `main` fusionado, y abierto en
+el **PR [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92)**.
 
 **Regla para la próxima sesión:** `git fetch origin` ANTES de nada y comprueba
 si `main` se movió. Si la rama de trabajo tiene commits que `main` no tiene,
@@ -29,55 +28,59 @@ historial divergente aunque el contenido sea idéntico.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**`[F2][RP6]` exportar e importar puestos operativos.** Es lo único que queda
-del bloque RP1–RP8, y es la tarea **más pequeña de toda la Fase 2**: la
-maquinaria ya existe entera.
+**`[F2][RT-TELETRABAJO]` rol `E` de teletrabajo (RT1–RT8).** Es lo último de la
+Fase 2: los bloques RF1–RF9 y RP1–RP8 están **cerrados enteros**.
 
-Estado del bloque tras esta sesión:
+Es la primera tarea de esta fase que **toca el dominio del cálculo de roles**, no
+la interfaz. Ahí está todo el riesgo, porque de ese cálculo dependen los 30
+indicadores normativos.
 
-| Req | Estado |
-|-----|--------|
-| RP1 interfaz CRUD · RP8 integración en Configuración | ✅ |
-| RP2 persistencia · RP3 migración de datos existentes | ✅ sin migrar nada: la clave nueva se completa desde la semilla |
-| RP4 unicidad de nombre y código · RP5 `requiereVisit` editable | ✅ |
-| RP7 ordenamiento personalizable | ✅ |
-| **RP6 exportar e importar puestos** | 🔴 **esta tarea** |
+Los tres módulos que hay que tocar y lo que protegen sus pruebas:
 
-Cómo hacerlo con lo que ya está construido:
+| Módulo | Pruebas | Qué hace |
+|--------|---------|----------|
+| `src/domain/roles.js` | 25 | códigos T/L/V/I/O, rotación NxM, consecutivos |
+| `src/domain/conflictos.js` | 3 | actividad asignada en un día de rol no activo |
+| `src/domain/cobertura.js` | 3 | cobertura crítica de atención de visitantes |
 
-1. `src/lib/csv.js` ya serializa **y** parsea. Las columnas de un puesto son
-   tres: nombre, código y color. El color es una pareja de clases de Tailwind,
-   así que al importar hay que **validarlo contra `PALETA`** de
-   `src/features/configuracion/ModalPuesto.jsx` y caer al primer color si llega
-   algo desconocido; un valor libre saldría sin estilo en la cuadrícula.
-2. La vista previa y el respaldo previo ya están resueltos en
-   `src/features/funcionarios/Funcionarios.jsx` (`prepararPrevia`,
-   `aplicarImportacion`). Copiar ese patrón, no inventar otro.
-3. **La decisión que hay que tomar y registrar**: qué pasa al importar un
-   puesto cuyo nombre no existe pero cuyo código sí, y al revés. `validarPuesto`
-   ya detecta ambos choques; falta decidir si se omite la fila, se renombra el
-   código o se pisa el existente.
-4. **Cuidado con la baja implícita.** La importación de funcionarios fusiona y
-   nunca borra. Con los puestos hay que hacer lo mismo, y además **no permitir
-   que un import deje sin puesto a fichas existentes**: si un puesto
-   desapareciera, las fichas quedarían apuntando a algo inexistente. Lo más
-   seguro es que el import solo agregue y actualice, nunca elimine.
+**Añadir el código `E` a las pruebas existentes, no crear un módulo paralelo.**
+Lo prohíbe `PROTOCOLO.md` §1 y es la vía rápida a que dos cálculos discrepen.
+
+Requisitos, con lo que ya existe para apoyarse:
+
+1. **RT1 código `E`.** Mirar primero `codigoRolFuncionario`, `esRolActivo` y
+   `categoriaDe` en `src/domain/roles.js`. La pregunta a decidir: **¿un día de
+   teletrabajo es rol activo?** De esa respuesta depende si cuenta para la
+   cobertura y si asignarle una actividad genera conflicto. No improvisar:
+   decidirlo, escribirlo en «Decisiones» y luego codificar.
+2. **RT4 incompatibilidad.** `E` no debería valer en un puesto que requiere
+   visitantes a diario. Esa lista es `reglas.puestosRequierenVisitantesDiario`,
+   **ahora editable** desde Configuración, así que la validación tiene que leerla
+   del estado y no de una constante.
+3. **RT5 cobertura.** Si `E` cuenta como activo pero no puede atender
+   visitantes, `src/domain/cobertura.js` necesita distinguir «hay gente en
+   turno» de «hay gente que puede atender». Hoy no distingue.
+4. **RT2/RT7** el campo y su indicador visual; **RT3** conflictos; **RT6** el
+   filtro; **RT8** los reportes. La leyenda de colores de la cuadrícula está en
+   `src/features/roles/Roles.jsx` y los colores por código en
+   `src/ui/styles.js` (`codigoCls`), que hay que ampliar con `E`.
 5. Bump de `version` en `package.json`.
 
-Después de RP6, Fase 2 cierra con **`[F2][RT-TELETRABAJO]`** (rol `E`,
-RT1–RT8): toca `src/domain/roles.js`, `conflictos.js` y `cobertura.js`, que
-tienen 25, 3 y 3 pruebas. Añadir el código a las pruebas existentes, no crear un
-módulo paralelo. `RT4` (el rol `E` es incompatible con un puesto que requiere
-visitantes a diario) ya tiene dónde apoyarse: la lista
-`reglas.puestosRequierenVisitantesDiario`, ahora editable desde Configuración.
+Tras RT1–RT8, la Fase 2 queda cerrada y arranca la **Fase 3**: Vista Minimalista
+de Funcionario (VF1–VF8, con el Banco de Tiempo **reutilizando** la función de
+dominio existente), virtualización de la cuadrícula de Roles (A1), estado de
+tablas y filtros en la URL, y exportación CSV de más vistas (B1) —para la que ya
+están `src/lib/csv.js`, `src/lib/descargas.js` y `src/lib/respaldo.js`.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.25.0** — Rama: **`claude/festive-allen-hl6igv`**, con `origin/main`
-  ya fusionado dentro — Último commit: `e5fc8c2` «[F2][RP7] orden personalizable
-  de los puestos, y una guarda táctil más estricta»
-- Tests: ✅ **526/526** (52 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.25.0
+- Versión: **1.26.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
+  el `main` fusionado, abierta en el PR
+  [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) — Último
+  commit: `3971d2a` «[F2][RP6] exportar e importar puestos, y arregla un
+  respaldo incompleto»
+- Tests: ✅ **556/556** (53 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.26.0
 
 ## ✅ Hecho en esta sesión
 
@@ -121,7 +124,10 @@ visitantes a diario) ya tiene dónde apoyarse: la lista
 - `e5fc8c2` `[F2][RP7]` — orden personalizable, y una guarda táctil más
   estricta al descubrir que `min-w-touch` dejaba pasar botones de 24 px de alto.
 
-Tests: de 290 a 526 (+236). Ninguna función existente se eliminó.
+- `3971d2a` `[F2][RP6]` — exportar e importar puestos, y **arregla un respaldo
+  incompleto**: `crearRespaldo` no guardaba `puestos` ni `historial`.
+
+Tests: de 290 a 556 (+266). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -153,13 +159,12 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F2][RP6]` — exportar e importar puestos. Ver «SIGUIENTE ACCIÓN».
-2. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo con su lógica de conflictos y
-   cobertura (RT1–RT8).
-3. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
+1. `[F2][RT-TELETRABAJO]` — rol `E` Teletrabajo (RT1–RT8). Ver «SIGUIENTE ACCIÓN».
+   Cierra la Fase 2.
+2. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
    de dominio existente para el Banco de Tiempo, virtualización de Roles (A1),
    estado de tablas y filtros en la URL, exportación CSV (B1).
-4. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+3. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
    «cargando» en import/export (A-P17).
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
@@ -235,6 +240,18 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los avisos de campo se disparan **al salir del
   foco**, no al teclear: mientras alguien escribe, el valor está incompleto por
   definición y avisar es ruido.
+- 2026-09-11 (Claude Code): **La importación de puestos solo agrega y actualiza;
+  NUNCA elimina.** Si pudiera borrar un puesto, las fichas que lo referencian
+  quedarían apuntando a algo inexistente y la cobertura crítica dejaría de
+  evaluarse en silencio. Una fila cuyo código ya usa otro puesto **se omite y se
+  informa**: pisar el código del otro rompería su identificación e inventar uno
+  sería fabricar un dato que nadie escribió. Un color desconocido cae al primero
+  de la paleta, porque el color es decoración y no justifica perder la fila.
+- 2026-09-11 (Claude Code): **`crearRespaldo` elige las claves a mano.** Cada
+  clave NUEVA del estado que deba sobrevivir a un respaldo hay que añadirla ahí
+  y a la lista de `src/lib/__tests__/respaldo.test.js`. Se descubrió por las
+  malas: `puestos` e `historial` no estaban, así que el respaldo parecía
+  completo y no lo era.
 - 2026-09-11 (Claude Code): **Un puesto se identifica por su NOMBRE, no por un
   id.** Las fichas guardan `puestoOperativo` y las reglas de cobertura guardan
   nombres; introducir ids obligaría a migrar datos ya persistidos y a subir el
@@ -358,6 +375,10 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - `src/data/puestos.js` es ahora **solo la semilla**: la lista viva está en el
   estado. Quien necesite los puestos debe leerlos de `useApp()`, nunca importar
   el módulo de datos, o se quedará con la lista del arranque.
+- **El respaldo no copia el estado entero**, selecciona claves en
+  `src/lib/respaldo.js`. Si añades una clave al estado y no la añades ahí, el
+  respaldo la pierde sin avisar. `src/lib/__tests__/respaldo.test.js` enumera
+  las obligatorias justamente para que eso salte.
 - El orden de los puestos **es un dato**, no algo que se recalcule: se guarda con
   la lista y se ve en Roles, en los desplegables de las fichas y en la vista Día.
 - Dexie está en `version(1)` y `SCHEMA_VERSION = 1`
@@ -377,7 +398,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 salvo RP6: los puestos operativos pasan a ser editables, con cascada al renombrar. 526 tests, v1.25.0.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros; de la Fase 2 solo falta el rol `E` de teletrabajo.** 556 tests, v1.26.0.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
