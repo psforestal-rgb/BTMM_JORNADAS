@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
+import { useApp } from "../../context/AppContext.jsx";
 import Card from "../../ui/Card.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { meses } from "../../data/calendario.js";
-import { puestos } from "../../data/puestos.js";
 import { useT } from "../../i18n/useT.js";
 import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
@@ -22,6 +22,8 @@ export default function Roles({
   hj,
 }) {
   const t = useT();
+  // Puestos vigentes desde el estado (RP1–RP8).
+  const { puestos } = useApp();
   const [busqueda, setBusqueda] = useState("");
   // Búsqueda por fecha: centra la tabla en el día elegido. La tabla carga
   // meses solo hacia adelante desde su mes inicial, así que si la fecha

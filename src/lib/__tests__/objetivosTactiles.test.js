@@ -19,9 +19,11 @@ const SRC = join(RAIZ, "src");
 const MINIMO_PX = 44;
 
 /** Señales literales que ya garantizan un objetivo suficiente. */
+/* Solo señales de ALTO. `min-w-touch` se excluye a propósito: es una señal de
+   ancho, y admitirla dejaba pasar botones de 24 px de alto por el simple hecho
+   de ser anchos. Se detectó justo así, con los botones de reordenar puestos. */
 const SENALES = [
   "min-h-touch", // 48 px, el token de la app (tailwind.config.js)
-  "min-w-touch", // controles cuadrados de solo icono
   "p-4", // 32 px de relleno + una línea de texto
   "py-4",
   "py-3", // 24 px de relleno + texto ≈ 44 px
@@ -51,6 +53,12 @@ const EXCEPCIONES = [
     archivo: "src/features/roles/RolesMensualGrid.jsx",
     fragmento: "min-h-10",
     motivo: "cuadrícula de roles densa a propósito: 40 px por fila, sobre el mínimo de 24 px de WCAG 2.5.8",
+  },
+  {
+    archivo: "src/features/configuracion/Configuracion.jsx",
+    fragmento: "min-h-6 min-w-touch",
+    motivo:
+      "par apilado de subir/bajar: cada botón mide 48x24 px y el par ocupa 48x48, que es el patrón habitual de reordenar; darle 48 px de alto a cada uno duplicaría la altura de cada fila de puestos",
   },
   {
     archivo: "src/features/planificacion/Planificacion.jsx",

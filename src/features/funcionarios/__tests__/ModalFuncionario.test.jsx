@@ -3,6 +3,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { AppProvider } from "../../../context/AppContext.jsx";
 import ModalFuncionario from "../ModalFuncionario.jsx";
 
 afterEach(cleanup);
@@ -31,7 +32,13 @@ const valorNuevo = {
 function renderModal(props = {}) {
   const guardar = vi.fn();
   const cerrar = vi.fn();
-  render(<ModalFuncionario valor={valorNuevo} cerrar={cerrar} guardar={guardar} {...props} />);
+  // Desde RP1–RP8 el modal lee los puestos vigentes del contexto, así que
+  // necesita el proveedor.
+  render(
+    <AppProvider>
+      <ModalFuncionario valor={valorNuevo} cerrar={cerrar} guardar={guardar} {...props} />
+    </AppProvider>,
+  );
   return { guardar, cerrar };
 }
 

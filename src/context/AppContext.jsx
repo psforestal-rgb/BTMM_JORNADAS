@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { baseFuncionarios } from "../data/seedFuncionarios.js";
+import { puestosSemilla } from "../data/puestos.js";
 import { baseActividadesPlan } from "../data/seedActividades.js";
 import { baseReposiciones } from "../data/seedReposiciones.js";
 import {
@@ -60,6 +61,9 @@ const seedState = {
   // snapshot anterior que no lo traiga lo recibe vacío en
   // `mergePersistedWithSeed`, así que NO hace falta subir `SCHEMA_VERSION`.
   historial: [],
+  // Puestos operativos editables (RP1–RP8). Mismo mecanismo que `historial`:
+  // una instalación anterior recibe la semilla y no hace falta migrar nada.
+  puestos: puestosSemilla,
   reglas: { ...REGLAS_DEFAULT },
   migraciones: {
     [MIGRACION_LIMPIEZA_2026]: true,
@@ -147,6 +151,12 @@ function mergePersistedWithSeed(stored) {
     actividadesPlan,
     reposiciones,
     historial: Array.isArray(stored?.historial) ? stored.historial : [],
+    // Una lista vacía o corrupta dejaría la app sin puestos y con la vista
+    // Roles en blanco: se cae a la semilla antes que a nada.
+    puestos:
+      Array.isArray(stored?.puestos) && stored.puestos.length
+        ? stored.puestos.filter((p) => p && typeof p === "object" && p.nombre)
+        : puestosSemilla,
     roleData: { ...baseRoleData, ...storedRoleData },
     reglas: mergeReglas(stored?.reglas),
     migraciones: {
@@ -194,6 +204,8 @@ function reducer(state, action) {
       return { ...state, reposiciones: resolveUpdater(action.payload, state.reposiciones) };
     case "SET_ROLE_DATA":
       return { ...state, roleData: resolveUpdater(action.payload, state.roleData) };
+    case "SET_PUESTOS":
+      return { ...state, puestos: resolveUpdater(action.payload, state.puestos) };
     case "REGISTRAR_CAMBIO":
       // El tope del rastro se aplica aquí y solo aquí: ningún llamador puede
       // saltárselo por descuido.
@@ -428,6 +440,7 @@ export function AppProvider({ children }) {
   const setActividadesPlan = useCallback((v) => dispatch({ type: "SET_ACTIVIDADES_PLAN", payload: v }), []);
   const setReposiciones = useCallback((v) => dispatch({ type: "SET_REPOSICIONES", payload: v }), []);
   const setRoleData = useCallback((v) => dispatch({ type: "SET_ROLE_DATA", payload: v }), []);
+  const setPuestos = useCallback((v) => dispatch({ type: "SET_PUESTOS", payload: v }), []);
   const registrarCambio = useCallback((entrada) => dispatch({ type: "REGISTRAR_CAMBIO", payload: entrada }), []);
   const setReglas = useCallback((v) => dispatch({ type: "SET_REGLAS", payload: v }), []);
 
@@ -467,6 +480,7 @@ export function AppProvider({ children }) {
       setActividadesPlan,
       setReposiciones,
       setRoleData,
+      setPuestos,
       registrarCambio,
       setReglas,
       resetReglas,
@@ -492,6 +506,7 @@ export function AppProvider({ children }) {
       setActividadesPlan,
       setReposiciones,
       setRoleData,
+      setPuestos,
       registrarCambio,
       setReglas,
       resetReglas,

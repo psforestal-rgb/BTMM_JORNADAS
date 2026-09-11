@@ -21,10 +21,22 @@ export const opcionesModalidad = [
   "20x10",
 ];
 
-export const opcionesLugarActividad = [
-  ...opcionesPuestoOperativo,
-  "Secretaría Ejecutiva/Dirección ACC",
-];
+/** Lugar fijo que no es un puesto operativo. */
+export const LUGAR_SEDE = "Secretaría Ejecutiva/Dirección ACC";
+
+/**
+ * Lugares de una actividad: los puestos operativos vigentes más la sede.
+ *
+ * Es una FUNCIÓN y no una constante porque los puestos son editables desde
+ * RP1–RP8: una constante calculada al importar el módulo se quedaría con la
+ * lista del arranque y no se enteraría de altas ni renombres.
+ */
+export function lugaresDeActividad(nombresPuestos = opcionesPuestoOperativo) {
+  const base = Array.isArray(nombresPuestos) && nombresPuestos.length
+    ? nombresPuestos
+    : opcionesPuestoOperativo;
+  return [...base, LUGAR_SEDE];
+}
 
 export const actividadRutinariaVisitantes = "Atención rutinaria de visitantes";
 

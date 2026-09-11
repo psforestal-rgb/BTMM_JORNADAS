@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useApp } from "../../context/AppContext.jsx";
 import { opcionesPuesto, opcionesCondicion, opcionesEstado, opcionesModalidad } from "../../data/opciones.js";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { validarCedula, validarCorreo, validarFuncionario, validarNombre } from "../../domain/validaciones.js";
 import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
@@ -90,6 +90,13 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
   // Advertencias de dominio, recalculadas en cada render sobre el borrador.
   // No bloquean nada: `Funcionarios.jsx` sigue rechazando solo el nombre vacío.
   const avisos = validarFuncionario(f);
+  // Puestos vigentes desde el estado (RP1–RP8), no desde el módulo de datos.
+  const { puestos: puestosVigentes } = useApp();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
+
 
   const [paso, setPaso] = useState(0);
   // Paso más lejano alcanzado: al crear, el indicador no deja saltar a un paso

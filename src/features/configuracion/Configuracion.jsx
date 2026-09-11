@@ -4,7 +4,17 @@ import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import ThemeToggle from "../../ui/ThemeToggle.jsx";
 import { useApp } from "../../context/AppContext.jsx";
-import { opcionesPuestoOperativo } from "../../data/puestos.js";
+import { useToast } from "../../context/ToastContext.jsx";
+import {
+  agregarPuesto,
+  personasEnPuesto,
+  moverPuesto,
+  quitarPuesto,
+  reemplazarPuesto,
+  renombrarPuesto,
+  validarPuesto,
+} from "../../domain/puestos.js";
+import ModalPuesto, { PALETA } from "./ModalPuesto.jsx";
 import { VIATICOS_OBJETIVO_OPCIONES, validarReglas, REGLAS_DEFAULT } from "../../config/reglas.js";
 import { FERIADOS_CR } from "../../data/feriadosCR.js";
 import { useT } from "../../i18n/useT.js";
@@ -17,7 +27,23 @@ import Modal from "../../ui/Modal.jsx";
  */
 export default function Configuracion() {
   const t = useT();
-  const { reglas, setReglas, resetReglas, resetToSeed } = useApp();
+  const {
+    reglas,
+    setReglas,
+    resetReglas,
+    resetToSeed,
+    // Puestos vigentes desde el estado (RP1–RP8), no desde el módulo de datos.
+    puestos: puestosVigentes,
+    setPuestos,
+    personas,
+    setPersonas,
+  } = useApp();
+  const { conDeshacer, exito, error } = useToast();
+  const opcionesPuestoOperativo = useMemo(
+    () => puestosVigentes.map((p) => p.nombre),
+    [puestosVigentes],
+  );
+  const [modalPuesto, setModalPuesto] = useState(null);
   const [draft, setDraft] = useState(reglas);
   const [confirmar, setConfirmar] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -25,11 +51,83 @@ export default function Configuracion() {
   const [seedConfirmStep, setSeedConfirmStep] = useState(false);
 
   const sucia = JSON.stringify(draft) !== JSON.stringify(reglas);
-  const advertencias = useMemo(() => validarReglas(draft), [draft]);
+  const advertencias = useMemo(
+    () => validarReglas(draft, opcionesPuestoOperativo),
+    [draft, opcionesPuestoOperativo],
+  );
   const aniosDisponibles = useMemo(
     () => Object.keys(FERIADOS_CR).sort().map(Number),
     [],
   );
+
+  /* ── CRUD de puestos (RP1–RP8) ────────────────────────────────────────
+     El renombrado NO es una edición más: arrastra el nombre a las fichas y a
+     la regla de cobertura. Si no lo hiciera, las fichas quedarían apuntando a
+     un puesto inexistente y la cobertura crítica dejaría de evaluarse. */
+  const guardarPuesto = (valor) => {
+    const original = modalPuesto?.nombreOriginal ?? null;
+    if (validarPuesto(valor, puestosVigentes, original).length > 0) return;
+
+    if (!original) {
+      setPuestos((prev) => agregarPuesto(prev, valor));
+      setModalPuesto(null);
+      exito(t("puestos.creado", { nombre: valor.nombre.trim() }));
+      return;
+    }
+
+    const cambiaNombre = original.trim() !== valor.nombre.trim();
+    setPuestos((prev) => reemplazarPuesto(prev, original, valor));
+    if (cambiaNombre) {
+      const cascada = renombrarPuesto({
+        puestos: puestosVigentes,
+        personas,
+        reglas: draft,
+        antes: original,
+        despues: valor.nombre,
+      });
+      setPersonas(cascada.personas);
+      // La regla se toca en el borrador Y en el aplicado: el usuario no debería
+      // tener que "confirmar reglas" para que un renombre no rompa la cobertura.
+      setDraft(cascada.reglas);
+      setReglas({ ...reglas, puestosRequierenVisitantesDiario: cascada.reglas.puestosRequierenVisitantesDiario });
+      exito(t("puestos.renombrado", { antes: original, despues: valor.nombre.trim(), n: cascada.afectados }));
+    } else {
+      exito(t("puestos.guardado", { nombre: valor.nombre.trim() }));
+    }
+    setModalPuesto(null);
+  };
+
+  const eliminarPuesto = (puesto) => {
+    if (puestosVigentes.length <= 1) {
+      error(t("puestos.ultimoPuesto"));
+      return;
+    }
+    const ocupantes = personasEnPuesto(personas, puesto.nombre);
+    if (ocupantes.length > 0) {
+      // Se bloquea en vez de avisar: borrarlo dejaría fichas apuntando a un
+      // puesto que ya no existe, y eso no se ve hasta que algo falla.
+      error(t("puestos.eliminarConPersonas", { nombre: puesto.nombre, n: ocupantes.length }));
+      return;
+    }
+    const indice = puestosVigentes.findIndex((x) => x.nombre === puesto.nombre);
+    setPuestos((prev) => quitarPuesto(prev, puesto.nombre));
+    conDeshacer(
+      t("puestos.eliminado", { nombre: puesto.nombre }),
+      () => {
+        setPuestos((prev) => {
+          if (prev.some((x) => x.nombre === puesto.nombre)) return prev;
+          const copia = [...prev];
+          copia.splice(Math.min(indice, copia.length), 0, puesto);
+          return copia;
+        });
+        exito(t("puestos.restaurado", { nombre: puesto.nombre }));
+      },
+      { detalle: t("toast.puedeDeshacer") },
+    );
+  };
+
+  // RP7: el orden se guarda con la lista, no se recalcula.
+  const moverPuestoEn = (nombre, delta) => setPuestos((prev) => moverPuesto(prev, nombre, delta));
 
   const togglePuesto = (puesto) => {
     setDraft((prev) => {
@@ -85,6 +183,80 @@ export default function Configuracion() {
         <div className="mb-4 rounded-xl border-l-4 border-critical bg-critical-soft p-3 text-sm text-critical-fg">
           {t("configuracion.reglaDuraIntro")}
         </div>
+
+        {/* Puestos operativos (RP1–RP8) */}
+        <details className="mb-3 rounded-2xl border border-line p-3">
+          <summary className="min-h-touch cursor-pointer py-3 text-sm font-bold uppercase tracking-wider text-ink">
+            {t("puestos.titulo")}
+          </summary>
+          <p className="mb-1 text-xs text-ink-muted">{t("puestos.sub")}</p>
+          <p className="mb-3 text-xs text-ink-muted">{t("puestos.ordenSub")}</p>
+          <ul className="space-y-2">
+            {puestosVigentes.map((p, i) => {
+              const ocupantes = personasEnPuesto(personas, p.nombre);
+              return (
+                <li key={p.nombre} className="flex flex-wrap items-center gap-2 rounded-xl border border-line p-2">
+                  <span className="flex shrink-0 flex-col">
+                    <button
+                      type="button"
+                      onClick={() => moverPuestoEn(p.nombre, -1)}
+                      disabled={i === 0}
+                      aria-label={t("puestos.subir", { nombre: p.nombre })}
+                      className="inline-flex min-h-6 min-w-touch items-center justify-center rounded-t-lg border border-line bg-surface text-ink-muted hover:bg-surface-alt disabled:opacity-30"
+                    >
+                      <Icon name="chevronUp" size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moverPuestoEn(p.nombre, 1)}
+                      disabled={i === puestosVigentes.length - 1}
+                      aria-label={t("puestos.bajar", { nombre: p.nombre })}
+                      className="inline-flex min-h-6 min-w-touch items-center justify-center rounded-b-lg border border-t-0 border-line bg-surface text-ink-muted hover:bg-surface-alt disabled:opacity-30"
+                    >
+                      <Icon name="chevronDown" size={14} />
+                    </button>
+                  </span>
+                  <span className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-lg px-2 text-xs font-bold ${p.color || "bg-surface-alt text-ink"}`}>
+                    {p.tag}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-ink">{p.nombre}</span>
+                    <span className="block text-xs text-ink-muted">
+                      {ocupantes.length ? t("puestos.personas", { n: ocupantes.length }) : t("puestos.sinPersonas")}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setModalPuesto({ valor: { ...p }, nombreOriginal: p.nombre })}
+                    className="inline-flex min-h-touch items-center rounded-lg border border-line bg-surface px-3 text-xs font-bold text-ink hover:bg-surface-alt"
+                  >
+                    {t("acciones.editar")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => eliminarPuesto(p)}
+                    className="inline-flex min-h-touch items-center rounded-lg border border-critical/40 bg-surface px-3 text-xs font-bold text-critical-fg hover:bg-critical-soft"
+                  >
+                    {t("acciones.eliminar")}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <button
+            type="button"
+            onClick={() =>
+              setModalPuesto({
+                valor: { nombre: "", tag: "", color: PALETA[0].clases },
+                nombreOriginal: null,
+              })
+            }
+            className="mt-3 inline-flex min-h-touch items-center gap-1 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg"
+          >
+            <Icon name="plus" size={16} />
+            {t("puestos.agregar")}
+          </button>
+        </details>
 
         {/* Cobertura */}
         <details className="mb-3 rounded-2xl border border-line p-3">
@@ -361,6 +533,15 @@ export default function Configuracion() {
           </p>
         )}
       </Modal>
+      {modalPuesto && (
+        <ModalPuesto
+          valor={modalPuesto.valor}
+          lista={puestosVigentes}
+          nombreOriginal={modalPuesto.nombreOriginal}
+          cerrar={() => setModalPuesto(null)}
+          guardar={guardarPuesto}
+        />
+      )}
     </section>
   );
 }
