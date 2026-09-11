@@ -239,6 +239,17 @@ const dict = {
       contratacion: "Contratación y fechas",
       atributos: "Atributos",
     },
+    // Textos tomados de docs/GLOSARIO.md; si cambia el glosario, cambian aquí.
+    ayuda: {
+      puesto:
+        "«Cargo institucional» es el puesto nominal; «Puesto operativo» es el sitio donde trabaja, y de él depende la cobertura diaria de atención de visitantes. La condición ONG-Invest-Volunt es personal de apoyo externo con régimen especial: no requiere resolución de jornada acumulativa y puede tener convenio en lugar de contrato.",
+      jornada:
+        "Ordinaria es horario administrativo de lunes a viernes. Acumulativa trabaja por ciclos y requiere número de resolución, salvo en personal ONG-Invest-Volunt. La modalidad NxM indica N días de trabajo por M días libres: 10x5 son 10 días de turno seguidos de 5 libres. Al editar una fila en Roles, la herramienta renumera los consecutivos T y L respetando esta modalidad.",
+      contratacion:
+        "La resolución es el número que respalda la jornada acumulativa; si falta, el funcionario queda marcado como «Sin resolución» y solo se registra el dato pendiente. El contrato y su vencimiento corresponden a la disponibilidad: la herramienta avisa cuando faltan 60 días o menos, el día del vencimiento y cuando ya venció.",
+      atributos:
+        "Disponibilidad es el contrato administrativo que habilita a llamar al funcionario fuera de su horario regular. Policía indica autoridad de policía y Brigada, pertenencia a la brigada forestal. Recuerde la regla dura: la herramienta registra y alerta, no genera pagos, reposiciones ni derechos automáticos.",
+    },
     nombre: "Nombre",
     cedula: "Cédula",
     correo: "Correo",
@@ -810,6 +821,10 @@ const dict = {
   toast: {
     regionAria: "Avisos de la aplicación",
     puedeDeshacer: "Puede deshacerlo mientras este aviso siga visible.",
+  },
+  ayuda: {
+    mostrar: "¿Qué significa esto?",
+    ocultar: "Ocultar ayuda",
   },
   actividad: {
     sinTitulo: "actividad sin título",

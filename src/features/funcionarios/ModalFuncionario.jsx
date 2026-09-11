@@ -3,6 +3,7 @@ import { opcionesPuesto, opcionesCondicion, opcionesEstado, opcionesModalidad } 
 import { opcionesPuestoOperativo } from "../../data/puestos.js";
 import { useModalA11y } from "../../lib/a11y.js";
 import { useT } from "../../i18n/useT.js";
+import Ayuda from "../../ui/Ayuda.jsx";
 
 const cls = "w-full min-h-touch rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100";
 
@@ -17,12 +18,17 @@ function Field({ label, children }) {
   );
 }
 
-function Seccion({ id, titulo, cols = "md:grid-cols-2", children }) {
+/* La ayuda va por sección y no por campo: con 18 campos, un botón de ayuda en
+   cada uno alargaría todavía más un formulario que ya se critica por largo. */
+function Seccion({ id, titulo, ayuda, cols = "md:grid-cols-2", children }) {
   return (
     <section aria-labelledby={id}>
-      <h4 id={id} className="mb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-        {titulo}
-      </h4>
+      <div className="mb-2 flex flex-wrap items-center gap-x-2">
+        <h4 id={id} className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+          {titulo}
+        </h4>
+        {ayuda && <Ayuda etiqueta={titulo}>{ayuda}</Ayuda>}
+      </div>
       <div className={`grid gap-4 ${cols}`}>{children}</div>
     </section>
   );
@@ -47,7 +53,7 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
             <Field label={t("modalFuncionario.cedula")}><input type="text" inputMode="numeric" autoComplete="off" className={cls} value={f.cedula} onChange={(e) => set("cedula", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.correo")}><input className={cls} value={f.email} onChange={(e) => set("email", e.target.value)} /></Field>
           </Seccion>
-          <Seccion id="sec-puesto" titulo={t("modalFuncionario.sec.puesto")}>
+          <Seccion id="sec-puesto" titulo={t("modalFuncionario.sec.puesto")} ayuda={t("modalFuncionario.ayuda.puesto")}>
             <Field label={t("modalFuncionario.cargo")}>
               <select className={cls} value={f.puesto} onChange={(e) => set("puesto", e.target.value)}>
                 {opcionesPuesto.map((x) => <option key={x}>{x}</option>)}
@@ -69,7 +75,7 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
               </select>
             </Field>
           </Seccion>
-          <Seccion id="sec-jornada" titulo={t("modalFuncionario.sec.jornada")}>
+          <Seccion id="sec-jornada" titulo={t("modalFuncionario.sec.jornada")} ayuda={t("modalFuncionario.ayuda.jornada")}>
             <Field label={t("modalFuncionario.jornada")}>
               <select className={cls} value={f.jornada} onChange={(e) => set("jornada", e.target.value)}>
                 <option>Ordinaria</option>
@@ -82,13 +88,13 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
               </select>
             </Field>
           </Seccion>
-          <Seccion id="sec-contratacion" titulo={t("modalFuncionario.sec.contratacion")}>
+          <Seccion id="sec-contratacion" titulo={t("modalFuncionario.sec.contratacion")} ayuda={t("modalFuncionario.ayuda.contratacion")}>
             <Field label={t("modalFuncionario.resolucion")}><input className={cls} value={f.resolucion} onChange={(e) => set("resolucion", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.contrato")}><input className={cls} value={f.contrato} onChange={(e) => set("contrato", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.vencimiento")}><input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={f.vencimiento} onChange={(e) => set("vencimiento", e.target.value)} /></Field>
             <Field label={t("modalFuncionario.ingreso")}><input type="date" className={cls + " [color-scheme:light] dark:[color-scheme:dark]"} value={f.ingreso} onChange={(e) => set("ingreso", e.target.value)} /></Field>
           </Seccion>
-          <Seccion id="sec-atributos" titulo={t("modalFuncionario.sec.atributos")} cols="sm:grid-cols-2 md:grid-cols-4">
+          <Seccion id="sec-atributos" titulo={t("modalFuncionario.sec.atributos")} ayuda={t("modalFuncionario.ayuda.atributos")} cols="sm:grid-cols-2 md:grid-cols-4">
             {[
               ["disponibilidad", t("modalFuncionario.attr.disponibilidad")],
               ["policia", t("modalFuncionario.attr.policia")],

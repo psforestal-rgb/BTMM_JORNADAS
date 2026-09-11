@@ -73,3 +73,35 @@ describe("ModalFuncionario — formulario seccionado", () => {
     expect(enviado.estado).toBe("Activo");
   });
 });
+
+describe("ModalFuncionario — ayuda contextual por sección", () => {
+  it("cada sección normativa ofrece su ayuda, y Identificación no la necesita", () => {
+    renderModal();
+    for (const seccion of ["Puesto y condición", "Jornada y modalidad", "Contratación y fechas", "Atributos"]) {
+      expect(screen.getByRole("button", { name: new RegExp(seccion) })).toBeDefined();
+    }
+    expect(screen.queryByRole("button", { name: /Identificación/ })).toBeNull();
+  });
+
+  it("la ayuda de Jornada explica la modalidad NxM (caso 10x5 del diagnóstico)", () => {
+    renderModal();
+    fireEvent.click(screen.getByRole("button", { name: /Jornada y modalidad/ }));
+    const panel = screen.getByRole("note");
+    expect(panel.textContent).toMatch(/10x5 son 10 días de turno seguidos de 5 libres/);
+    expect(panel.textContent).toMatch(/requiere número de resolución/);
+  });
+
+  it("la ayuda de Atributos repite la regla dura del proyecto", () => {
+    renderModal();
+    fireEvent.click(screen.getByRole("button", { name: /Atributos/ }));
+    expect(screen.getByRole("note").textContent).toMatch(/no genera pagos, reposiciones ni derechos automáticos/);
+  });
+
+  it("abrir la ayuda no altera lo que se guarda", () => {
+    const { guardar } = renderModal();
+    fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Juana Solís" } });
+    fireEvent.click(screen.getByRole("button", { name: /Jornada y modalidad/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(guardar.mock.calls[0][0].nombre).toBe("Juana Solís");
+  });
+});
