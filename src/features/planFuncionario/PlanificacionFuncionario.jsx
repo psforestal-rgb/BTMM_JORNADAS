@@ -13,7 +13,9 @@ import {
   modalidadFuncionario,
   funcionarioPorNombre,
 } from "../../domain/roles.js";
-import { actividadesEnDia } from "../../domain/actividades.js";
+import { actividadesEnDia, esAtencionRutinaria } from "../../domain/actividades.js";
+import { conflictoDePersonaDia } from "../../domain/conflictos.js";
+import { useApp } from "../../context/AppContext.jsx";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useT } from "../../i18n/useT.js";
 import ModalActividad from "../actividades/ModalActividad.jsx";
@@ -30,6 +32,8 @@ export default function PlanificacionFuncionario({
   roleData,
   setRoleData,
 }) {
+  // La regla de atención obligatoria es editable (RP/RT).
+  const { reglas } = useApp();
   const t = useT();
   const [asignar, setAsignar] = useState(null);
   const [modalActividad, setModalActividad] = useState(null);
@@ -85,7 +89,16 @@ export default function PlanificacionFuncionario({
         const turno = esRolActivo(rol);
         const acts = actividadesEnDia(actividadesPlan, iso).filter((a) => (a.funcionarios || []).includes(p.nombre));
         const visible = turno || acts.length > 0;
-        const conflicto = acts.length > 0 && !turno;
+        /* Misma regla que el resto de la aplicación. Con `acts.length && !turno`
+           se escapaba el teletrabajo en atención de visitantes, porque el rol
+           `E` cuenta como turno. */
+        const conflicto = conflictoDePersonaDia({
+          rol,
+          tieneActividad: acts.length > 0,
+          tieneVisit: acts.some(esAtencionRutinaria),
+          puesto: p.puestoOperativo,
+          puestosRequieren: reglas?.puestosRequierenVisitantesDiario,
+        });
         return visible ? { d, iso, rol, turno, acts, conflicto } : null;
       })
       .filter(Boolean);

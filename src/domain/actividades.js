@@ -98,7 +98,7 @@ const MAX_DIAS_INDEXADOS = 366;
  * Asume fechas ISO válidas, que es lo único que genera `isoFecha`.
  */
 export function indexarActividadesPorPersonaDia(actividadesPlan = []) {
-  const indice = new Set();
+  const indice = new Map();
   for (const a of actividadesPlan || []) {
     if (!a?.inicio) continue;
     const nombres = a.funcionarios || [];
@@ -108,10 +108,19 @@ export function indexarActividadesPorPersonaDia(actividadesPlan = []) {
     const cursor = new Date(`${a.inicio}T00:00:00`);
     const limite = new Date(`${fin}T00:00:00`);
     if (Number.isNaN(cursor.getTime()) || Number.isNaN(limite.getTime())) continue;
+    // Se guarda además si es la atención rutinaria de visitantes: sin ese dato
+    // la cuadrícula de Roles no puede aplicar la regla del teletrabajo (RT4) y
+    // se quedaría marcando menos conflictos que Día y Planificación.
+    const visit = esAtencionRutinaria(a);
     let dias = 0;
     while (cursor <= limite && dias < MAX_DIAS_INDEXADOS) {
       const iso = toLocalISODate(cursor);
-      for (const nombre of nombres) indice.add(`${nombre}|${iso}`);
+      for (const nombre of nombres) {
+        const clave = `${nombre}|${iso}`;
+        const previo = indice.get(clave);
+        if (previo) previo.visit = previo.visit || visit;
+        else indice.set(clave, { visit });
+      }
       cursor.setDate(cursor.getDate() + 1);
       dias += 1;
     }
@@ -122,4 +131,9 @@ export function indexarActividadesPorPersonaDia(actividadesPlan = []) {
 /** ¿Esa persona tiene actividad ese día, según el índice? */
 export function tieneActividadEse(indice, nombre, iso) {
   return Boolean(indice) && indice.has(`${nombre}|${iso}`);
+}
+
+/** ¿Alguna de sus actividades de ese día es la atención rutinaria de visitantes? */
+export function tieneVisitEse(indice, nombre, iso) {
+  return Boolean(indice?.get?.(`${nombre}|${iso}`)?.visit);
 }

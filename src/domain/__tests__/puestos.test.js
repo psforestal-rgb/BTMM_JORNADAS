@@ -269,3 +269,65 @@ describe("puestos.planificarImportacionPuestos (RP6)", () => {
     expect(planificarImportacionPuestos(undefined, undefined).nuevos).toEqual([]);
   });
 });
+
+describe("importación de puestos — casos que el formulario no permitiría", () => {
+  const COLORES = ["bg-a", "bg-b"];
+  const BASE = [
+    { nombre: "Puesto Orosi", tag: "OR", color: "bg-a" },
+    { nombre: "Puesto Quetzales", tag: "QZ", color: "bg-b" },
+  ];
+
+  it("conserva el nombre que ya estaba cuando el archivo cambia solo la grafía", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "puesto orosi", tag: "OR", color: "bg-a" }], COLORES);
+    // Adoptar «puesto orosi» renombraría el puesto sin arrastrar las fichas de
+    // los funcionarios, que seguirían diciendo «Puesto Orosi», y esa gente
+    // desaparecería del grupo.
+    expect(plan.resultado[0].nombre).toBe("Puesto Orosi");
+    expect(plan.renombresIgnorados).toEqual([
+      { fila: 2, actual: "Puesto Orosi", pedido: "puesto orosi" },
+    ]);
+  });
+
+  it("el cambio de grafía no cuenta como actualización", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "PUESTO OROSI", tag: "OR", color: "bg-a" }], COLORES);
+    expect(plan.actualizados).toEqual([]);
+  });
+
+  it("un puesto nuevo sin código corto se omite en vez de crearse vacío", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Nuevo", tag: "", color: "bg-a" }], COLORES);
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos).toEqual([{ fila: 2, motivo: "sinCodigo", nombre: "Puesto Nuevo" }]);
+    expect(plan.resultado).toHaveLength(2);
+  });
+
+  it("dos nuevos sin código no se cuelan con el mismo código vacío", () => {
+    const plan = planificarImportacionPuestos(
+      BASE,
+      [{ nombre: "Uno", tag: "" }, { nombre: "Dos", tag: "" }],
+      COLORES,
+    );
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos.map((o) => o.motivo)).toEqual(["sinCodigo", "sinCodigo"]);
+  });
+
+  it("reimportar la propia exportación no cambia ni cuenta nada", () => {
+    const plan = planificarImportacionPuestos(BASE, BASE.map((p) => ({ ...p })), COLORES);
+    expect(plan.actualizados).toEqual([]);
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos).toEqual([]);
+    expect(plan.resultado).toEqual(BASE);
+  });
+
+  it("un cambio de verdad sí se cuenta", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Orosi", tag: "ORO", color: "bg-a" }], COLORES);
+    expect(plan.actualizados).toHaveLength(1);
+    expect(plan.actualizados[0].cambios).toEqual(["tag"]);
+    expect(plan.resultado[0].tag).toBe("ORO");
+  });
+
+  it("una fila sin código sobre un puesto existente conserva el suyo", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Orosi", tag: "", color: "bg-b" }], COLORES);
+    expect(plan.resultado[0].tag).toBe("OR");
+    expect(plan.actualizados[0].cambios).toEqual(["color"]);
+  });
+});

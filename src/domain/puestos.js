@@ -151,6 +151,7 @@ export function planificarImportacionPuestos(puestos, filas, coloresValidos = []
   const actualizados = [];
   const omitidos = [];
   const duplicados = [];
+  const renombresIgnorados = [];
   const vistos = new Map();
   const clases = coloresValidos.map((c) => c.clases ?? c);
   const colorPorDefecto = clases[0] ?? "";
@@ -189,24 +190,46 @@ export function planificarImportacionPuestos(puestos, filas, coloresValidos = []
     const color = clases.includes(colorPedido) ? colorPedido : null;
 
     if (posicion < 0) {
+      // Un puesto NUEVO sin código corto se omite en vez de crearse vacío.
+      // `validarPuesto` exige un código único y no vacío, así que un archivo
+      // sin esa columna estaría metiendo por la puerta de atrás puestos que el
+      // formulario rechazaría, y varios a la vez con el mismo código «».
+      if (!tag) {
+        omitidos.push({ fila: numeroDeFila, motivo: "sinCodigo", nombre });
+        return;
+      }
       const registro = { nombre, tag, color: color || colorPorDefecto };
       resultado.push(registro);
       nuevos.push({ fila: numeroDeFila, registro });
       return;
     }
     const previo = resultado[posicion];
+    /* El nombre que manda es el que ya estaba, NO el del archivo.
+       La comparación ignora mayúsculas y acentos, así que importar «puesto
+       orosi» encontraría «Puesto Orosi»; adoptar la grafía del archivo sería
+       renombrar el puesto, y un renombre tiene que arrastrar las fichas de los
+       funcionarios y las reglas de cobertura (eso lo hace `renombrarPuesto`,
+       desde el editor). Sin ese arrastre, las fichas se quedarían apuntando a
+       un nombre que ya no existe y sus funcionarios desaparecerían del grupo.
+       Se informa para que no parezca que el archivo se ignoró en silencio. */
+    if (previo.nombre !== nombre) {
+      renombresIgnorados.push({ fila: numeroDeFila, actual: previo.nombre, pedido: nombre });
+    }
     const fusionado = {
       ...previo,
-      nombre,
       ...(tag ? { tag } : {}),
       ...(color ? { color } : {}),
     };
     const cambios = Object.keys(fusionado).filter((k) => previo[k] !== fusionado[k]);
+    // Solo cuenta como actualizada la fila que CAMBIA algo. Si no, reimportar
+    // la propia exportación de la aplicación diría que se actualizó todo y que
+    // no quedó nada intacto, que es exactamente al revés.
+    if (cambios.length === 0) return;
     resultado[posicion] = fusionado;
     actualizados.push({ fila: numeroDeFila, registro: fusionado, previo, cambios });
   });
 
-  return { resultado, nuevos, actualizados, omitidos, duplicados };
+  return { resultado, nuevos, actualizados, omitidos, duplicados, renombresIgnorados };
 }
 
 /** Cuántas fichas activas quedarían huérfanas si se elimina el puesto. */

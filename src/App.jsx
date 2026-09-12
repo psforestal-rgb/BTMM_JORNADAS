@@ -156,6 +156,7 @@ function AppShell() {
                   setActividadesPlan={setActividadesPlan}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
+                  setView={navigate}
                 />
               )}
               {view === "planificacion" && (

@@ -693,10 +693,26 @@ export default function Configuracion() {
               {(() => {
                 const sinNombre = previaPuestos.plan.omitidos.filter((o) => o.motivo === "sinNombre");
                 const porCodigo = previaPuestos.plan.omitidos.filter((o) => o.motivo === "codigoOcupado");
+                const sinCodigo = previaPuestos.plan.omitidos.filter((o) => o.motivo === "sinCodigo");
+                const renombres = previaPuestos.plan.renombresIgnorados || [];
                 return (
                   <>
                     {sinNombre.length > 0 && (
                       <li>{t("puestos.importa.omitidasSinNombre", { n: sinNombre.length })}</li>
+                    )}
+                    {sinCodigo.length > 0 && (
+                      <li>
+                        {t("puestos.importa.omitidasSinCodigo", {
+                          cols: sinCodigo.map((o) => o.nombre).join(", "),
+                        })}
+                      </li>
+                    )}
+                    {renombres.length > 0 && (
+                      <li>
+                        {t("puestos.importa.renombresIgnorados", {
+                          cols: renombres.map((r) => `${r.pedido} → ${r.actual}`).join(", "),
+                        })}
+                      </li>
                     )}
                     {porCodigo.length > 0 && (
                       <li>

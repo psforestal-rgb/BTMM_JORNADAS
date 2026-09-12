@@ -17,7 +17,9 @@ import {
   actividadesEnDia,
   indexarActividadesPorPersonaDia,
   tieneActividadEse,
+  tieneVisitEse,
 } from "../../domain/actividades.js";
+import { conflictoDePersonaDia } from "../../domain/conflictos.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { buildFeriadosSet } from "../../domain/feriados.js";
 import { tieneCoberturaOficial } from "../../data/feriadosCR.js";
@@ -765,6 +767,7 @@ export default function RolesMensualGrid({
                   abrirConflicto={abrirConflicto}
                   setMenu={setMenu}
                   indiceActividades={indiceActividades}
+                  puestosRequieren={reglas?.puestosRequierenVisitantesDiario}
                   trabajadas={trabajadas}
                   reposicionesDia={reposicionesDia}
                   year={year}
@@ -895,6 +898,7 @@ function RowsGrupo({
   abrirConflicto,
   setMenu,
   indiceActividades,
+  puestosRequieren,
   trabajadas,
   reposicionesDia,
   registerBodyRef,
@@ -994,7 +998,17 @@ function RowsGrupo({
                 tramo.columnas.map((col) => {
               const { year: y, month: m, dia: d, iso, finde, esHoy, inicioMes } = col;
               const val = getCelda(grupo, nombre, y, m, d);
-              const conflicto = tieneActividadEse(indiceActividades, nombre, iso) && !esRolActivo(val);
+              /* La regla completa, no solo «no trabaja ese día»: desde que el
+                 rol `E` cuenta como activo, mirar únicamente `esRolActivo`
+                 dejaba pasar el teletrabajo en atención de visitantes que Día y
+                 Planificación sí marcaban. */
+              const conflicto = conflictoDePersonaDia({
+                rol: val,
+                tieneActividad: tieneActividadEse(indiceActividades, nombre, iso),
+                tieneVisit: tieneVisitEse(indiceActividades, nombre, iso),
+                puesto: grupo.nombre,
+                puestosRequieren,
+              });
               const esInicio = editing && d === inicioMes;
               return (
                 <RoleCell

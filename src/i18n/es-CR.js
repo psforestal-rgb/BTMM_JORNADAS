@@ -1085,6 +1085,8 @@ const dict = {
       intactos: "No se tocan",
       noElimina: "La importación nunca elimina un puesto: si uno desapareciera, las fichas que lo usan quedarían apuntando a algo inexistente.",
       omitidasSinNombre: "Filas sin nombre, omitidas: {n}",
+      omitidasSinCodigo: "Puestos nuevos omitidos por no traer código corto: {cols}. El código es obligatorio, igual que en el formulario.",
+      renombresIgnorados: "Se conserva el nombre actual de estos puestos: {cols}. Cambiar el nombre desde un archivo dejaría las fichas de los funcionarios apuntando a un puesto que ya no existe; hágalo desde el botón de editar, que sí arrastra las fichas y las reglas.",
       omitidasCodigo: "Filas omitidas porque su código ya lo usa otro puesto: {cols}",
       vacias: "Filas en blanco ignoradas: {n}",
       duplicadas: "Nombres repetidos dentro del archivo: {n}. Manda la última fila de cada uno.",

@@ -10,6 +10,7 @@ import {
   FILTROS_TIEMPO,
   indexarActividadesPorPersonaDia,
   tieneActividadEse,
+  tieneVisitEse,
 } from "../actividades.js";
 
 const plan = [
@@ -131,5 +132,36 @@ describe("índice de actividad por persona y día", () => {
     ]);
     expect(indice.size).toBe(0);
     expect(tieneActividadEse(null, "Ana", "2026-05-01")).toBe(false);
+  });
+});
+
+describe("el índice distingue la atención de visitantes", () => {
+  const plan = [
+    { id: "v", titulo: "Atención rutinaria de visitantes", inicio: "2026-05-12", fin: "2026-05-13", funcionarios: ["Ana"] },
+    { id: "p", titulo: "Patrullaje", inicio: "2026-05-12", fin: "2026-05-12", funcionarios: ["Beto"] },
+  ];
+  const indice = indexarActividadesPorPersonaDia(plan);
+
+  it("marca los días de quien atiende visitantes", () => {
+    expect(tieneVisitEse(indice, "Ana", "2026-05-12")).toBe(true);
+    expect(tieneVisitEse(indice, "Ana", "2026-05-13")).toBe(true);
+  });
+
+  it("no marca otras actividades ni otros días", () => {
+    expect(tieneActividadEse(indice, "Beto", "2026-05-12")).toBe(true);
+    expect(tieneVisitEse(indice, "Beto", "2026-05-12")).toBe(false);
+    expect(tieneVisitEse(indice, "Ana", "2026-05-14")).toBe(false);
+  });
+
+  it("un día con varias actividades queda marcado si UNA es la atención", () => {
+    const mixto = indexarActividadesPorPersonaDia([
+      { id: "x", titulo: "Patrullaje", inicio: "2026-05-12", funcionarios: ["Ana"] },
+      { id: "y", titulo: "Atención rutinaria de visitantes", inicio: "2026-05-12", funcionarios: ["Ana"] },
+    ]);
+    expect(tieneVisitEse(mixto, "Ana", "2026-05-12")).toBe(true);
+  });
+
+  it("aguanta que le pregunten sin índice", () => {
+    expect(tieneVisitEse(null, "Ana", "2026-05-12")).toBe(false);
   });
 });
