@@ -8,6 +8,8 @@ import {
   filtrarActividadesPorTiempo,
   finDeActividad,
   FILTROS_TIEMPO,
+  indexarActividadesPorPersonaDia,
+  tieneActividadEse,
 } from "../actividades.js";
 
 const plan = [
@@ -81,5 +83,53 @@ describe("actividades de una persona y filtro de tiempo (VF4 y VF7)", () => {
   it("sin nombre no devuelve nada, en vez de devolver el plan entero", () => {
     expect(actividadesDeFuncionario(PLAN, "")).toEqual([]);
     expect(actividadesDeFuncionario(PLAN, undefined)).toEqual([]);
+  });
+});
+
+describe("índice de actividad por persona y día", () => {
+  it("dice lo mismo que preguntar día por día con `actividadesEnDia`", () => {
+    const plan = [
+      { id: "a1", titulo: "Gira", inicio: "2026-05-12", fin: "2026-05-14", funcionarios: ["Ana", "Beto"] },
+      { id: "a2", titulo: "Censo", inicio: "2026-05-20", funcionarios: ["Ana"] },
+      { id: "a3", titulo: "Cruza mes", inicio: "2026-05-30", fin: "2026-06-02", funcionarios: ["Beto"] },
+    ];
+    const indice = indexarActividadesPorPersonaDia(plan);
+    const dias = [];
+    for (let d = 10; d <= 30; d += 1) dias.push(`2026-05-${String(d).padStart(2, "0")}`);
+    for (let d = 1; d <= 5; d += 1) dias.push(`2026-06-0${d}`);
+    for (const nombre of ["Ana", "Beto", "Carla"]) {
+      for (const iso of dias) {
+        const referencia = actividadesEnDia(plan, iso).some((a) => (a.funcionarios || []).includes(nombre));
+        expect(tieneActividadEse(indice, nombre, iso)).toBe(referencia);
+      }
+    }
+  });
+
+  it("cruza el cambio de mes sin saltarse días", () => {
+    const indice = indexarActividadesPorPersonaDia([
+      { id: "a", inicio: "2026-05-30", fin: "2026-06-02", funcionarios: ["Beto"] },
+    ]);
+    expect(tieneActividadEse(indice, "Beto", "2026-05-31")).toBe(true);
+    expect(tieneActividadEse(indice, "Beto", "2026-06-01")).toBe(true);
+    expect(tieneActividadEse(indice, "Beto", "2026-06-03")).toBe(false);
+  });
+
+  it("un rango imposible no cubre ningún día, igual que `actividadesEnDia`", () => {
+    const plan = [{ id: "a", inicio: "2026-05-20", fin: "2026-05-10", funcionarios: ["Ana"] }];
+    const indice = indexarActividadesPorPersonaDia(plan);
+    for (let d = 10; d <= 20; d += 1) {
+      const iso = `2026-05-${d}`;
+      expect(tieneActividadEse(indice, "Ana", iso)).toBe(actividadesEnDia(plan, iso).some((a) => a.funcionarios.includes("Ana")));
+    }
+  });
+
+  it("ignora lo que no puede indexar sin inventar nada", () => {
+    const indice = indexarActividadesPorPersonaDia([
+      { id: "a", titulo: "Sin fecha", funcionarios: ["Ana"] },
+      { id: "b", inicio: "2026-05-01", funcionarios: [] },
+      null,
+    ]);
+    expect(indice.size).toBe(0);
+    expect(tieneActividadEse(null, "Ana", "2026-05-01")).toBe(false);
   });
 });
