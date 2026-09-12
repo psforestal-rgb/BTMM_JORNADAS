@@ -3,6 +3,7 @@ import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
 import Roles from "../Roles.jsx";
 
 afterEach(() => {
@@ -34,6 +35,7 @@ const personas = [
 function renderRoles(props = {}) {
   return render(
     <AppProvider>
+      <ToastProvider>
       <Roles
         year={2026}
         month={6}
@@ -47,6 +49,7 @@ function renderRoles(props = {}) {
         hj={8}
         {...props}
       />
+      </ToastProvider>
     </AppProvider>,
   );
 }

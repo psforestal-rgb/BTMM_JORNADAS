@@ -1,7 +1,11 @@
 import { useRef, useState } from "react";
 import Badge from "../../ui/Badge.jsx";
 import { diasLargos } from "../../data/calendario.js";
-import { dim, pad2 } from "../../domain/fechas.js";
+import { dim, pad2, toLocalFileTimestamp } from "../../domain/fechas.js";
+import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { filasDePlanificacion, isoDelPeriodo, nombreArchivo } from "../../lib/exportaciones.js";
+import { useToast } from "../../context/ToastContext.jsx";
 import { codigoRolFuncionario, esRolActivo } from "../../domain/roles.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
@@ -100,6 +104,7 @@ export default function Planificacion({
     const siguiente = typeof v === "function" ? v(filtros) : v;
     for (const clave of ["persona", "lugar", "viatico"]) ponerFiltro(clave, siguiente[clave]);
   };
+  const { exito, aviso, error } = useToast();
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const isMobile = useIsMobile();
   const modo = vistaManual ?? (isMobile ? "agenda" : "cuadricula");
@@ -124,14 +129,46 @@ export default function Planificacion({
     viatico: false,
   });
   const enDia = (a, iso) => iso >= a.inicio && iso <= (a.fin || a.inicio);
+  /* Un solo predicado para la pantalla y para la exportación: si se duplicara,
+     el archivo acabaría trayendo actividades que la vista no enseña. */
+  const coincideFiltros = (a) =>
+    (!texto.trim() || `${a.titulo} ${a.lugar} ${a.observaciones} ${a.funcionarios.join(" ")}`.toLocaleLowerCase().includes(texto.trim().toLocaleLowerCase())) &&
+    (!filtros.persona || a.funcionarios.includes(filtros.persona)) &&
+    (!filtros.lugar || (a.lugar || "").toLocaleLowerCase().includes(filtros.lugar.toLocaleLowerCase())) &&
+    (filtros.viatico === "todos" || Boolean(a.viatico) === (filtros.viatico === "si"));
   const actividadesDia = (d) =>
     actividadesPlan
       .filter((a) => enDia(a, isoDia(d)))
-      .filter((a) => !texto.trim() || `${a.titulo} ${a.lugar} ${a.observaciones} ${a.funcionarios.join(" ")}`.toLocaleLowerCase().includes(texto.trim().toLocaleLowerCase()))
-      .filter((a) => !filtros.persona || a.funcionarios.includes(filtros.persona))
-      .filter((a) => !filtros.lugar || (a.lugar || "").toLocaleLowerCase().includes(filtros.lugar.toLocaleLowerCase()))
-      .filter((a) => filtros.viatico === "todos" || Boolean(a.viatico) === (filtros.viatico === "si"))
+      .filter(coincideFiltros)
       .sort((a, b) => a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo));
+  /* Exporta las actividades del rango que se está viendo y que pasan los
+     filtros. Una actividad de varios días sale UNA vez, con su rango: repetirla
+     por cada día convertiría un recuento en una cuenta inflada. */
+  const exportarCSV = () => {
+    const vistos = new Set();
+    const visibles = [];
+    for (const d of daysVisible) {
+      for (const a of actividadesDia(d)) {
+        if (vistos.has(a.id)) continue;
+        vistos.add(a.id);
+        visibles.push(a);
+      }
+    }
+    if (visibles.length === 0) {
+      aviso(t("planificacion.exportadoVacio"));
+      return;
+    }
+    visibles.sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)) || a.titulo.localeCompare(b.titulo));
+    const { filas, columnas } = filasDePlanificacion(visibles, t);
+    const ok = descargarArchivo(
+      nombreArchivo("planificacion", isoDelPeriodo(year, month), toLocalFileTimestamp()),
+      csvDescargable(filas, columnas),
+      TIPO_CSV,
+    );
+    if (ok) exito(t("planificacion.exportado", { n: visibles.length }));
+    else error(t("planificacion.exportarError"));
+  };
+
   const guardar = (act) => {
     if (!act.titulo.trim()) return;
     const normal = { ...act, fin: act.unDia ? act.inicio : act.fin || act.inicio };
@@ -192,12 +229,22 @@ export default function Planificacion({
           {botonModo("agenda", t("planificacion.vistaAgenda"))}
           {botonModo("cuadricula", t("planificacion.vistaCuadricula"))}
         </div>
-        <button
-          onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
-          className="min-h-touch rounded-lg bg-brand px-4 text-sm font-semibold text-brand-fg hover:opacity-90"
-        >
-          {t("planificacion.agregar")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={exportarCSV}
+            aria-label={t("planificacion.exportarAria")}
+            className="min-h-touch rounded-lg border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-surface-alt"
+          >
+            {t("planificacion.exportar")}
+          </button>
+          <button
+            onClick={() => setModal(nuevo(isoDia(Math.min(new Date().getDate(), dim(year, month)))))}
+            className="min-h-touch rounded-lg bg-brand px-4 text-sm font-semibold text-brand-fg hover:opacity-90"
+          >
+            {t("planificacion.agregar")}
+          </button>
+        </div>
       </div>
 
       {/* Leyenda colapsable: no debe competir con los datos por el primer

@@ -3,7 +3,7 @@ import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
 import EmptyState from "../../ui/EmptyState.jsx";
-import { fecha, toLocalISODate } from "../../domain/fechas.js";
+import { fecha, toLocalFileTimestamp, toLocalISODate } from "../../domain/fechas.js";
 import {
   resumenReposiciones,
   ordenarPorFecha,
@@ -17,6 +17,9 @@ import {
 import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { reinsertarEn } from "../../lib/undo.js";
+import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { filasDeReposicion, nombreArchivo } from "../../lib/exportaciones.js";
 import { useT } from "../../i18n/useT.js";
 import { magnitudLabel, saldoTexto } from "./etiquetas.js";
 import ModalReposicion from "./ModalReposicion.jsx";
@@ -39,7 +42,7 @@ const ESTADO_CLS = {
 export default function Reposicion({ personas, reposiciones, setReposiciones }) {
   const t = useT();
   const { reglas } = useApp();
-  const { conDeshacer, exito } = useToast();
+  const { conDeshacer, exito, aviso, error } = useToast();
   const hj = reglas?.horasJornada ?? HORAS_JORNADA_DEFAULT;
   const [modal, setModal] = useState(null);
   const [reponer, setReponer] = useState(null);
@@ -70,6 +73,25 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
         .some((value) => String(value || "").toLocaleLowerCase("es").includes(needle));
     });
   }, [reposiciones, filtro, funcionarioFiltro, tipoFiltro, periodo, soloObservaciones, busqueda, hj]);
+
+  /* Exporta LO QUE SE ESTÁ VIENDO, no la lista completa: el contador de
+     resultados está a la vista, así que es lo que la persona espera. Las horas
+     y el estado salen del dominio (`filasDeReposicion`), no de un cálculo
+     propio del exportador. */
+  const exportarCSV = () => {
+    if (filtrados.length === 0) {
+      aviso(t("reposicion.exportadoVacio"));
+      return;
+    }
+    const { filas, columnas } = filasDeReposicion(filtrados, hj, t);
+    const ok = descargarArchivo(
+      nombreArchivo("reposicion", null, toLocalFileTimestamp()),
+      csvDescargable(filas, columnas),
+      TIPO_CSV,
+    );
+    if (ok) exito(t("reposicion.exportado", { n: filtrados.length }));
+    else error(t("reposicion.exportarError"));
+  };
 
   const limpiarFiltros = () => {
     setFiltro("todos");
@@ -183,6 +205,15 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={exportarCSV}
+          aria-label={t("reposicion.exportarAria")}
+          className="inline-flex min-h-touch items-center gap-1 rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-surface-alt"
+        >
+          <Icon name="file" size={16} />
+          <span className="hidden sm:inline">{t("reposicion.exportar")}</span>
+        </button>
         <button
           onClick={() => setModal(nuevo())}
           className="inline-flex min-h-touch items-center gap-1 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"

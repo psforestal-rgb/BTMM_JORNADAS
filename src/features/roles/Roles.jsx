@@ -6,6 +6,12 @@ import { meses } from "../../data/calendario.js";
 import { useT } from "../../i18n/useT.js";
 import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
+import { toLocalFileTimestamp } from "../../domain/fechas.js";
+import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { filasDeResumenRoles, filasDeRoles, isoDelPeriodo, nombreArchivo } from "../../lib/exportaciones.js";
 
 export default function Roles({
   year,
@@ -25,6 +31,10 @@ export default function Roles({
   const t = useT();
   // Puestos vigentes desde el estado (RP1–RP8).
   const { puestos } = useApp();
+  const { exito, aviso, error } = useToast();
+  // Los mismos feriados que usa la cuadrícula: si el exportador usara otros,
+  // el primer día laboral cambiaría y el archivo no cuadraría con la pantalla.
+  const feriados = useFeriadosDelAno(year);
   const [busqueda, setBusqueda] = useState("");
   // Búsqueda por fecha: centra la tabla en el día elegido. La tabla carga
   // meses solo hacia adelante desde su mes inicial, así que si la fecha
@@ -136,6 +146,29 @@ export default function Roles({
     setPuestosSeleccionados((prev) => [...new Set([...prev, grupo.nombre])]);
     setFuncionariosSeleccionados((prev) => [...new Set([...prev, nombre])]);
   };
+
+  /* Exporta los puestos y funcionarios SELECCIONADOS y el mes que se está
+     viendo, que es lo que la persona tiene delante. Los códigos salen de
+     `codigoRolFuncionario`, el mismo del que se pinta la cuadrícula. */
+  const exportar = (constructor, sufijo, mensaje) => {
+    const nFuncionarios = gruposFiltrados.reduce((acc, g) => acc + g.funcionarios.length, 0);
+    if (nFuncionarios === 0) {
+      aviso(t("roles.exportadoVacio"));
+      return;
+    }
+    const { filas, columnas } = constructor({
+      grupos: gruposFiltrados, personas, roleData, year, month, feriados, t,
+    });
+    const ok = descargarArchivo(
+      nombreArchivo(sufijo, isoDelPeriodo(year, month), toLocalFileTimestamp()),
+      csvDescargable(filas, columnas),
+      TIPO_CSV,
+    );
+    if (ok) exito(t(mensaje, { n: nFuncionarios }));
+    else error(t("roles.exportarError"));
+  };
+  const exportarRolCSV = () => exportar(filasDeRoles, "rol", "roles.exportado");
+  const exportarResumenCSV = () => exportar(filasDeResumenRoles, "rol-resumen", "roles.exportado");
 
   return (
     <section className="space-y-4">
@@ -293,6 +326,32 @@ export default function Roles({
               {t("roles.irAFecha")}
             </button>
           </form>
+
+          {/* Exportación (B1). Dos archivos distintos a propósito: la
+              cuadrícula día a día sirve para revisar, y el resumen por
+              categoría es lo que la administración suele adjuntar. Meter los
+              dos en una hoja obligaría a elegir un ancho común que no le sirve
+              bien a ninguno. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={exportarRolCSV}
+              aria-label={t("roles.exportarAria")}
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="file" size={14} />
+              {t("roles.exportar")}
+            </button>
+            <button
+              type="button"
+              onClick={exportarResumenCSV}
+              aria-label={t("roles.exportarResumenAria")}
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="chart" size={14} />
+              {t("roles.exportarResumen")}
+            </button>
+          </div>
         </div>
 
         <div className="pnlq-print-page">
