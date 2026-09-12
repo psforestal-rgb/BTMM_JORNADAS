@@ -3,8 +3,9 @@ import { hashForState, normalizarVista, parseAppHash } from "./navigation.js";
 
 export function useAppNavigation({
   view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
-  funcionarioVista, setFuncionarioVista,
+  funcionarioVista, setFuncionarioVista, filtrosVista, setFiltrosVista,
 }) {
+  const filtros = filtrosVista?.[view];
   const applyHash = useCallback(() => {
     const next = parseAppHash(window.location.hash);
     setView(next.view);
@@ -12,7 +13,10 @@ export function useAppNavigation({
     if (next.month != null) setMonth(next.month);
     if (next.diaVista) setDiaVista(next.diaVista);
     if (next.funcionarioVista) setFuncionarioVista?.(next.funcionarioVista);
-  }, [setDiaVista, setFuncionarioVista, setMonth, setView, setYear]);
+    // Solo si la ruta dice algo de los filtros. Un enlace limpio no debe borrar
+    // los que la persona tenía puestos (ver `parseAppHash`).
+    if (next.filtros) setFiltrosVista?.(next.view, next.filtros);
+  }, [setDiaVista, setFiltrosVista, setFuncionarioVista, setMonth, setView, setYear]);
 
   useEffect(() => {
     applyHash();
@@ -25,9 +29,9 @@ export function useAppNavigation({
   }, [applyHash]);
 
   useEffect(() => {
-    const target = hashForState({ view, year, month, diaVista, funcionarioVista });
+    const target = hashForState({ view, year, month, diaVista, funcionarioVista, filtros });
     if (window.location.hash !== target) window.history.replaceState({}, "", target);
-  }, [diaVista, funcionarioVista, month, view, year]);
+  }, [diaVista, filtros, funcionarioVista, month, view, year]);
 
   /**
    * `navegar(vista, { funcionario })`. El segundo argumento es opcional y hoy
@@ -39,8 +43,11 @@ export function useAppNavigation({
     const safeView = normalizarVista(nextView);
     const nombre = opciones.funcionario != null ? opciones.funcionario : funcionarioVista;
     if (opciones.funcionario != null) setFuncionarioVista?.(opciones.funcionario);
-    const target = hashForState({ view: safeView, year, month, diaVista, funcionarioVista: nombre });
+    const target = hashForState({
+      view: safeView, year, month, diaVista, funcionarioVista: nombre,
+      filtros: filtrosVista?.[safeView],
+    });
     if (window.location.hash !== target) window.history.pushState({}, "", target);
     setView(safeView);
-  }, [diaVista, funcionarioVista, month, setFuncionarioVista, setView, year]);
+  }, [diaVista, filtrosVista, funcionarioVista, month, setFuncionarioVista, setView, year]);
 }

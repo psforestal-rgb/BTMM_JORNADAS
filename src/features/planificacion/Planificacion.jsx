@@ -7,6 +7,7 @@ import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useSessionState } from "../../lib/useSessionState.js";
+import { useFiltrosDeVista } from "../../lib/useFiltrosDeVista.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import Modal from "../../ui/Modal.jsx";
@@ -75,13 +76,30 @@ export default function Planificacion({
   const [modal, setModal] = useState(null);
   // null = sin preferencia explícita: agenda en móvil, cuadrícula en escritorio.
   const [vistaManual, setVistaManual] = useSessionState("btmm:planificacion:vista", null);
-  const [rangoManual, setRangoManual] = useSessionState("btmm:planificacion:rango", null);
-  const [texto, setTexto] = useSessionState("btmm:planificacion:texto", "");
-  const [filtros, setFiltros] = useSessionState("btmm:planificacion:filtros", {
+  /* Búsqueda, persona, ubicación, viático y rango cambian QUÉ actividades se
+     ven, así que viajan en la ruta y el enlace se puede compartir. La elección
+     entre cuadrícula y agenda no: es preferencia del aparato y se queda en la
+     sesión.
+
+     El rango se guarda solo si se elige a mano. Sin elección explícita manda el
+     tamaño de la pantalla, y así un enlace hecho desde el escritorio no obliga
+     a ver el mes entero en un teléfono. */
+  const { valores: filtrosURL, poner: ponerFiltro } = useFiltrosDeVista("planificacion", {
+    rango: "",
+    texto: "",
     persona: "",
     lugar: "",
     viatico: "todos",
   });
+  const rangoManual = filtrosURL.rango || null;
+  const setRangoManual = (v) => ponerFiltro("rango", v);
+  const texto = filtrosURL.texto;
+  const setTexto = (v) => ponerFiltro("texto", typeof v === "function" ? v(texto) : v);
+  const filtros = filtrosURL;
+  const setFiltros = (v) => {
+    const siguiente = typeof v === "function" ? v(filtros) : v;
+    for (const clave of ["persona", "lugar", "viatico"]) ponerFiltro(clave, siguiente[clave]);
+  };
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const isMobile = useIsMobile();
   const modo = vistaManual ?? (isMobile ? "agenda" : "cuadricula");

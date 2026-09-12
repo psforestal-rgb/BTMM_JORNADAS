@@ -84,3 +84,55 @@ describe("useAppNavigation", () => {
     expect(window.history.length).toBe(largo);
   });
 });
+
+/** Los filtros de la vista viajan por el mismo sitio que la ruta. */
+function usarNavegacionConFiltros(inicial = {}) {
+  const [view, setView] = useState(inicial.view ?? "funcionarios");
+  const [year, setYear] = useState(2026);
+  const [month, setMonth] = useState(6);
+  const [diaVista, setDiaVista] = useState("2026-07-10");
+  const [funcionarioVista, setFuncionarioVista] = useState("");
+  const [filtrosVista, setFiltrosVistaEstado] = useState(inicial.filtrosVista ?? {});
+  const setFiltrosVista = (vista, valor) =>
+    setFiltrosVistaEstado((prev) => ({
+      ...prev,
+      [vista]: typeof valor === "function" ? valor(prev[vista] || {}) : valor,
+    }));
+  const navegar = useAppNavigation({
+    view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
+    funcionarioVista, setFuncionarioVista, filtrosVista, setFiltrosVista,
+  });
+  return { navegar, view, filtrosVista, setFiltrosVista };
+}
+
+describe("useAppNavigation — filtros", () => {
+  it("escribe en la ruta los filtros de la vista activa", () => {
+    window.history.replaceState({}, "", "#/funcionarios");
+    const { result } = renderHook(() => usarNavegacionConFiltros());
+    act(() => result.current.setFiltrosVista("funcionarios", { filtro: "guardas" }));
+    expect(window.location.hash).toBe("#/funcionarios?filtro=guardas");
+  });
+
+  it("lee los filtros de un enlace compartido", () => {
+    window.history.replaceState({}, "", "#/funcionarios?filtro=ong&orden=puesto");
+    const { result } = renderHook(() => usarNavegacionConFiltros());
+    expect(result.current.filtrosVista.funcionarios).toEqual({ filtro: "ong", orden: "puesto" });
+  });
+
+  it("no arrastra a una vista los filtros de otra", () => {
+    window.history.replaceState({}, "", "#/funcionarios");
+    const { result } = renderHook(() => usarNavegacionConFiltros());
+    act(() => result.current.setFiltrosVista("funcionarios", { filtro: "guardas" }));
+    act(() => result.current.navegar("reposicion"));
+    expect(window.location.hash).toBe("#/reposicion");
+  });
+
+  it("un enlace limpio no borra los filtros que ya había", () => {
+    window.history.replaceState({}, "", "#/funcionarios");
+    const { result } = renderHook(() =>
+      usarNavegacionConFiltros({ filtrosVista: { funcionarios: { filtro: "acum" } } }),
+    );
+    expect(result.current.filtrosVista.funcionarios).toEqual({ filtro: "acum" });
+    expect(window.location.hash).toBe("#/funcionarios?filtro=acum");
+  });
+});

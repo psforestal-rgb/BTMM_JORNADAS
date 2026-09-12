@@ -64,6 +64,8 @@ function AppShell() {
     setDiaVista,
     funcionarioVista,
     setFuncionarioVista,
+    filtrosVista,
+    setFiltrosVista,
     reglas,
   } = useApp();
 
@@ -78,6 +80,7 @@ function AppShell() {
   const navigate = useAppNavigation({
     view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
     funcionarioVista, setFuncionarioVista,
+    filtrosVista, setFiltrosVista,
   });
   const keyboardOpen = useVirtualKeyboard();
 

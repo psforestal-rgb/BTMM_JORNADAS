@@ -44,8 +44,44 @@ function nombreDeSegmento(segmento) {
   }
 }
 
+/**
+ * Lee los filtros de la ruta («?filtro=guardas&orden=puesto»).
+ *
+ * Devuelve `null` —y no un objeto vacío— cuando la ruta no trae consulta, para
+ * poder distinguir «esta ruta no dice nada de los filtros» de «esta ruta pide
+ * explícitamente que no haya ninguno». Sin esa distinción, abrir un enlace
+ * limpio borraría los filtros que la persona tenía puestos.
+ */
+function filtrosDeConsulta(consulta) {
+  if (!consulta) return null;
+  try {
+    const params = new URLSearchParams(consulta);
+    const salida = {};
+    for (const [clave, valor] of params.entries()) {
+      if (valor !== "") salida[clave] = valor;
+    }
+    return Object.keys(salida).length ? salida : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Serializa los filtros en orden alfabético: el mismo estado, el mismo enlace. */
+function consultaDeFiltros(filtros) {
+  if (!filtros) return "";
+  const params = new URLSearchParams();
+  for (const clave of Object.keys(filtros).sort()) {
+    const valor = filtros[clave];
+    if (valor === undefined || valor === null || valor === "") continue;
+    params.set(clave, String(valor));
+  }
+  const texto = params.toString();
+  return texto ? `?${texto}` : "";
+}
+
 export function parseAppHash(hash = "") {
-  const clean = String(hash).replace(/^#\/?/, "");
+  const [ruta, consulta] = String(hash).split("?");
+  const clean = String(ruta).replace(/^#\/?/, "");
   const [rawView, a, b] = clean.split("/");
   const view = normalizarVista(rawView || "dia");
   const parsed = { view };
@@ -58,18 +94,21 @@ export function parseAppHash(hash = "") {
     if (nombre) parsed.funcionarioVista = nombre;
     else parsed.view = "funcionarios";
   }
+  const filtros = filtrosDeConsulta(consulta);
+  if (filtros) parsed.filtros = filtros;
   return parsed;
 }
 
-export function hashForState({ view, year, month, diaVista, funcionarioVista }) {
+export function hashForState({ view, year, month, diaVista, funcionarioVista, filtros }) {
   const safeView = normalizarVista(view);
-  if (safeView === "dia") return `#/dia/${diaVista}`;
-  if (CON_PERIODO.has(safeView)) return `#/${safeView}/${year}/${pad2(month + 1)}`;
+  const consulta = consultaDeFiltros(filtros);
+  if (safeView === "dia") return `#/dia/${diaVista}${consulta}`;
+  if (CON_PERIODO.has(safeView)) return `#/${safeView}/${year}/${pad2(month + 1)}${consulta}`;
   if (CON_FUNCIONARIO.has(safeView)) {
     const nombre = String(funcionarioVista || "").trim();
     // `encodeURIComponent` también escapa la barra, así que un nombre con «/»
     // no parte la ruta en dos segmentos.
-    return nombre ? `#/funcionario/${encodeURIComponent(nombre)}` : "#/funcionarios";
+    return nombre ? `#/funcionario/${encodeURIComponent(nombre)}${consulta}` : "#/funcionarios";
   }
-  return `#/${safeView}`;
+  return `#/${safeView}${consulta}`;
 }

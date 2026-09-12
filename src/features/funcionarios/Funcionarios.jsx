@@ -9,6 +9,7 @@ import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
+import { useFiltrosDeVista } from "../../lib/useFiltrosDeVista.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
@@ -36,9 +37,21 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
   const { conDeshacer, exito, aviso, error } = useToast();
   const archivoRef = useRef(null);
   const [previa, setPrevia] = useState(null);
-  const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
-  const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
-  const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
+  /* Búsqueda, filtro y orden viajan en la ruta: definen QUÉ se está viendo, así
+     que un enlace a «los guardaparques sin resolución» tiene que poder
+     compartirse. La elección entre tabla y tarjetas NO viaja: es una preferencia
+     del aparato de quien mira. */
+  const { valores: filtrosURL, poner: ponerFiltro } = useFiltrosDeVista("funcionarios", {
+    q: "",
+    filtro: "todos",
+    orden: "nombre",
+  });
+  const q = filtrosURL.q;
+  const setQ = (v) => ponerFiltro("q", typeof v === "function" ? v(q) : v);
+  const filtro = filtrosURL.filtro;
+  const setFiltro = (v) => ponerFiltro("filtro", typeof v === "function" ? v(filtro) : v);
+  const orden = filtrosURL.orden;
+  const setOrden = (v) => ponerFiltro("orden", typeof v === "function" ? v(orden) : v);
   const [modal, setModal] = useState(null);
   const isMobile = useIsMobile();
   // Breakpoint `md` (768 px): por debajo, los filtros siguen colapsados; a
