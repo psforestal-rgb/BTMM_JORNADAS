@@ -10,6 +10,7 @@ export default function MenuCelda({ data, cerrar, seleccionar }) {
     ["V", t("menuCelda.cat.V"), "border-sky-300 bg-sky-100 text-sky-950"],
     ["I", t("menuCelda.cat.I"), "border-rose-300 bg-rose-100 text-rose-950"],
     ["O", t("menuCelda.cat.O"), "border-violet-300 bg-violet-100 text-violet-950"],
+    ["E", t("menuCelda.cat.E"), "border-cyan-300 bg-cyan-100 text-cyan-950"],
   ];
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 md:items-center md:p-4" onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}>

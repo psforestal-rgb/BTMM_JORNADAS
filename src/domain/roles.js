@@ -103,9 +103,33 @@ export function generarValorPatron(modalidad, dia, inicio, year, month) {
   return `L${pos - cfg.trabajo + 1}`;
 }
 
+/**
+ * ¿La persona está TRABAJANDO ese día? Turno presencial (T) o teletrabajo (E).
+ *
+ * `E` cuenta como activo a propósito (RT1): un día de teletrabajo es
+ * precisamente un día en que se hacen actividades. Si no lo fuera, asignar
+ * cualquier actividad a alguien en teletrabajo marcaría conflicto, que es justo
+ * lo contrario de lo que el rol significa.
+ */
 export function esRolActivo(v) {
   const x = String(v || "").toUpperCase();
-  return x.startsWith("T");
+  return x.startsWith("T") || x.startsWith("E");
+}
+
+/**
+ * ¿La persona está FÍSICAMENTE en el puesto? Solo el turno presencial.
+ *
+ * Trabajar y estar presente dejaron de ser lo mismo al aparecer el teletrabajo
+ * (RT5). Todo lo que dependa de la presencia física —atender visitantes, la
+ * cobertura crítica— debe usar esta función y no `esRolActivo`.
+ */
+export function esRolPresencial(v) {
+  return String(v || "").toUpperCase().startsWith("T");
+}
+
+/** ¿Es un día de teletrabajo? (RT1) */
+export function esTeletrabajo(v) {
+  return String(v || "").toUpperCase().startsWith("E");
 }
 
 export function etiquetaRol(v) {
@@ -115,6 +139,7 @@ export function etiquetaRol(v) {
   if (x.startsWith("V")) return "Vacaciones";
   if (x.startsWith("I")) return "Incapacidad";
   if (x.startsWith("O")) return "Otro";
+  if (x.startsWith("E")) return "Teletrabajo";
   if (!x) return "Sin marcar";
   return "Turno";
 }
@@ -126,6 +151,7 @@ export function categoriaDe(v) {
   if (x.startsWith("V")) return "V";
   if (x.startsWith("I")) return "I";
   if (x.startsWith("O")) return "O";
+  if (x.startsWith("E")) return "E";
   return "";
 }
 

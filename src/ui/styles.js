@@ -27,7 +27,8 @@ export function estadoCls(e) {
 
 // Badges de rol — fondos sólidos para uso en campo bajo sol.
 // T=turno (verde), I=incapacidad (rojo), V=vacaciones (azul),
-// L=libre (ámbar), O=otro (violeta), finde=fin de semana (gris oscuro).
+// L=libre (ámbar), O=otro (violeta), E=teletrabajo (cian),
+// finde=fin de semana (gris oscuro).
 export function codigoCls(c, finde) {
   const v = String(c || "").toUpperCase();
   if (finde && !v)   return "bg-slate-600 text-white border-slate-700";
@@ -36,6 +37,9 @@ export function codigoCls(c, finde) {
   if (v.startsWith("V")) return "bg-sky-700     text-white border-sky-800";
   if (v.startsWith("L")) return "bg-amber-700   text-white border-amber-800";
   if (v.startsWith("O")) return "bg-violet-700  text-white border-violet-800";
+  // E = teletrabajo. Cian para que no se confunda con el turno presencial
+  // (verde) ni con libre (ámbar): se trabaja, pero no se está en el puesto.
+  if (v.startsWith("E")) return "bg-cyan-700    text-white border-cyan-800";
   if (!v) return finde ? "bg-slate-600 text-white border-slate-700" : "bg-slate-400 text-white border-slate-500";
   return finde ? "bg-slate-600 text-white border-slate-700" : "bg-emerald-700 text-white border-emerald-800";
 }

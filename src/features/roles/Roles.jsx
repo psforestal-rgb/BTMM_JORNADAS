@@ -319,6 +319,7 @@ export default function Roles({
           <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
           <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
           <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
+          <span className="rounded-lg border border-cyan-300 bg-cyan-200 px-2 py-1 text-cyan-950">{t("roles.leyenda.teletrabajo")}</span>
         </div>
       </Card>
     </section>

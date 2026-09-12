@@ -77,7 +77,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   const isMobile = useMobile();
   // Los puestos son editables (RP1–RP8): se leen del estado, no del módulo de
   // datos, o la vista se quedaría con la lista del arranque.
-  const { puestos: puestosVigentes } = useApp();
+  const { puestos: puestosVigentes, reglas } = useApp();
+  // Igual que en Planificación: la regla de atención obligatoria es editable.
+  const puestosVisitDiario = reglas?.puestosRequierenVisitantesDiario;
   const opcionesPuestoOperativo = useMemo(
     () => puestosVigentes.map((p) => p.nombre),
     [puestosVigentes],
@@ -388,7 +390,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         ) : (
           <div className="space-y-3">
             {actsVisibles.map((act) => {
-              const conf = conflictosActividadDia(act, dayD, yearD, monthIdx, personas, roleData, feriados);
+              const conf = conflictosActividadDia(act, dayD, yearD, monthIdx, personas, roleData, feriados, puestosVisitDiario);
               return (
                 <div
                   key={act.id}

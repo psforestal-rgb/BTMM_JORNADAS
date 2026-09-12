@@ -8,6 +8,7 @@ import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useT } from "../../i18n/useT.js";
+import { useApp } from "../../context/AppContext.jsx";
 import Modal from "../../ui/Modal.jsx";
 import ModalActividad from "../actividades/ModalActividad.jsx";
 import { useEliminarActividad } from "../actividades/useEliminarActividad.js";
@@ -66,6 +67,10 @@ export default function Planificacion({
   setDiaVista,
 }) {
   const t = useT();
+  // La lista de puestos con atención obligatoria es editable: la regla del
+  // teletrabajo (RT4) tiene que leerla del estado, no de la constante histórica.
+  const { reglas } = useApp();
+  const puestosVisitDiario = reglas?.puestosRequierenVisitantesDiario;
   const eliminarActividad = useEliminarActividad(actividadesPlan, setActividadesPlan);
   const [modal, setModal] = useState(null);
   // null = sin preferencia explícita: agenda en móvil, cuadrícula en escritorio.
@@ -129,7 +134,7 @@ export default function Planificacion({
     setDiaVista(isoDia(d));
     setView("dia");
   };
-  const tieneConflicto = (d, a) => conflictosActividadDia(a, d, year, month, personas, roleData, feriados).length > 0;
+  const tieneConflicto = (d, a) => conflictosActividadDia(a, d, year, month, personas, roleData, feriados, puestosVisitDiario).length > 0;
   const hoyDia = diaActual || 1;
   const daysVisible = days.filter((d) => {
     const items = actividadesDia(d);
@@ -288,7 +293,7 @@ export default function Planificacion({
                       <ActividadItem
                         key={a.id}
                         a={a}
-                        conflictos={conflictosActividadDia(a, d, year, month, personas, roleData, feriados)}
+                        conflictos={conflictosActividadDia(a, d, year, month, personas, roleData, feriados, puestosVisitDiario)}
                         abrir={() => setModal({ ...a })}
                       />
                     ))}
@@ -364,7 +369,7 @@ export default function Planificacion({
                         <ActividadItem
                           key={a.id}
                           a={a}
-                          conflictos={conflictosActividadDia(a, d, year, month, personas, roleData, feriados)}
+                          conflictos={conflictosActividadDia(a, d, year, month, personas, roleData, feriados, puestosVisitDiario)}
                           abrir={() => setModal({ ...a })}
                           compacta
                         />
