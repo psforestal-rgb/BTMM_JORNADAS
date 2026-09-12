@@ -73,9 +73,9 @@ en teletrabajo saldría como cubierto.
 ## 📍 Estado del repo al relevar
 
 - Versión: **1.29.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
-  el `main` del PR #92 (`eef5ab1`) — Último commit: `437a52b` «[F3][VF8] arregla
-  tokens de color inventados y añade la guarda que los detecta»
-- Tests: ✅ **635/635** (57 archivos) — Build: ✅ `npm run build` limpio, PWA
+  el `main` del PR #92 (`eef5ab1`) — Último commit: `[F3][VF1]` «la sección
+  Funcionarios queda marcada mientras se lee una ficha»
+- Tests: ✅ **641/641** (58 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - `main` está en v1.25.0; esta rama lleva por delante el cierre de la Fase 2
   (RT2/RT6/RT8) y el bloque VF entero.
@@ -143,7 +143,7 @@ en teletrabajo saldría como cubierto.
   detecta. Tailwind no avisa de esto: genera la clase vacía y el elemento hereda
   el color del padre.
 
-Tests: de 290 a 635 (+345). Ninguna función existente se eliminó.
+Tests: de 290 a 641 (+351). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -504,7 +504,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** Ya en Fase 3, se entregó el bloque **VF1–VF8** completo: la ficha individual del funcionario como ruta propia `#/funcionario/<nombre>`, con banco de tiempo que reutiliza `reposicion.js`, teletrabajo contado día a día, alertas por persona y filtro próximas/pasadas/todas; más la guarda estática de tokens de color, que destapó tres clases inventadas que no pintaban nada. 635 tests en 57 archivos, v1.29.0. Commits `12dec07` y `437a52b`.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** Ya en Fase 3, se entregó el bloque **VF1–VF8** completo: la ficha individual del funcionario como ruta propia `#/funcionario/<nombre>`, con banco de tiempo que reutiliza `reposicion.js`, teletrabajo contado día a día, alertas por persona y filtro próximas/pasadas/todas; más la guarda estática de tokens de color, que destapó tres clases inventadas que no pintaban nada. 641 tests en 58 archivos, v1.29.0. Commits `12dec07`, `437a52b` y siguientes.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 

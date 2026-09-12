@@ -81,14 +81,22 @@ function AppShell() {
   });
   const keyboardOpen = useVirtualKeyboard();
 
+  /* La ficha individual pertenece a la sección «Funcionarios»: la barra la
+     mantiene marcada mientras se lee una ficha, en vez de quedarse sin ninguna
+     entrada activa. Y una ficha sin nombre no es una vista: se cae a la lista,
+     lo mismo que hace `hashForState`, para que la ruta y lo que se ve nunca
+     digan cosas distintas. */
+  const vistaDeSeccion = view === "funcionario" ? "funcionarios" : view;
+  const fichaAbierta = view === "funcionario" && Boolean(funcionarioVista);
+
   return (
     <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-surface-alt text-ink ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
       <ImportadorPlanificacion2026 />
       <div className="flex min-h-screen">
-        <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
+        <Sidebar view={vistaDeSeccion} setView={navigate} nAlertas={nAlertas} />
         <main className="pnlq-app-main min-w-0 flex-1 overflow-x-clip">
           <Topbar
-            view={view}
+            view={vistaDeSeccion}
             setView={navigate}
             month={month}
             setMonth={setMonth}
@@ -113,10 +121,10 @@ function AppShell() {
                   setView={navigate}
                 />
               )}
-              {view === "funcionarios" && (
+              {vistaDeSeccion === "funcionarios" && !fichaAbierta && (
                 <Funcionarios personas={personas} setPersonas={setPersonas} setView={navigate} />
               )}
-              {view === "funcionario" && (
+              {fichaAbierta && (
                 <FichaFuncionario
                   nombre={funcionarioVista}
                   personas={personas}
@@ -186,7 +194,7 @@ function AppShell() {
           </div>
         </main>
       </div>
-      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
+      <BottomNav view={vistaDeSeccion} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
     </div>
   );
 }
