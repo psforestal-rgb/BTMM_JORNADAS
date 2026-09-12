@@ -4,6 +4,9 @@
  * `{nombre}` que el hook `useT()` interpola con un objeto.
  */
 const dict = {
+  atajos: {
+    buscarTitulo: "Pulse / para saltar aquí",
+  },
   app: {
     name: "PNLQ — Gestión de Jornadas Laborales",
     short: "PNLQ",
@@ -279,6 +282,9 @@ const dict = {
       estado: "Estado",
       obs: "Observaciones",
     },
+    procesando: "Procesando…",
+    procesandoCorto: "…",
+    procesandoAria: "Procesando el archivo, espere un momento",
     atributoPolicia: "Policía",
     atributoBrigada: "Brigada",
     card: {

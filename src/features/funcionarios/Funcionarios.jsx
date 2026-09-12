@@ -10,6 +10,7 @@ import { useIsMobile } from "../../lib/responsive.js";
 import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useFiltrosDeVista } from "../../lib/useFiltrosDeVista.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
@@ -53,6 +54,11 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
   const orden = filtrosURL.orden;
   const setOrden = (v) => ponerFiltro("orden", typeof v === "function" ? v(orden) : v);
   const [modal, setModal] = useState(null);
+  // Trabajo pesado en curso (lectura o análisis de un CSV). Ver A-P17 abajo.
+  const [procesando, setProcesando] = useState(false);
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   const isMobile = useIsMobile();
   // Breakpoint `md` (768 px): por debajo, los filtros siguen colapsados; a
   // partir de ahí hay sitio de sobra para dejarlos siempre a la vista.
@@ -172,6 +178,15 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
      es después un solo `setPersonas` con el resultado ya calculado. */
   const elegirArchivo = () => archivoRef.current?.click();
 
+  /* A-P17: leer y analizar el CSV es SÍNCRONO y bloquea el hilo principal. Con
+     un archivo grande la pantalla se queda congelada y parece que el botón no
+     hizo nada.
+
+     La exportación NO se aplaza: serializar unas decenas de filas tarda
+     microsegundos, y separar la descarga del gesto que la pidió es arriesgado
+     en navegadores que exigen esa relación directa. El aviso de proceso es
+     para la importación, que es la que bloquea de verdad. */
+
   const alElegirArchivo = (evento) => {
     const archivo = evento.target.files?.[0];
     // Se limpia el input siempre: si no, elegir el MISMO archivo dos veces
@@ -182,14 +197,23 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
       error(t("funcionarios.importa.demasiadoGrande", { mb: Math.round(MAX_CSV_BYTES / 1024 / 1024) }));
       return;
     }
+    setProcesando(true);
     const lector = new FileReader();
-    lector.onerror = () => error(t("funcionarios.importa.errorLectura"));
+    lector.onerror = () => {
+      setProcesando(false);
+      error(t("funcionarios.importa.errorLectura"));
+    };
     lector.onload = () => {
-      try {
-        prepararPrevia(String(lector.result ?? ""), archivo.name);
-      } catch {
-        error(t("funcionarios.importa.errorLectura"));
-      }
+      // El aplazamiento deja al navegador pintar el aviso antes de analizar.
+      window.setTimeout(() => {
+        try {
+          prepararPrevia(String(lector.result ?? ""), archivo.name);
+        } catch {
+          error(t("funcionarios.importa.errorLectura"));
+        } finally {
+          setProcesando(false);
+        }
+      }, 0);
     };
     lector.readAsText(archivo, "UTF-8");
   };
@@ -288,6 +312,12 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
                 {t("funcionarios.vistaTarjetas")}
               </button>
             </div>
+            {/* La región existe siempre, aunque esté vacía: un `role="status"`
+                que aparece junto con su texto no lo anuncia en varios
+                lectores de pantalla. */}
+            <span role="status" aria-live="polite" className="sr-only">
+              {procesando ? t("funcionarios.procesandoAria") : ""}
+            </span>
             <input
               ref={archivoRef}
               type="file"
@@ -300,18 +330,20 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
             <button
               type="button"
               onClick={elegirArchivo}
+              disabled={procesando}
               aria-label={t("funcionarios.importarAria")}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-progress disabled:opacity-60"
             >
-              <Icon name="refresh" size={16} />
-              <span className="hidden sm:inline">{t("funcionarios.importar")}</span>
-              <span className="sm:hidden">{t("funcionarios.importarCorto")}</span>
+              <Icon name="refresh" size={16} className={procesando ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">{procesando ? t("funcionarios.procesando") : t("funcionarios.importar")}</span>
+              <span className="sm:hidden">{procesando ? t("funcionarios.procesandoCorto") : t("funcionarios.importarCorto")}</span>
             </button>
             <button
               type="button"
               onClick={exportarCSV}
+              disabled={procesando}
               aria-label={t("funcionarios.exportarAria")}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-progress disabled:opacity-60"
             >
               <Icon name="file" size={16} />
               <span className="hidden sm:inline">{t("funcionarios.exportar")}</span>
@@ -330,8 +362,11 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
       >
         <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center">
           <input
+            ref={buscadorRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-keyshortcuts="/"
+            title={t("atajos.buscarTitulo")}
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-700 xl:max-w-md"
             placeholder={t("funcionarios.buscarPlaceholder")}
           />

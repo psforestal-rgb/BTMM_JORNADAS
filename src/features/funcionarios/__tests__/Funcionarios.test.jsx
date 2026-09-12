@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import { AppProvider, useApp } from "../../../context/AppContext.jsx";
 import { ToastProvider } from "../../../context/ToastContext.jsx";
 import ToastViewport from "../../../ui/Toast.jsx";
@@ -465,5 +465,40 @@ describe("Funcionarios — acceso a la ficha individual (VF1)", () => {
   it("sin navegación disponible no se pinta el acceso, en vez de dejar un botón muerto", () => {
     renderConProvider();
     expect(screen.queryAllByRole("button", { name: /^Ver la ficha de / })).toHaveLength(0);
+  });
+});
+
+describe("Funcionarios — aviso de proceso al importar (A-P17)", () => {
+  /** Elige un archivo sin esperar a que termine el análisis. */
+  const elegirSinEsperar = (texto) => {
+    const input = document.querySelector('input[type="file"]');
+    const archivo = new Blob([texto], { type: "text/csv" });
+    archivo.name = "personal.csv";
+    Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+    fireEvent.change(input);
+  };
+
+  it("mientras lee y analiza, el botón queda bloqueado y se anuncia", async () => {
+    renderConProvider();
+    const boton = screen.getByRole("button", { name: "Importar funcionarios desde un archivo CSV" });
+    expect(boton.disabled).toBe(false);
+
+    elegirSinEsperar("Nombre,Cédula\r\nDora Nueva,1-0000-0009");
+    // El aviso tiene que estar ANTES de que termine: es su única razón de ser.
+    await waitFor(() => expect(screen.getByRole("button", { name: "Importar funcionarios desde un archivo CSV" }).disabled).toBe(true));
+    expect(screen.getByText("Procesando el archivo, espere un momento")).toBeDefined();
+
+    // Y al terminar se libera.
+    await screen.findByRole("dialog", { name: /Revisar antes de importar/i });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Importar funcionarios desde un archivo CSV" }).disabled).toBe(false));
+  });
+
+  it("la región de estado existe desde el principio, aunque esté vacía", () => {
+    const { container } = renderConProvider();
+    // Un `role=status` que aparece junto con su texto no se anuncia en varios
+    // lectores de pantalla, así que tiene que estar montado de antemano.
+    const region = container.querySelector('[role="status"][aria-live="polite"]');
+    expect(region).not.toBeNull();
+    expect(region.textContent).toBe("");
   });
 });

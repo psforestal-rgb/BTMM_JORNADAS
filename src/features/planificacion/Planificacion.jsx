@@ -12,6 +12,7 @@ import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useSessionState } from "../../lib/useSessionState.js";
 import { useFiltrosDeVista } from "../../lib/useFiltrosDeVista.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import Modal from "../../ui/Modal.jsx";
@@ -106,6 +107,9 @@ export default function Planificacion({
   };
   const { exito, aviso, error } = useToast();
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   const isMobile = useIsMobile();
   const modo = vistaManual ?? (isMobile ? "agenda" : "cuadricula");
   const rango = rangoManual ?? (isMobile ? "proximos7" : "mes");
@@ -265,9 +269,12 @@ export default function Planificacion({
         <div className="space-y-2 rounded-lg bg-surface-inset p-2">
           <div className="flex gap-2">
             <input
+              ref={buscadorRef}
               type="search"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
+              aria-keyshortcuts="/"
+              title={t("atajos.buscarTitulo")}
               placeholder={t("planificacion.buscarPlaceholder")}
               aria-label={t("planificacion.buscarAria")}
               className="min-h-touch min-w-0 flex-1 rounded-xl border border-line bg-surface px-3 text-sm text-ink"

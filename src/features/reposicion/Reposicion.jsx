@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Badge from "../../ui/Badge.jsx";
 import Avatar from "../../ui/Avatar.jsx";
 import Icon from "../../ui/Icon.jsx";
@@ -17,6 +17,7 @@ import {
 import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { reinsertarEn } from "../../lib/undo.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
 import { descargarArchivo } from "../../lib/descargas.js";
 import { filasDeReposicion, nombreArchivo } from "../../lib/exportaciones.js";
@@ -45,6 +46,9 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
   const { conDeshacer, exito, aviso, error } = useToast();
   const hj = reglas?.horasJornada ?? HORAS_JORNADA_DEFAULT;
   const [modal, setModal] = useState(null);
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   const [reponer, setReponer] = useState(null);
   const [filtro, setFiltro] = useState("todos");
   const [tab, setTab] = useState("registros");
@@ -232,9 +236,12 @@ export default function Reposicion({ personas, reposiciones, setReposiciones }) 
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">{t("reposicion.buscar")}</span>
             <input
+              ref={buscadorRef}
               type="search"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
+              aria-keyshortcuts="/"
+              title={t("atajos.buscarTitulo")}
               placeholder={t("reposicion.buscar")}
               className="min-h-touch w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:ring-2 focus:ring-brand"
             />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useApp } from "../../context/AppContext.jsx";
 import Card from "../../ui/Card.jsx";
 import Icon from "../../ui/Icon.jsx";
@@ -8,6 +8,7 @@ import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
 import { descargarArchivo } from "../../lib/descargas.js";
@@ -36,6 +37,9 @@ export default function Roles({
   // el primer día laboral cambiaría y el archivo no cuadraría con la pantalla.
   const feriados = useFeriadosDelAno(year);
   const [busqueda, setBusqueda] = useState("");
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   // Búsqueda por fecha: centra la tabla en el día elegido. La tabla carga
   // meses solo hacia adelante desde su mes inicial, así que si la fecha
   // buscada queda antes de ese mes (o más allá del tope de carga), primero
@@ -196,9 +200,12 @@ export default function Roles({
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface px-2">
               <Icon name="search" size={14} className="shrink-0 text-ink-subtle" />
               <input
+                ref={buscadorRef}
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
+                aria-keyshortcuts="/"
+                title={t("atajos.buscarTitulo")}
                 placeholder={t("roles.buscarFuncionario")}
                 aria-label={t("roles.buscarFuncionario")}
                 className="min-h-touch w-full bg-transparent py-2 text-xs font-semibold text-ink outline-none"
