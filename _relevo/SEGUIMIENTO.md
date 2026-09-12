@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 02:55 por Claude Code
+> Última actualización: 2026-09-12 03:10 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
@@ -77,12 +77,11 @@ añadiendo funciones sin pedir.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.34.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
+- Versión: **1.34.1** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
   el `main` del PR #92 (`eef5ab1`), abierta en el PR
   [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) — Último
-  commit: `18acc0a` «[F3][A-P12+A-P17] atajo «/» para buscar y aviso de proceso
-  al importar»
-- Tests: ✅ **704/704** (63 archivos) — Build: ✅ `npm run build` limpio, PWA
+  commit: `08194d8` «[F3][FIX] cinco hallazgos de revisión»
+- Tests: ✅ **724/724** (63 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - `main` está en v1.25.0; esta rama lleva por delante el cierre de la Fase 2
   (RT2/RT6/RT8) y el bloque VF entero.
@@ -165,12 +164,18 @@ añadiendo funciones sin pedir.
   al importar. La navegación por celdas de A-P12 queda fuera a propósito (ver
   «Siguiente acción»).
 
+- `08194d8` `[F3][FIX]` — los cinco hallazgos de la revisión del PR #93, todos
+  reales: la regla de conflicto duplicada, el acceso a la ficha desde Roles que
+  no llegaba a existir en la aplicación real, y tres defectos de la importación
+  de puestos (renombre sin cascada, puesto nuevo sin código, y filas contadas
+  como actualizadas sin cambiar nada).
+
 - `437a52b` `[F3][VF8]` — arregla tres clases de color que no existían
   (`text-ink-soft`, `bg-danger-soft`…) y añade la guarda estática que las
   detecta. Tailwind no avisa de esto: genera la clase vacía y el elemento hereda
   el color del padre.
 
-Tests: de 290 a 704 (+414). Ninguna función existente se eliminó.
+Tests: de 290 a 724 (+434). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -476,6 +481,19 @@ atajo de búsqueda y aviso de proceso al importar.
   aritmética propia entrega a la administración un archivo que no cuadra con la
   pantalla. Hay pruebas que lo comparan celda por celda.
 
+- 2026-09-12 (Claude Code): **La regla de conflicto vive en un solo sitio**,
+  `conflictoDePersonaDia`, y `conflictosActividadDia` se expresa en términos de
+  ella. No es una preferencia de estilo: ya se separaron una vez. Al hacer
+  activo el rol `E`, la cuadrícula de Roles y Plan/Funcionario siguieron
+  mirando solo `esRolActivo` y dejaron de marcar el teletrabajo en atención de
+  visitantes que Día y Planificación sí marcaban, durante varios commits y sin
+  que ninguna prueba lo notara.
+- 2026-09-12 (Claude Code): **Importar puestos NUNCA renombra.** La comparación
+  ignora mayúsculas y acentos, así que una fila «puesto orosi» encuentra
+  «Puesto Orosi»; se conserva el nombre que ya estaba y se informa. Adoptar la
+  grafía del archivo sería un renombre, y un renombre tiene que arrastrar fichas
+  y reglas: eso es `renombrarPuesto`, desde el editor.
+
 ## ⚠️ Advertencias / trampas conocidas
 
 - **El trabajo pendiente de fusionar vive en `claude/festive-allen-hl6igv`** y en
@@ -485,6 +503,10 @@ atajo de búsqueda y aviso de proceso al importar.
   se abre otro.
 - `npm ci` normal falla por el proxy al compilar `sharp`; usar
   `npm ci --ignore-scripts`.
+- **Una prueba de componente aislado no demuestra que la vista funcione.** El
+  botón «Ver ficha» de Roles pasaba sus pruebas y no existía en la aplicación:
+  `App.jsx` montaba `<Roles>` sin `setView`. Si añades una prop que activa algo,
+  comprueba el árbol real, no solo el componente.
 - **Un token de color que no existe NO da error.** Tailwind genera la clase
   vacía y el elemento hereda el color del padre: en el tema claro casi no se
   nota, en alto contraste deja texto ilegible. Pasó de verdad en esta sesión con
