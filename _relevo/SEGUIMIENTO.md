@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 03:55 por Claude Code
+> Última actualización: 2026-09-12 13:25 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -11,7 +11,7 @@ paralelo con otra IA (Grok) que tocaba `main` directamente, contra
 comparando las dos implementaciones función por función. El historial de Grok se
 conserva íntegro más abajo.
 
-**Estado actual.** Se fusionaron TRES PR de esta rama, los tres con aplastado
+**Estado actual.** Se fusionaron CUATRO PR de esta rama, los cuatro con aplastado
 (squash):
 
 | PR | Deja `main` en | Qué llevaba |
@@ -19,8 +19,9 @@ conserva íntegro más abajo.
 | [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) | v1.22.0 | Fase 1 y hasta RF9 |
 | [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) | v1.25.0 | Puestos operativos |
 | [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) | **v1.34.1** | Cierre de la Fase 2 y la Fase 3 entera |
+| [#94](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/94) | **v1.35.0** | Navegación por teclado en Roles (cierra A-P12) |
 
-`main` está en el commit `7d1e689` y **la rama `claude/festive-allen-hl6igv` se
+`main` está en el commit `f2a2c4e` y **la rama `claude/festive-allen-hl6igv` se
 reinició desde ahí**: no arrastra nada pendiente. El despliegue automático a
 GitHub Pages se dispara con cada push a `main`.
 
@@ -29,13 +30,14 @@ GitHub Pages se dispara con cada push a `main`.
 1. `git fetch origin main` ANTES de nada. Si la rama tiene commits que `main` no
    tiene, **rebásalos sobre `main`, no fusiones al revés**: el aplastado deja el
    historial divergente aunque el contenido sea idéntico.
-2. **Un PR fusionado no se reutiliza.** El #93 está cerrado. El trabajo nuevo va
+2. **Un PR fusionado no se reutiliza.** El #94 está cerrado. El trabajo nuevo va
    en un PR nuevo sobre esta misma rama.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**El roadmap acordado de `PROTOCOLO.md` §7 está agotado.** Fases 1, 2 y 3
-entregadas y fusionadas. No hay ninguna tarea pendiente que el protocolo pida.
+**El roadmap acordado de `PROTOCOLO.md` §7 está agotado y TODO está fusionado
+en `main`.** Fases 1, 2 y 3 entregadas, más los sueltos auditados y la
+cobertura crítica. **No queda ninguna tarea de código que el protocolo pida.**
 
 Lo que queda, en orden:
 
@@ -70,8 +72,9 @@ i18n multi-idioma.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.35.0** en la rama; `main` va en 1.34.1 (`7d1e689`, desplegada)
-- Rama: **`claude/festive-allen-hl6igv`**, con A-P12 cerrado y pendiente de PR
+- Versión: **1.35.0**, ya en `main` (`f2a2c4e`) y desplegada
+- Rama: **`claude/festive-allen-hl6igv`**, reiniciada desde `main`. Sin trabajo
+  pendiente y sin PR abierto.
 - Tests: ✅ **741/741** (65 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/
