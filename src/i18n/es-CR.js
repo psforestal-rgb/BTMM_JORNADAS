@@ -118,6 +118,11 @@ const dict = {
     conViatico: "Con viático",
   },
   dia: {
+    coberturaCritica: "Cobertura crítica en {n} puesto(s)",
+    coberturaCriticaSinNadie: "{puesto}: nadie asignado a la atención de visitantes.",
+    coberturaCriticaRemoto: "{puesto}: {n} persona(s) asignada(s) a la atención de visitantes, pero ninguna presente en el puesto.",
+    coberturaCriticaAyuda: "Estos puestos deben tener atención de visitantes todos los días. Asigne a alguien que esté en turno presencial, o ajuste la regla en Configuración.",
+    coberturaCriticaAria: "{puesto} en cobertura crítica",
     anterior: "Anterior",
     siguiente: "Siguiente",
     diaAnterior: "Día anterior",
