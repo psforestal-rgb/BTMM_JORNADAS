@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 03:30 por Claude Code
+> Última actualización: 2026-09-12 03:55 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -45,16 +45,7 @@ sobre un diagnóstico de hace meses; antes de añadir nada más conviene ver qu�
 pasa cuando alguien la usa en el puesto, con guantes y bajo sol, y volver con lo
 que salga. **No inventes funciones nuevas sin ese contraste.**
 
-**2. Navegación por celdas con flechas en la cuadrícula de Roles**, la mitad de
-A-P12 que quedó fuera a propósito. La razón importa: hoy las celdas son botones
-deshabilitados salvo en las filas en edición, así que exige el patrón ARIA
-completo de cuadrícula (`role="grid"` con tabindex móvil), que es rediseñar el
-modelo de foco del componente más denso de la aplicación. Si se aborda, es su
-propia tarea con su propia verificación en navegador, y cuidado con la
-virtualización: moverse a un mes colapsado exige desplazarlo a la vista ANTES de
-intentar enfocar nada, porque sus celdas no existen en el DOM.
-
-**3. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
+**2. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
 fuera de alcance A3 (sincronización), RF10 (autenticación), C4 (API externa) e
 i18n multi-idioma.
 
@@ -69,13 +60,19 @@ i18n multi-idioma.
   pintado** (`anchosMes`), no un ancho medio por columna. Las columnas no son
   todas iguales; con un promedio la tabla encogía y el contenido se movía bajo
   el dedo (83 px en móvil).
+- **Un tramo POR MES, con clave estable.** Si los grupos de celdas se fusionan o
+  cambian de posición en el arreglo, React desmonta la celda que tiene el foco y
+  la navegación con teclado se muere al cruzar un mes colapsado. Costó
+  encontrarlo: parecía culpa de la virtualización y era de la reconciliación.
+- **Para entrar en un mes colapsado se AMPLÍA la ventana, no se desplaza.**
+  Desplazando, la celda de origen se desmonta antes de que exista la de destino
+  y el foco cae al `body`.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.34.1**, ya en `main` (`7d1e689`) y desplegada
-- Rama: **`claude/festive-allen-hl6igv`**, reiniciada desde `main`. Sin trabajo
-  pendiente y sin PR abierto.
-- Tests: ✅ **724/724** (63 archivos) — Build: ✅ `npm run build` limpio, PWA
+- Versión: **1.35.0** en la rama; `main` va en 1.34.1 (`7d1e689`, desplegada)
+- Rama: **`claude/festive-allen-hl6igv`**, con A-P12 cerrado y pendiente de PR
+- Tests: ✅ **741/741** (65 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/
 
@@ -203,14 +200,13 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 **El roadmap acordado está agotado.** Queda una sola cosa con trabajo técnico
 claro, y una decisión de producto:
 
-1. Navegación por celdas con flechas en la cuadrícula de Roles (la mitad de
-   A-P12 que quedó fuera). Ver «Siguiente acción» para la razón y las cautelas.
-2. Decidir si habrá backend. Hasta entonces, `PROTOCOLO.md` §7 deja fuera de
+1. Decidir si habrá backend. Hasta entonces, `PROTOCOLO.md` §7 deja fuera de
    alcance A3, RF10, C4 e i18n multi-idioma.
 
 Ya cerrados en la Fase 3: ficha individual (VF1–VF8), virtualización de Roles
-(A1), filtros en la URL, exportación CSV (B1), cobertura crítica cableada,
-atajo de búsqueda y aviso de proceso al importar.
+(A1), filtros en la URL, exportación CSV (B1), cobertura crítica cableada, y
+A-P12 entero (atajo de búsqueda y navegación por celdas con el teclado) más
+A-P17.
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
 
@@ -486,6 +482,15 @@ atajo de búsqueda y aviso de proceso al importar.
   «Puesto Orosi»; se conserva el nombre que ya estaba y se informa. Adoptar la
   grafía del archivo sería un renombre, y un renombre tiene que arrastrar fichas
   y reglas: eso es `renombrarPuesto`, desde el editor.
+
+- 2026-09-12 (Claude Code): **Las celdas del rol usan `aria-disabled`, nunca
+  `disabled`.** Un botón deshabilitado no recibe foco, y con `disabled` la
+  cuadrícula entera quedaba fuera del alcance del teclado y de un lector de
+  pantalla. Con `aria-disabled` se recorre aunque la fila esté bloqueada: leer
+  el rol no exige permiso de edición.
+- 2026-09-12 (Claude Code): **Inicio y Fin se mueven dentro del MES**, no del
+  rango cargado. La cuadrícula puede tener diez años dentro y saltar al último
+  día de todos ellos desorienta más de lo que ayuda.
 
 ## ⚠️ Advertencias / trampas conocidas
 
