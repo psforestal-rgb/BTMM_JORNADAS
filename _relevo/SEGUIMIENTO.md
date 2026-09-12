@@ -20,7 +20,8 @@ v1.22.0, todo hasta RF9) y el
 
 El trabajo posterior —el cierre de la Fase 2 y la ficha individual de la Fase 3,
 v1.29.0— está en la rama `claude/festive-allen-hl6igv`, **rebasada sobre el
-`main` del #92**. La rebase se hizo comprobando antes que el árbol del commit
+`main` del #92** y abierto en el **PR
+[#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93)**. La rebase se hizo comprobando antes que el árbol del commit
 `d20adfe` era idéntico al de `origin/main`, así que el squash no se perdió nada;
 por eso el push posterior necesitó `--force-with-lease` (autorizado, y con
 `respaldo-pre-rebase-f3` como red local).
@@ -410,9 +411,11 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## ⚠️ Advertencias / trampas conocidas
 
-- **El trabajo de esta sesión vive en `claude/festive-allen-hl6igv`** y en el PR
-  [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91), no en `main`;
-  hasta que se fusione, el sitio publicado sigue en 1.14.17.
+- **El trabajo pendiente de fusionar vive en `claude/festive-allen-hl6igv`** y en
+  el PR [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93). Los PR
+  #91 y #92 ya se fusionaron; `main` está en v1.25.0 y la rama en v1.29.0.
+  **Un PR fusionado no se reutiliza**: si el #93 se fusiona y hay trabajo nuevo,
+  se abre otro.
 - `npm ci` normal falla por el proxy al compilar `sharp`; usar
   `npm ci --ignore-scripts`.
 - **Un token de color que no existe NO da error.** Tailwind genera la clase
