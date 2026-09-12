@@ -50,7 +50,7 @@ const ESTADO_REPOSICION_CLS = {
 };
 
 const TONO_ALERTA = {
-  danger: "border-danger-soft bg-danger-soft/50 text-danger-fg",
+  danger: "border-critical-soft bg-critical-soft/50 text-critical-fg",
   warn: "border-warning-soft bg-warning-soft/50 text-warning-fg",
   ok: "border-ok-soft bg-ok-soft/50 text-ok-fg",
 };
@@ -156,7 +156,7 @@ export default function FichaFuncionario({
           <button
             type="button"
             onClick={() => setView("funcionarios")}
-            className="inline-flex min-h-touch items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white"
+            className="inline-flex min-h-touch items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-brand-fg"
           >
             <Icon name="chevronLeft" size={16} />
             {t("ficha.volver")}
@@ -190,7 +190,7 @@ export default function FichaFuncionario({
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
-              <Badge className="border-line bg-surface-inset text-ink-soft">{f.condicion}</Badge>
+              <Badge className="border-line bg-surface-inset text-ink-muted">{f.condicion}</Badge>
               {f.ong && <Badge className="border-orange-200 bg-orange-100 text-orange-900">{t("funcionarios.filtroOng")}</Badge>}
               {f.policia && <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">{t("funcionarios.atributoPolicia")}</Badge>}
               {f.brigada && <Badge className="border-orange-200 bg-orange-50 text-orange-900">{t("funcionarios.atributoBrigada")}</Badge>}
@@ -237,7 +237,7 @@ export default function FichaFuncionario({
             <p className="text-[10px] font-bold uppercase tracking-wide text-ink-muted">
               {t("ficha.datos.observaciones")}
             </p>
-            <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-ink-soft">{f.obs}</p>
+            <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-ink-muted">{f.obs}</p>
           </div>
         )}
       </Card>
@@ -254,7 +254,7 @@ export default function FichaFuncionario({
               <p className="text-2xl font-bold text-ink">{textoSaldoCorto(banco.saldoHoras, hj)}</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <Badge className="border-line bg-surface text-ink-soft">
+              <Badge className="border-line bg-surface text-ink-muted">
                 {t("ficha.banco.registros", { n: banco.total })}
               </Badge>
               <Badge className={ESTADO_REPOSICION_CLS.Pendiente}>
@@ -302,14 +302,14 @@ export default function FichaFuncionario({
                     const estado = estadoReposicion(r, hj);
                     return (
                       <tr key={r.id}>
-                        <td className="p-2 font-mono text-xs text-ink-soft">{r.folio}</td>
+                        <td className="p-2 font-mono text-xs text-ink-muted">{r.folio}</td>
                         <td className="p-2 whitespace-nowrap text-ink">{fecha(r.fecha)}</td>
-                        <td className="p-2 text-ink-soft">{r.tipoDia}</td>
-                        <td className="p-2 text-ink-soft">{r.motivo}</td>
+                        <td className="p-2 text-ink-muted">{r.tipoDia}</td>
+                        <td className="p-2 text-ink-muted">{r.motivo}</td>
                         <td className="p-2 text-right tabular-nums text-ink">
                           {t("ficha.banco.horas", { n: horasTrabajadas(r, hj) })}
                         </td>
-                        <td className="p-2 text-right tabular-nums text-ink-soft">
+                        <td className="p-2 text-right tabular-nums text-ink-muted">
                           {t("ficha.banco.horas", { n: horasRepuestas(r, hj) })}
                         </td>
                         <td className="p-2 text-right font-semibold tabular-nums text-ink">
@@ -349,7 +349,7 @@ export default function FichaFuncionario({
                   <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs font-bold ${codigoCls(cat, false)}`}>
                     {cat}
                   </span>
-                  <span className="truncate text-xs font-semibold text-ink-soft">{etiquetaCategoria(cat)}</span>
+                  <span className="truncate text-xs font-semibold text-ink-muted">{etiquetaCategoria(cat)}</span>
                 </div>
                 <p className="mt-1 text-lg font-bold tabular-nums text-ink">
                   {t("ficha.roles.dias", { n: resumenRoles.porCategoria[cat] })}
@@ -382,7 +382,7 @@ export default function FichaFuncionario({
               onClick={() => setFiltroActividades(clave)}
               className={`min-h-touch rounded-lg border px-3 py-2 text-sm font-semibold ${
                 filtroActividades === clave
-                  ? "border-brand bg-brand text-white"
+                  ? "border-brand bg-brand text-brand-fg"
                   : "border-line text-ink hover:bg-surface-alt"
               }`}
             >
@@ -434,7 +434,7 @@ export default function FichaFuncionario({
                         </Badge>
                       )}
                       {acompanantes > 0 && (
-                        <Badge className="border-line bg-surface text-ink-soft">
+                        <Badge className="border-line bg-surface text-ink-muted">
                           {t("ficha.actividades.acompanantes", { n: acompanantes })}
                         </Badge>
                       )}
