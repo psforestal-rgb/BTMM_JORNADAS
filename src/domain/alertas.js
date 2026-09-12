@@ -1,17 +1,7 @@
 import { faltan, fecha } from "./fechas.js";
-import { historialPorFuncionario } from "./reposicion.js";
+import { historialPorFuncionario, textoSaldoCorto } from "./reposicion.js";
 
 const HOY_DEFAULT = new Date(2026, 4, 19);
-
-/** Formato breve de un saldo en horas, en días cuando calza con la jornada. */
-function saldoTextoCorto(horas, hj) {
-  const h = Math.round((Number(horas) || 0) * 100) / 100;
-  if (h <= 0) return "0 h";
-  const dias = h / hj;
-  if (Number.isInteger(dias)) return dias === 1 ? "1 día" : `${dias} días`;
-  if (h === hj / 2) return "medio día";
-  return `${h} h`;
-}
 
 /**
  * Genera el listado de alertas administrativas para el personal.
@@ -47,6 +37,7 @@ export function alertas(personas, opts = {}) {
       const d = faltan(f.vencimiento, hoy);
       if (d !== null && d < 0) {
         r.push({
+          funcionario: f.nombre,
           t: "danger",
           icon: "🚨",
           msg: `Disponibilidad vencida — ${f.nombre}`,
@@ -54,6 +45,7 @@ export function alertas(personas, opts = {}) {
         });
       } else if (d !== null && d === 0) {
         r.push({
+          funcionario: f.nombre,
           t: "danger",
           icon: "🚨",
           msg: `Disponibilidad vence HOY — ${f.nombre}`,
@@ -61,6 +53,7 @@ export function alertas(personas, opts = {}) {
         });
       } else if (d !== null && d > 0 && d <= 60) {
         r.push({
+          funcionario: f.nombre,
           t: "warn",
           icon: "⚠️",
           msg: `Disponibilidad por vencer — ${f.nombre}`,
@@ -72,6 +65,7 @@ export function alertas(personas, opts = {}) {
     // 2. Acumulativa sin resolución (no ONG).
     if (f.jornada === "Acumulativa" && !f.resolucion && !f.ong) {
       r.push({
+        funcionario: f.nombre,
         t: "warn",
         icon: "📄",
         msg: `Sin resolución acumulativa — ${f.nombre}`,
@@ -82,6 +76,7 @@ export function alertas(personas, opts = {}) {
     // 3. Acumulativa sin modalidad (Fase 6).
     if (alertaAcumulativaSinModalidad && f.jornada === "Acumulativa" && !f.modalidad) {
       r.push({
+        funcionario: f.nombre,
         t: "warn",
         icon: "📄",
         msg: `Acumulativa sin modalidad definida — ${f.nombre}`,
@@ -92,6 +87,7 @@ export function alertas(personas, opts = {}) {
     // 4. Incapacitado con disponibilidad activa.
     if (f.estado === "Incapacitado" && f.disponibilidad) {
       r.push({
+        funcionario: f.nombre,
         t: "danger",
         icon: "🩺",
         msg: `Revisar disponibilidad — ${f.nombre}`,
@@ -104,6 +100,7 @@ export function alertas(personas, opts = {}) {
       const futuras = actividadesFuturasDe(actividadesPlan, f.nombre, isoHoy);
       if (futuras.length) {
         r.push({
+          funcionario: f.nombre,
           t: "danger",
           icon: "🩺",
           msg: `Incapacitado con actividad planificada — ${f.nombre}`,
@@ -117,6 +114,7 @@ export function alertas(personas, opts = {}) {
       const futuras = actividadesFuturasDe(actividadesPlan, f.nombre, isoHoy);
       if (futuras.length) {
         r.push({
+          funcionario: f.nombre,
           t: "warn",
           icon: "⚠️",
           msg: `Inactivo con actividad planificada — ${f.nombre}`,
@@ -133,10 +131,11 @@ export function alertas(personas, opts = {}) {
     for (const fila of historialPorFuncionario(reposiciones, horasJornada)) {
       if (fila.pendientes === 0) continue;
       r.push({
+        funcionario: fila.funcionario,
         t: "warn",
         icon: "⟳",
         msg: `Tiempo por reponer — ${fila.funcionario}`,
-        sub: `${fila.pendientes} registro${fila.pendientes !== 1 ? "s" : ""} de trabajo fuera de rol sin reponer · saldo a favor ${saldoTextoCorto(fila.saldoHoras, horasJornada)}. Coordinar la reposición del tiempo.`,
+        sub: `${fila.pendientes} registro${fila.pendientes !== 1 ? "s" : ""} de trabajo fuera de rol sin reponer · saldo a favor ${textoSaldoCorto(fila.saldoHoras, horasJornada)}. Coordinar la reposición del tiempo.`,
       });
     }
   }
@@ -151,6 +150,19 @@ export function alertas(personas, opts = {}) {
           sub: "No se observan vencimientos o bloqueos críticos en los datos visibles.",
         },
       ];
+}
+
+/**
+ * Alertas que corresponden a UNA persona (VF6).
+ *
+ * Cada alerta de personal lleva el campo `funcionario`; filtrar por ese campo
+ * y no por el texto de `msg` es lo que permite que la ficha individual y la
+ * vista general compartan exactamente el mismo cálculo. El aviso de cierre
+ * «Sin alertas críticas» no lleva el campo, así que nunca se cuela aquí.
+ */
+export function alertasDeFuncionario(lista = [], nombre) {
+  if (!nombre) return [];
+  return lista.filter((a) => a?.funcionario === nombre);
 }
 
 function actividadesFuturasDe(actividadesPlan, nombre, isoHoy) {

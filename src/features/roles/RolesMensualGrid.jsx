@@ -82,6 +82,7 @@ export default function RolesMensualGrid({
   setActividadesPlan,
   reposiciones = [],
   hj,
+  setView,
 }) {
   const t = useT();
   const { reglas } = useApp();
@@ -89,6 +90,9 @@ export default function RolesMensualGrid({
     () => indexarReposiciones(reposiciones, hj),
     [reposiciones, hj],
   );
+  /* VF1: acceso a la ficha individual. Se pasa como callback ya resuelto para
+     que la fila no tenga que conocer la forma de la navegación. */
+  const verFicha = setView ? (nombre) => setView("funcionario", { funcionario: nombre }) : null;
   const [editRows, setEditRows] = useState({});
   const [menu, setMenu] = useState(null);
   const [conflictoActivo, setConflictoActivo] = useState(null);
@@ -574,6 +578,7 @@ export default function RolesMensualGrid({
                   year={year}
                   month={month}
                   t={t}
+                  verFicha={verFicha}
                 />
               ))}
               {/* El resumen general es el último bloque de la tabla, así que
@@ -679,6 +684,7 @@ function RowsGrupo({
   year,
   month,
   t,
+  verFicha,
 }) {
   return (
     <tbody data-grupo={grupo.nombre} ref={registerBodyRef}>
@@ -745,6 +751,20 @@ function RowsGrupo({
                       >
                         {t("roles.aplicarPatronAbrir")}
                       </button>
+                      {/* VF1: acceso a la ficha individual desde Roles. Va en
+                          el panel de edición de la fila y no junto al nombre
+                          porque la celda del nombre mide 5,5 rem en móvil: un
+                          segundo botón ahí duplicaría el alto de TODAS las
+                          filas de una cuadrícula que es densa a propósito. */}
+                      {verFicha && (
+                        <button
+                          type="button"
+                          onClick={() => verFicha(nombre)}
+                          className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-2 text-[10px] font-semibold text-ink hover:bg-surface-alt sm:text-[11px]"
+                        >
+                          {t("roles.verFicha")}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

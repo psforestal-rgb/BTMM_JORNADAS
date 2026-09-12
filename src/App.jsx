@@ -16,6 +16,7 @@ import DiaLayout from "./features/dia/DiaLayout.jsx";
 
 const Roles = lazy(() => import("./features/roles/Roles.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
+const FichaFuncionario = lazy(() => import("./features/funcionarios/FichaFuncionario.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
 const AdelantoViaticos = lazy(() => import("./features/viaticos/AdelantoViaticos.jsx"));
@@ -61,6 +62,8 @@ function AppShell() {
     setReposiciones,
     diaVista,
     setDiaVista,
+    funcionarioVista,
+    setFuncionarioVista,
     reglas,
   } = useApp();
 
@@ -72,7 +75,10 @@ function AppShell() {
     () => alerts.filter((a) => a.t === "danger" || a.t === "warn").length,
     [alerts],
   );
-  const navigate = useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista });
+  const navigate = useAppNavigation({
+    view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
+    funcionarioVista, setFuncionarioVista,
+  });
   const keyboardOpen = useVirtualKeyboard();
 
   return (
@@ -107,7 +113,24 @@ function AppShell() {
                   setView={navigate}
                 />
               )}
-              {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}
+              {view === "funcionarios" && (
+                <Funcionarios personas={personas} setPersonas={setPersonas} setView={navigate} />
+              )}
+              {view === "funcionario" && (
+                <FichaFuncionario
+                  nombre={funcionarioVista}
+                  personas={personas}
+                  setPersonas={setPersonas}
+                  actividadesPlan={actividadesPlan}
+                  roleData={roleData}
+                  reposiciones={reposiciones}
+                  year={year}
+                  month={month}
+                  alerts={alerts}
+                  setView={navigate}
+                  setDiaVista={setDiaVista}
+                />
+              )}
               {view === "roles" && (
                 <Roles
                   year={year}

@@ -444,3 +444,26 @@ describe("Funcionarios — rastro de cambios (RF9)", () => {
     expect(h[0].funcionario.nombre).toBe("Ana Pérez");
   });
 });
+
+describe("Funcionarios — acceso a la ficha individual (VF1)", () => {
+  it("desde la tabla abre la ficha de esa persona, sin tocar la vista de Roles", () => {
+    const setView = vi.fn();
+    renderConProvider({ setView });
+    fireEvent.click(screen.getByRole("button", { name: "Ver la ficha de Ana Pérez" }));
+    expect(setView).toHaveBeenCalledWith("funcionario", { funcionario: "Ana Pérez" });
+  });
+
+  it("cada fila lleva a su propia ficha", () => {
+    const setView = vi.fn();
+    renderConProvider({ setView });
+    const botones = screen.getAllByRole("button", { name: /^Ver la ficha de / });
+    expect(botones.length).toBe(3);
+    fireEvent.click(screen.getByRole("button", { name: "Ver la ficha de Carla Mora" }));
+    expect(setView).toHaveBeenCalledWith("funcionario", { funcionario: "Carla Mora" });
+  });
+
+  it("sin navegación disponible no se pinta el acceso, en vez de dejar un botón muerto", () => {
+    renderConProvider();
+    expect(screen.queryAllByRole("button", { name: /^Ver la ficha de / })).toHaveLength(0);
+  });
+});

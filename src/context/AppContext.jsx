@@ -57,6 +57,10 @@ const seedState = {
   actividadesPlan: baseActividadesPlan,
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
+  // Funcionario abierto en la ficha individual (VF1). Es estado de navegación
+  // —vive en el hash `#/funcionario/<nombre>`— y por eso es efímero: no se
+  // persiste ni viaja en el respaldo.
+  funcionarioVista: "",
   // Rastro de cambios sobre las fichas (RF9). Al vivir en `seedState`, un
   // snapshot anterior que no lo traiga lo recibe vacío en
   // `mergePersistedWithSeed`, así que NO hace falta subir `SCHEMA_VERSION`.
@@ -196,6 +200,8 @@ function reducer(state, action) {
       return { ...state, compact: resolveUpdater(action.payload, state.compact) };
     case "SET_DIA_VISTA":
       return { ...state, diaVista: resolveUpdater(action.payload, state.diaVista) };
+    case "SET_FUNCIONARIO_VISTA":
+      return { ...state, funcionarioVista: String(resolveUpdater(action.payload, state.funcionarioVista) || "") };
     case "SET_PERSONAS":
       return { ...state, personas: resolveUpdater(action.payload, state.personas) };
     case "SET_ACTIVIDADES_PLAN":
@@ -238,7 +244,7 @@ function reducer(state, action) {
 }
 
 // Campos del estado que NO se persisten (UI ephemera).
-const EPHEMERAL_KEYS = new Set(["view", "compact", "diaVista", "month", "year"]);
+const EPHEMERAL_KEYS = new Set(["view", "compact", "diaVista", "funcionarioVista", "month", "year"]);
 
 function pickPersistable(state) {
   const out = {};
@@ -436,6 +442,7 @@ export function AppProvider({ children }) {
   const setYear = useCallback((v) => dispatch({ type: "SET_YEAR", payload: v }), []);
   const setCompact = useCallback((v) => dispatch({ type: "SET_COMPACT", payload: v }), []);
   const setDiaVista = useCallback((v) => dispatch({ type: "SET_DIA_VISTA", payload: v }), []);
+  const setFuncionarioVista = useCallback((v) => dispatch({ type: "SET_FUNCIONARIO_VISTA", payload: v }), []);
   const setPersonas = useCallback((v) => dispatch({ type: "SET_PERSONAS", payload: v }), []);
   const setActividadesPlan = useCallback((v) => dispatch({ type: "SET_ACTIVIDADES_PLAN", payload: v }), []);
   const setReposiciones = useCallback((v) => dispatch({ type: "SET_REPOSICIONES", payload: v }), []);
@@ -476,6 +483,7 @@ export function AppProvider({ children }) {
       setYear,
       setCompact,
       setDiaVista,
+      setFuncionarioVista,
       setPersonas,
       setActividadesPlan,
       setReposiciones,
@@ -502,6 +510,7 @@ export function AppProvider({ children }) {
       setYear,
       setCompact,
       setDiaVista,
+      setFuncionarioVista,
       setPersonas,
       setActividadesPlan,
       setReposiciones,

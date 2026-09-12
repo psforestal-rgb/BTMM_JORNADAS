@@ -16,19 +16,20 @@ import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/c
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo } from "../../lib/respaldo.js";
 import { validarFuncionario } from "../../domain/validaciones.js";
-import { crearEntrada, entradaDeEdicion, TIPO } from "../../domain/historial.js";
+import { crearEntrada, TIPO } from "../../domain/historial.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
 import Modal from "../../ui/Modal.jsx";
 import { planificarImportacion } from "./importarFuncionarios.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
+import { useGuardarFuncionario } from "./useGuardarFuncionario.js";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
 /* Tope de tamaño, como el que ya protege la importación JSON de «Datos»: un
    archivo enorme o corrupto no debe congelar el hilo principal. */
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
-export default function Funcionarios({ personas, setPersonas }) {
+export default function Funcionarios({ personas, setPersonas, setView }) {
   const t = useT();
   const ctx = useApp();
   const { registrarCambio } = ctx;
@@ -90,19 +91,17 @@ export default function Funcionarios({ personas, setPersonas }) {
     ingreso: "",
     obs: "",
   });
+  // El guardado vive en un hook compartido con la ficha individual: una sola
+  // ruta de alta/edición, un solo sitio donde se registra el rastro RF9.
+  const guardarFuncionario = useGuardarFuncionario(personas, setPersonas);
   const guardar = (obj) => {
-    if (!obj.nombre.trim()) return;
-    const previo = personas.find((x) => x.id === obj.id);
-    const esEdicion = Boolean(previo);
-    setPersonas((prev) => (prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev]));
-    setModal(null);
-    // RF9: una edición que no cambió nada no deja rastro (`entradaDeEdicion`
-    // devuelve null), así que abrir y cerrar el formulario no ensucia nada.
-    registrarCambio(
-      esEdicion ? entradaDeEdicion(previo, obj) : crearEntrada({ tipo: TIPO.ALTA, funcionario: obj }),
-    );
-    exito(t(esEdicion ? "funcionarios.guardado" : "funcionarios.creado", { nombre: obj.nombre.trim() }));
+    if (guardarFuncionario(obj)) setModal(null);
   };
+
+  /* VF1: la ficha individual es una ruta propia (`#/funcionario/<nombre>`) y
+     no una entrada más de la barra de navegación. Se entra desde aquí y desde
+     la cuadrícula de Roles, y el enlace se puede compartir. */
+  const verFicha = (f) => setView?.("funcionario", { funcionario: f.nombre });
 
   /* Borrado reversible (F-P12): en vez de un modal de confirmación por clic,
      se elimina de inmediato y el aviso ofrece «Deshacer» durante 10 s. La red
@@ -378,6 +377,7 @@ export default function Funcionarios({ personas, setPersonas }) {
               <FuncionarioCard
                 key={f.id}
                 f={f}
+                onVerFicha={setView ? () => verFicha(f) : null}
                 onEditar={() => setModal({ ...f })}
                 onBorrar={() => eliminar(f.id)}
               />
@@ -455,6 +455,15 @@ export default function Funcionarios({ personas, setPersonas }) {
                     <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
                   </td>
                   <td className="p-3 text-right">
+                    {setView && (
+                      <button
+                        onClick={() => verFicha(f)}
+                        aria-label={t("funcionarios.verFichaDe", { nombre: f.nombre })}
+                        className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-emerald-800 hover:bg-emerald-50"
+                      >
+                        {t("funcionarios.verFicha")}
+                      </button>
+                    )}
                     <button onClick={() => setModal({ ...f })} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-blue-800 hover:bg-blue-50">
                       {t("acciones.editar")}
                     </button>

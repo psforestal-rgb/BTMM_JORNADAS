@@ -1,14 +1,18 @@
 import { useCallback, useEffect } from "react";
 import { hashForState, normalizarVista, parseAppHash } from "./navigation.js";
 
-export function useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista }) {
+export function useAppNavigation({
+  view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
+  funcionarioVista, setFuncionarioVista,
+}) {
   const applyHash = useCallback(() => {
     const next = parseAppHash(window.location.hash);
     setView(next.view);
     if (next.year != null) setYear(next.year);
     if (next.month != null) setMonth(next.month);
     if (next.diaVista) setDiaVista(next.diaVista);
-  }, [setDiaVista, setMonth, setView, setYear]);
+    if (next.funcionarioVista) setFuncionarioVista?.(next.funcionarioVista);
+  }, [setDiaVista, setFuncionarioVista, setMonth, setView, setYear]);
 
   useEffect(() => {
     applyHash();
@@ -21,14 +25,22 @@ export function useAppNavigation({ view, setView, year, setYear, month, setMonth
   }, [applyHash]);
 
   useEffect(() => {
-    const target = hashForState({ view, year, month, diaVista });
+    const target = hashForState({ view, year, month, diaVista, funcionarioVista });
     if (window.location.hash !== target) window.history.replaceState({}, "", target);
-  }, [diaVista, month, view, year]);
+  }, [diaVista, funcionarioVista, month, view, year]);
 
-  return useCallback((nextView) => {
+  /**
+   * `navegar(vista, { funcionario })`. El segundo argumento es opcional y hoy
+   * solo lo usa la ficha individual: sin él se conserva el funcionario que ya
+   * estuviera seleccionado, para que volver a la ficha desde otra vista no
+   * pierda el contexto.
+   */
+  return useCallback((nextView, opciones = {}) => {
     const safeView = normalizarVista(nextView);
-    const target = hashForState({ view: safeView, year, month, diaVista });
+    const nombre = opciones.funcionario != null ? opciones.funcionario : funcionarioVista;
+    if (opciones.funcionario != null) setFuncionarioVista?.(opciones.funcionario);
+    const target = hashForState({ view: safeView, year, month, diaVista, funcionarioVista: nombre });
     if (window.location.hash !== target) window.history.pushState({}, "", target);
     setView(safeView);
-  }, [diaVista, month, setView, year]);
+  }, [diaVista, funcionarioVista, month, setFuncionarioVista, setView, year]);
 }

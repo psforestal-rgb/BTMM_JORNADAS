@@ -20,6 +20,7 @@ export default function Roles({
   setActividadesPlan,
   reposiciones = [],
   hj,
+  setView,
 }) {
   const t = useT();
   // Puestos vigentes desde el estado (RP1–RP8).
@@ -309,6 +310,7 @@ export default function Roles({
             setActividadesPlan={setActividadesPlan}
             reposiciones={reposiciones}
             hj={hj}
+            setView={setView}
           />
           <RolesPrintFooter />
         </div>
