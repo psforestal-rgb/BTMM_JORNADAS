@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Icon from "../../ui/Icon.jsx";
-import { meses, dias } from "../../data/calendario.js";
+import { meses, dias, diasLargos } from "../../data/calendario.js";
 import { opcionesModalidad } from "../../data/opciones.js";
 import { isoFecha, primerDiaLaboral, dim, addMonths } from "../../domain/fechas.js";
 import {
@@ -20,6 +20,7 @@ import {
   tieneVisitEse,
 } from "../../domain/actividades.js";
 import { conflictoDePersonaDia } from "../../domain/conflictos.js";
+import { destinoDeTecla, filasDeGrupos, TECLAS } from "./navegacionCuadricula.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { buildFeriadosSet } from "../../domain/feriados.js";
 import { tieneCoberturaOficial } from "../../data/feriadosCR.js";
@@ -179,6 +180,10 @@ export default function RolesMensualGrid({
       for (let d = 1; d <= n; d++) {
         const dow = new Date(y, m, d).getDay();
         lista.push({
+          // Posición absoluta dentro del rango cargado. La necesita
+          // `aria-colindex`: con los meses lejanos colapsados, la posición de
+          // la celda en la fila ya no dice en qué columna está de verdad.
+          indice: lista.length,
           year: y,
           month: m,
           dia: d,
@@ -187,6 +192,11 @@ export default function RolesMensualGrid({
           finde: dow === 0 || dow === 6,
           esHoy: y === anioHoy && m === mesHoy && d === diaHoy,
           inicioMes,
+          // Para el nombre accesible de la celda: «martes 7 de julio de 2026».
+          // En minúsculas: el diccionario los guarda en mayúsculas para la
+          // interfaz, y algunos lectores de pantalla deletrean las palabras
+          // escritas así en vez de leerlas.
+          fechaLegible: `${diasLargos[dow].toLocaleLowerCase("es")} ${d} de ${meses[m].toLocaleLowerCase("es")} de ${y}`,
         });
       }
     });
@@ -329,36 +339,155 @@ export default function RolesMensualGrid({
     }
   });
 
+  /* ── Navegación con teclado (A-P12) ──────────────────────────────────────
+     Patrón ARIA de cuadrícula: una sola celda en la secuencia de tabulación y
+     las flechas para moverse. Las celdas usan `aria-disabled` y no `disabled`,
+     así que se pueden recorrer aunque la fila esté bloqueada: leer el rol con
+     el teclado no debería exigir permiso de edición.
+
+     El destino lo decide `destinoDeTecla`, que es pura y está probada aparte.
+     Aquí queda solo lo que necesita el DOM. */
+  const filasNavegables = useMemo(() => filasDeGrupos(grupos, rowId), [grupos]);
+  const celdaActivaRef = useRef(null);
+  const focoPendienteRef = useRef(null);
+
+  /* Se busca recorriendo las celdas pintadas en vez de con un selector de
+     atributo. La clave de fila lleva el nombre de la persona, que puede traer
+     comillas o acentos, y `CSS.escape` no existe en todos los entornos (jsdom,
+     entre otros): un selector mal escapado deja la navegación muerta en
+     silencio. Comparar `dataset` no puede fallar por eso. */
+  const botonDeCelda = (fila, iso) => {
+    const celdas = scrollRef.current?.querySelectorAll("td[data-celda-rol]");
+    if (!celdas) return null;
+    for (const celda of celdas) {
+      if (celda.dataset.fila === fila && celda.dataset.iso === iso) return celda.querySelector("button");
+    }
+    return null;
+  };
+
+  const desplazarHasta = (elemento, inline) => {
+    if (typeof elemento?.scrollIntoView === "function") {
+      elemento.scrollIntoView({ block: "nearest", inline });
+    }
+  };
+
+  /* `scrollIntoView` no sabe nada de la columna congelada de nombres, así que
+     da por visible una celda que queda DEBAJO de ella y el anillo de foco
+     aparece medio tapado. Después de desplazar, se corrige a mano dejando la
+     celda a la derecha de esa columna. */
+  const desplazarCeldaALaVista = (boton) => {
+    const contenedor = scrollRef.current;
+    if (!contenedor || !boton) return;
+    desplazarHasta(boton, "nearest");
+    if (typeof boton.getBoundingClientRect !== "function") return;
+    const celda = boton.getBoundingClientRect();
+    const caja = contenedor.getBoundingClientRect();
+    if (!celda.width || !caja.width) return;
+    const margen = 8;
+    const limiteIzquierdo = caja.left + anchoNombre + margen;
+    if (celda.left < limiteIzquierdo) contenedor.scrollLeft -= limiteIzquierdo - celda.left;
+    else if (celda.right > caja.right - margen) contenedor.scrollLeft += celda.right - caja.right + margen;
+  };
+
+  const enfocarCelda = (destino) => {
+    if (!destino) return;
+    celdaActivaRef.current = destino;
+    const boton = botonDeCelda(destino.fila, destino.iso);
+    if (boton) {
+      boton.focus();
+      // Mover el foco no provoca render, así que el tabindex se actualiza aquí
+      // mismo: si no, al salir y volver con el tabulador se regresaría a la
+      // celda anterior y no a la última visitada.
+      aplicarTabindex();
+      desplazarCeldaALaVista(boton);
+      return;
+    }
+    /* La celda no está en el DOM: su mes está colapsado por la virtualización.
+       Se AMPLÍA la ventana para incluirlo, sin soltar el mes actual.
+
+       Ampliar y no desplazar es lo que salva el foco. Desplazando, la celda de
+       origen se desmontaba antes de que apareciera la de destino y el foco caía
+       al `body`; a partir de ahí las flechas ya no llegaban a la cuadrícula y
+       la navegación quedaba muerta. Al crecer la ventana, el origen sigue
+       montado hasta que el destino existe y puede recibirlo. */
+    focoPendienteRef.current = destino;
+    const indice = columnas.findIndex((c) => c.iso === destino.iso);
+    if (indice < 0) return;
+    setVentana((prev) => ({
+      desde: Math.min(prev.desde, indice),
+      hasta: Math.max(prev.hasta, indice + 1),
+    }));
+  };
+
+  useLayoutEffect(() => {
+    const pendiente = focoPendienteRef.current;
+    if (!pendiente) return;
+    const boton = botonDeCelda(pendiente.fila, pendiente.iso);
+    if (!boton) return;
+    focoPendienteRef.current = null;
+    boton.focus();
+    desplazarCeldaALaVista(boton);
+  });
+
+  /* Tabindex móvil: exactamente una celda en la secuencia de tabulación. Se
+     aplica sobre el DOM y no por props para no repintar las miles de celdas en
+     cada movimiento. Si la celda activa ya no está pintada, el turno pasa a la
+     primera visible, o la cuadrícula entera se caería de la tabulación. */
+  const aplicarTabindex = () => {
+    const contenedor = scrollRef.current;
+    if (!contenedor) return;
+    const activa = celdaActivaRef.current;
+    const deseada =
+      (activa && botonDeCelda(activa.fila, activa.iso)) ||
+      contenedor.querySelector("td[data-celda-rol] button");
+    const actual = contenedor.querySelector('td[data-celda-rol] button[tabindex="0"]');
+    if (actual === deseada) return;
+    if (actual) actual.tabIndex = -1;
+    if (deseada) deseada.tabIndex = 0;
+  };
+
+  // Tras cada render, porque la virtualización puede haberse llevado la celda
+  // que lo tenía.
+  useLayoutEffect(aplicarTabindex);
+
+  const alPulsarTecla = (evento) => {
+    if (!TECLAS.includes(evento.key)) return;
+    const celda = evento.target.closest?.("td[data-celda-rol]");
+    if (!celda) return;
+    const destino = destinoDeTecla({
+      tecla: evento.key,
+      fila: celda.dataset.fila,
+      iso: celda.dataset.iso,
+      filas: filasNavegables,
+      columnas,
+    });
+    // Se consume la tecla aunque no haya destino: en el borde de la cuadrícula,
+    // dejar que la flecha desplace la página sería peor que no hacer nada.
+    evento.preventDefault();
+    enfocarCelda(destino);
+  };
+
   /* Tramos del cuerpo: series de columnas que se pintan y huecos que se
      resumen en una sola celda. Se calcula una vez y lo comparten todas las
      filas, así que la cuenta de celdas por fila es idéntica en todas. */
   const tramos = useMemo(() => {
     const virtualizar = !imprimiendo && anchoColumna > 0;
-    if (!virtualizar) return [{ tipo: "celdas", clave: "todo", columnas }];
     const lista = [];
-    let bufer = [];
-    const cerrarBufer = () => {
-      if (bufer.length) {
-        lista.push({ tipo: "celdas", clave: `c-${bufer[0].iso}`, columnas: bufer });
-        bufer = [];
-      }
-    };
     let desde = 0;
     for (const { year: y, month: m } of rangoMeses) {
       const n = dim(y, m);
-      if (mesesVisibles.has(`${y}-${m}`)) {
-        for (let i = desde; i < desde + n; i += 1) bufer.push(columnas[i]);
+      const clave = `${y}-${m}`;
+      if (!virtualizar || mesesVisibles.has(clave)) {
+        lista.push({ tipo: "celdas", clave, columnas: columnas.slice(desde, desde + n) });
       } else {
-        cerrarBufer();
         // Si el mes nunca llegó a pintarse (un salto a una fecha lejana), se
         // cae al ancho medio por columna. Es una estimación, pero solo afecta
         // a meses que la persona todavía no ha visto.
-        const exacto = anchosMes.current.get(`${y}-${m}`);
-        lista.push({ tipo: "hueco", clave: `h-${y}-${m}`, n, ancho: exacto || n * anchoColumna });
+        const exacto = anchosMes.current.get(clave);
+        lista.push({ tipo: "hueco", clave, n, ancho: exacto || n * anchoColumna });
       }
       desde += n;
     }
-    cerrarBufer();
     return lista;
   }, [columnas, rangoMeses, mesesVisibles, imprimiendo, anchoColumna]);
 
@@ -657,6 +786,10 @@ export default function RolesMensualGrid({
         style={{ paddingBottom: Math.max(0, bodyHeight - theadHeight - lastGroupHeight) }}
       >
         <table
+          role="grid"
+          aria-label={t("roles.cuadriculaAria")}
+          aria-colcount={columnas.length + 1}
+          onKeyDown={alPulsarTecla}
           className={`border-separate border-spacing-0 text-[11px] sm:text-xs ${
             compact ? "min-w-[1040px] lg:min-w-[1140px]" : "min-w-[1160px] lg:min-w-[1380px]"
           }`}
@@ -995,7 +1128,8 @@ function RowsGrupo({
               tramo.tipo === "hueco" ? (
                 <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
               ) : (
-                tramo.columnas.map((col) => {
+                <Fragment key={tramo.clave}>
+                {tramo.columnas.map((col) => {
               const { year: y, month: m, dia: d, iso, finde, esHoy, inicioMes } = col;
               const val = getCelda(grupo, nombre, y, m, d);
               /* La regla completa, no solo «no trabaja ese día»: desde que el
@@ -1013,6 +1147,11 @@ function RowsGrupo({
               return (
                 <RoleCell
                   key={`${grupo.nombre}-${nombre}-${iso}`}
+                  fila={rowId(grupo.nombre, nombre)}
+                  iso={iso}
+                  nombre={nombre}
+                  fechaLegible={col.fechaLegible}
+                  colIndex={col.indice + 2}
                   value={val}
                   compact={compact}
                   editable={editing}
@@ -1029,7 +1168,8 @@ function RowsGrupo({
                   onConflicto={() => abrirConflicto(grupo, nombre, y, m, d, val)}
                 />
               );
-                })
+                })}
+                </Fragment>
               ),
             )}
           </tr>
@@ -1043,7 +1183,8 @@ function RowsGrupo({
           tramo.tipo === "hueco" ? (
             <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
           ) : (
-            tramo.columnas.map((col) => {
+            <Fragment key={tramo.clave}>
+              {tramo.columnas.map((col) => {
           const { year: y, month: m, dia: d, iso, esHoy } = col;
           const count = grupo.funcionarios.reduce(
             (acc, nombre) => (esRolActivo(getCelda(grupo, nombre, y, m, d)) ? acc + 1 : acc),
@@ -1059,7 +1200,8 @@ function RowsGrupo({
               {count}
             </td>
           );
-            })
+              })}
+            </Fragment>
           ),
         )}
       </tr>
@@ -1120,7 +1262,8 @@ function ResumenTbody({ grupos, columnas, tramos, getCelda, registerBodyRef, t }
             tramo.tipo === "hueco" ? (
               <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
             ) : (
-              tramo.columnas.map((col) => {
+              <Fragment key={tramo.clave}>
+                {tramo.columnas.map((col) => {
             const { iso, esHoy } = col;
             const n = totales.get(iso)[cat];
             return (
@@ -1133,7 +1276,8 @@ function ResumenTbody({ grupos, columnas, tramos, getCelda, registerBodyRef, t }
                 {n}
               </td>
             );
-              })
+                  })}
+              </Fragment>
             ),
           )}
         </tr>

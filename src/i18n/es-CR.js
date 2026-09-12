@@ -535,6 +535,8 @@ const dict = {
     aplicar: "Aplicar",
     aplicarPatronAbrir: "Aplicar…",
     titleConflicto: "Clic para resolver: rol vs actividad planificada",
+    conflictoAria: "en conflicto",
+    cuadriculaAria: "Rol por funcionario y día. Use las flechas para moverse entre celdas.",
     titleEditar: "Cambiar marca del día",
     titleSinEdicion: "Active edición del funcionario para modificar",
     initRing: "INICIO",
