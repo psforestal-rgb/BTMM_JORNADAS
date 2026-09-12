@@ -33,6 +33,17 @@ const personas = [
   { id: "f2", nombre: "Bruno Salas", puestoOperativo: "Puesto Quetzales", estado: "Activo" },
 ];
 
+/**
+ * El botón del nombre de una fila, que abre y cierra su edición. Desde A-P12
+ * las celdas del rol también llevan el nombre en su etiqueta accesible, así que
+ * hace falta distinguirlo: es el único que NO es una celda de la cuadrícula.
+ */
+function botonDeFila(nombre) {
+  return screen
+    .getAllByRole("button", { name: new RegExp(nombre.split(" ")[0], "i") })
+    .find((b) => !b.closest("td[data-celda-rol]"));
+}
+
 function renderRoles(props = {}) {
   return render(
     <AppProvider>
@@ -129,7 +140,7 @@ describe("Roles — asistente de patrón por rango", () => {
   it("abre el modal desde el panel de edición y muestra la elección de rotación", () => {
     renderRoles();
     // Activar edición de la fila de Ana Pérez (candado).
-    fireEvent.click(screen.getByRole("button", { name: /Ana/i }));
+    fireEvent.click(botonDeFila("Ana Pérez"));
     // El panel muestra el botón que abre el asistente.
     fireEvent.click(screen.getByRole("button", { name: /Aplicar…/ }));
     // Modal abierto con la elección de fase de rotación explicada.
@@ -142,7 +153,7 @@ describe("Roles — asistente de patrón por rango", () => {
   it("aplica el patrón y persiste overrides de rol para la persona/puesto en el rango", () => {
     const setRoleData = vi.fn();
     renderRoles({ setRoleData });
-    fireEvent.click(screen.getByRole("button", { name: /Ana/i }));
+    fireEvent.click(botonDeFila("Ana Pérez"));
     fireEvent.click(screen.getByRole("button", { name: /Aplicar…/ }));
     fireEvent.click(screen.getByRole("button", { name: /Aplicar patrón/i }));
     // El fill escribe roleData una sola vez, con claves para Ana Pérez en Orosi.
