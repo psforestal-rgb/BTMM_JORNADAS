@@ -33,36 +33,37 @@ historial divergente aunque el contenido sea idéntico.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**El bloque VF está cerrado entero (VF1–VF8).** La ficha individual del
-funcionario existe, se llega a ella desde Funcionarios y desde Roles, y tiene su
-propia ruta compartible. Lo siguiente de la Fase 3, por orden de valor:
+**Cerrados el bloque VF (ficha individual) y A1 (virtualización de Roles).** Lo
+siguiente de la Fase 3:
 
-**1. `[F3][A1]` Virtualización de la cuadrícula de Roles.** Es el punto más
-caro de la app: `src/features/roles/RolesMensualGrid.jsx` son ~880 líneas y
-pinta una fila por funcionario × ~31 columnas de día, todo a la vez. Antes de
-tocar nada, lee estas trampas, porque la cuadrícula ya tiene mecanismos que una
-virtualización ingenua rompe:
+**1. Estado de tablas y filtros en la URL.** El patrón ya existe y hay que
+seguirlo, no inventar otro: `src/lib/navigation.js` sabe llevar parámetros en la
+ruta desde VF1 (`#/funcionario/<nombre>`) y `useAppNavigation` acepta un segundo
+argumento con opciones (`navegar("funcionario", { funcionario })`). Hoy los
+filtros viven en `useSessionState` (`btmm:funcionarios:filtro`, `:orden`,
+`:buscar`, `:vista`), que sobrevive a recargar pero **no se puede compartir**.
+Decidir y registrar antes de codificar: qué filtros merecen ir en la URL y qué
+manda cuando la URL y la sesión se contradicen.
 
-- Hay **celdas `sticky`** (la columna del nombre y la cabecera). Una librería
-  que reemplace el `<tbody>` por divs absolutos las pierde.
-- El cuerpo está partido en **un `<tbody>` por puesto** (`RowsGrupo`), con
-  divisores, y cada uno registra su ref (`registerBodyRef`) para dimensionar el
-  relleno del scroll. Eso ya es media virtualización hecha a mano: entiéndela
-  antes de sustituirla.
-- **`window.print()`**: hay clases `pnlq-print-only` / `pnlq-no-print` y un pie
-  de impresión. Si se virtualiza sin más, **al imprimir salen solo las filas
-  visibles**, y el rol impreso es un entregable real de la administración. La
-  solución tiene que desactivar la virtualización al imprimir.
-- Mide antes de optimizar. Con ~20 funcionarios puede que no haga falta
-  virtualizar nada y sí memoizar la celda.
+**2. Exportación CSV de más vistas (B1)**, con `src/lib/csv.js`,
+`src/lib/descargas.js` y `src/lib/respaldo.js` ya listos y probados.
 
-**2. Estado de tablas y filtros en la URL.** La base ya está: `src/lib/navigation.js`
-sabe llevar parámetros en la ruta desde VF1 (`#/funcionario/<nombre>`), y
-`useAppNavigation` acepta un segundo argumento con opciones. Extenderlo a
-filtros es seguir ese mismo patrón, no inventar otro.
+**3. Cablear la cobertura crítica**, hoy desconectada (ver la advertencia de
+abajo).
 
-**3. Exportación CSV de más vistas (B1)**, con `src/lib/csv.js`,
-`src/lib/descargas.js` y `src/lib/respaldo.js` ya listos.
+⚠️ **Si vuelves a tocar la cuadrícula de Roles, lee primero esto.** El cuerpo
+está virtualizado por meses y hay tres invariantes que no se pueden romper:
+
+- **El encabezado NUNCA se colapsa.** Es quien fija el ancho de las columnas.
+  Si se colapsa también, hay que pasar la tabla a `table-layout: fixed` con un
+  `colgroup`, y eso rompe la columna congelada de nombres y las barras de mes.
+- **Al imprimir vuelve la tabla entera** (`beforeprint` y medio `print`). El rol
+  impreso es un entregable de la administración.
+- **El hueco reserva el ancho EXACTO que ese mes midió mientras estaba
+  pintado**, no un ancho medio por columna. Las columnas no son todas iguales
+  («T10» ocupa más que «L1»); con un promedio la tabla encogía al colapsar y el
+  contenido se movía bajo el dedo (83 px en móvil). Está en
+  `anchosMes` (un `useRef` con un `Map`) y hay pruebas que lo pinan.
 
 ⚠️ **Pendiente heredado, independiente de la Fase 3.** La «cobertura crítica»
 que describe `docs/GLOSARIO.md` **no está conectada a nada**: existen
@@ -73,10 +74,12 @@ en teletrabajo saldría como cubierto.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.29.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
-  el `main` del PR #92 (`eef5ab1`) — Último commit: `[F3][VF1]` «la sección
-  Funcionarios queda marcada mientras se lee una ficha»
-- Tests: ✅ **641/641** (58 archivos) — Build: ✅ `npm run build` limpio, PWA
+- Versión: **1.30.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
+  el `main` del PR #92 (`eef5ab1`), abierta en el PR
+  [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) — Último
+  commit: `d52b3e8` «[F3][A1] virtualiza por meses el cuerpo de la cuadrícula
+  de Roles»
+- Tests: ✅ **653/653** (59 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - `main` está en v1.25.0; esta rama lleva por delante el cierre de la Fase 2
   (RT2/RT6/RT8) y el bloque VF entero.
@@ -139,12 +142,18 @@ en teletrabajo saldría como cubierto.
   Módulo nuevo `src/domain/fichaFuncionario.js` (compone, no calcula) y hook
   `useGuardarFuncionario` compartido con la lista.
 
+- `d52b3e8` `[F3][A1]` — **virtualización por meses del cuerpo de la cuadrícula
+  de Roles.** Medido en Chromium antes y después: tras desplazarse ocho meses,
+  de 6348 celdas a 2500 en escritorio y 940 en móvil. El encabezado nunca se
+  colapsa, al imprimir vuelve la tabla entera y cada hueco reserva el ancho
+  exacto que ese mes midió mientras estaba pintado.
+
 - `437a52b` `[F3][VF8]` — arregla tres clases de color que no existían
   (`text-ink-soft`, `bg-danger-soft`…) y añade la guarda estática que las
   detecta. Tailwind no avisa de esto: genera la clase vacía y el elemento hereda
   el color del padre.
 
-Tests: de 290 a 641 (+351). Ninguna función existente se eliminó.
+Tests: de 290 a 653 (+363). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -176,16 +185,14 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F3][A1]` — virtualización de la cuadrícula de Roles. Ver «SIGUIENTE
-   ACCIÓN», que lista las cuatro trampas (sticky, `RowsGrupo`, impresión, medir
-   antes).
-2. Estado de tablas y filtros en la URL, siguiendo el patrón que VF1 ya dejó en
+1. Estado de tablas y filtros en la URL, siguiendo el patrón que VF1 ya dejó en
    `src/lib/navigation.js`.
-3. Exportación CSV de más vistas (B1).
-4. Cablear la cobertura crítica, hoy desconectada.
-5. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+2. Exportación CSV de más vistas (B1).
+3. Cablear la cobertura crítica, hoy desconectada.
+4. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
    «cargando» en import/export (A-P17).
-6. Ya cerrado: `[F3][VF]` Vista Minimalista de Funcionario (VF1–VF8).
+5. Ya cerrados: `[F3][VF]` ficha individual (VF1–VF8) y `[F3][A1]`
+   virtualización de la cuadrícula de Roles.
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
 
@@ -408,6 +415,24 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
   móvil; un segundo botón ahí duplicaría el alto de TODAS las filas de una
   cuadrícula que es densa a propósito (la misma razón por la que ahí se aceptó
   `min-h-10` en vez de `min-h-touch`).
+
+- 2026-09-12 (Claude Code): **La cuadrícula de Roles se virtualiza por MESES y
+  solo el CUERPO.** Se descartó la virtualización por columnas sueltas porque
+  obliga a `table-layout: fixed` con `colgroup`, y eso rompe la columna
+  congelada de nombres y las barras de mes con `colSpan`. Virtualizando solo el
+  cuerpo, el ancho de cada columna lo sigue fijando el encabezado, que nunca se
+  colapsa.
+- 2026-09-12 (Claude Code): **El hueco de un mes colapsado reserva el ancho que
+  ESE mes midió mientras estaba pintado**, guardado en un `Map`. Un ancho medio
+  por columna no sirve: las columnas no son todas iguales porque el ancho lo fija
+  el contenido más largo de cada una. Con promedio, un día concreto se movía
+  hasta 83 px en móvil al colapsar los meses vecinos; con la medida exacta, 5 px.
+  Se comprobó en Chromium que un mes pintado mide lo mismo esté o no colapsado el
+  resto, que es lo que hace válido el truco.
+- 2026-09-12 (Claude Code): **Medir antes de optimizar, y quedó medido.** El
+  JavaScript por celda NO era el cuello de botella: eliminarlo entero movía el
+  render menos de un 5 %. Lo que pesa es el número de celdas del DOM. Quien
+  vuelva a optimizar esta vista que empiece por ahí y no por memoizar.
 
 ## ⚠️ Advertencias / trampas conocidas
 
