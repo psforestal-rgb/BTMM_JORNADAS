@@ -7,6 +7,7 @@ import { parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo as crearRespaldoDe } from "../../lib/respaldo.js";
 import HistorialCambios from "./HistorialCambios.jsx";
+import RespaldosAutomaticos from "./RespaldosAutomaticos.jsx";
 import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
@@ -235,6 +236,10 @@ export default function Datos() {
         <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
           {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div><div><dt>Puestos</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.puestos?.length ?? 0}</dd></div><div><dt>Rastro de cambios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.historial?.length ?? 0}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="text-xs text-slate-600">{pendingImport.parsed.state.puestos ? "Los puestos operativos del archivo reemplazarán a los actuales." : "Este respaldo es anterior a los puestos editables; se mantienen los puestos actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
         </Modal>
+      </Card>
+
+      <Card title={t("datos.respaldosAuto.titulo")} icon="🧯">
+        <RespaldosAutomaticos />
       </Card>
 
       <Card title={t("historial.titulo")} icon="📜">

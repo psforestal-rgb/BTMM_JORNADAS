@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useEffect } from "react";
 import { AppProvider, useApp } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
 import { crearEntrada, TIPO } from "../../../domain/historial.js";
 import Datos from "../Datos.jsx";
 
@@ -65,8 +66,10 @@ describe("Datos — respaldo/restauración round-trip", () => {
 
     render(
       <AppProvider>
-        <Probe />
-        <Datos />
+        <ToastProvider>
+          <Probe />
+          <Datos />
+        </ToastProvider>
       </AppProvider>,
     );
 
@@ -134,8 +137,10 @@ describe("Datos — respaldo/restauración round-trip", () => {
 
     render(
       <AppProvider>
-        <Probe />
-        <Datos />
+        <ToastProvider>
+          <Probe />
+          <Datos />
+        </ToastProvider>
       </AppProvider>,
     );
 

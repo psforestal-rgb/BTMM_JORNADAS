@@ -41,6 +41,7 @@ importa features.
 | Lazy load por vista, Roles eager | Roles está disponible inmediatamente; las vistas operativas se cargan bajo demanda. |
 | Dexie con `import()` dinámico | ~32 KB gzip fuera del bundle inicial; la persistencia durable no necesita estar lista antes del primer render. |
 | Reglas de negocio en `config/reglas.js` + UI | Cambios de directriz administrativa (corte de viáticos, puestos con Visit.) no requieren tocar código. |
+| Respaldo automático antes de migrar (A2) | Un cambio de formato puede dejar ilegible lo ya guardado. El snapshot anterior se copia al store `respaldos` antes de que el esquema nuevo toque nada, y se puede descargar desde «Datos». Ver `lib/db.js`. |
 
 ## Flujo de datos (escritura)
 

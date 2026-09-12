@@ -26,7 +26,10 @@
  *
  * Si la versión persistida no coincide con `SCHEMA_VERSION`, se crea
  * un backup automático (`pnlq:backup:vN`) y se descarta el estado
- * obsoleto para evitar leer estructuras incompatibles.
+ * obsoleto para evitar leer estructuras incompatibles. Esa copia es
+ * SÍNCRONA a propósito —`loadStateWithMeta()` no puede esperar a
+ * IndexedDB—, y `loadStateAsync()` la traslada después al store
+ * `respaldos`, desde donde se puede descargar (A2).
  */
 
 import {
@@ -37,15 +40,29 @@ import {
   getLastSavedFromDexie,
   wipeDexie,
   getDb,
+  rescatarRespaldosDeLocalStorage,
+  LS_BACKUP_PREFIX,
 } from "./db.js";
 import { SCHEMA_VERSION } from "./schemaVersion.js";
 import { sanitizeImportedState } from "./sanitize.js";
 
 export { SCHEMA_VERSION };
+
+// Puerta única para la interfaz: la vista «Datos» habla con storage.js, no
+// con db.js. Ver «Respaldo automático en migraciones» en db.js.
+export {
+  listarRespaldosDeMigracion,
+  obtenerRespaldoDeMigracion,
+  eliminarRespaldoDeMigracion,
+  restaurarRespaldoDeMigracion,
+  MOTIVO_RESPALDO,
+  RESPALDOS_MAX,
+} from "./db.js";
 export const STORAGE_KEY = "pnlq:state";
 export const LAST_SAVED_KEY = "pnlq:lastSavedAt";
 
-const BACKUP_PREFIX = "pnlq:backup:v";
+// Fuente única en db.js, que es quien después rescata estas claves.
+const BACKUP_PREFIX = LS_BACKUP_PREFIX;
 
 function safeStorage() {
   try {
@@ -178,6 +195,14 @@ export async function loadStateAsync() {
 
   const fromDexie = await loadFromDexieWithMeta();
   const fromLs = loadStateWithMeta();
+
+  // Rescate de las copias que `loadStateWithMeta()` deja en localStorage al
+  // toparse con un snapshot de otra versión. Va DESPUÉS de esa llamada a
+  // propósito: si fuera antes, la copia recién creada tendría que esperar al
+  // siguiente arranque para ponerse a salvo. No bloquea nada — si falla, las
+  // claves siguen en localStorage para el próximo intento.
+  await rescatarRespaldosDeLocalStorage().catch(() => ({ rescatados: 0, descartados: 0 }));
+
   const ganador = elegirMasReciente(fromLs, fromDexie);
   if (!ganador) return { state: null, source: null, migrated: mig.migrated };
 

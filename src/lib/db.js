@@ -11,6 +11,8 @@
  *    paso 2 (registro de quién hizo qué). Hoy se crea pero no se usa.
  *  - Un store `pendientes` con cola de cambios offline; preparado para
  *    futuro sync con backend SINAC.
+ *  - Un store `respaldos` con los respaldos automáticos de migración (A2):
+ *    ver «Respaldo automático en migraciones» más abajo.
  *
  * Optimización de bundle:
  *  - Dexie se carga DINÁMICAMENTE con `import("dexie")` la primera vez
@@ -23,6 +25,28 @@
  *    `migrateFromLocalStorageIfNeeded()` copia el snapshot.
  *  - El localStorage existente se conserva como caché sincrónico para
  *    arranques rápidos (loadState() sigue siendo síncrono).
+ *
+ * Respaldo automático en migraciones (A2):
+ *  - Hay DOS versiones distintas en juego y conviene no confundirlas. La
+ *    versión de la BASE de Dexie (`db.version(n)`) describe qué stores e
+ *    índices existen; `SCHEMA_VERSION` describe la forma del PAYLOAD que se
+ *    guarda dentro de `state`. Un cambio en cualquiera de las dos puede dejar
+ *    ilegible lo que ya estaba guardado.
+ *  - Antes de que un cambio de esquema toque nada, el snapshot anterior se
+ *    copia al store `respaldos`. Se cubren los dos caminos:
+ *      · sube la versión de la base  → el callback `.upgrade()` copia `state`
+ *        DENTRO de la transacción de migración, antes de que el código nuevo
+ *        pueda escribir encima;
+ *      · sube `SCHEMA_VERSION`       → `loadFromDexieWithMeta()` encuentra un
+ *        snapshot de otra versión, lo copia y solo entonces lo descarta. Sin
+ *        esto, el primer `saveToDexie()` posterior lo sobrescribía con un
+ *        `put` sobre la misma clave y no quedaba rastro.
+ *  - También se rescatan las copias que `loadStateWithMeta()` deja en
+ *    localStorage (`pnlq:backup:v*`), que hasta ahora se escribían y nadie
+ *    volvía a leer jamás.
+ *  - Los respaldos NO se borran con «Reiniciar datos semilla»: son justo la
+ *    red que esa operación necesita. Se podan al llegar a `RESPALDOS_MAX` y
+ *    se pueden descargar o eliminar a mano desde «Datos · respaldo».
  */
 
 import { SCHEMA_VERSION } from "./schemaVersion.js";
@@ -31,6 +55,24 @@ export { SCHEMA_VERSION };
 export const SNAPSHOT_ID = "current";
 const LS_STATE_KEY = "pnlq:state";
 const LS_LAST_SAVED_KEY = "pnlq:lastSavedAt";
+// Prefijo de las copias que `loadStateWithMeta()` (storage.js) deja en
+// localStorage al apartar un snapshot de otra versión. Vive aquí, y no en
+// storage.js, porque quien las rescata es este módulo: storage.js lo importa
+// desde aquí, nunca al revés (eso crearía un ciclo).
+export const LS_BACKUP_PREFIX = "pnlq:backup:v";
+
+/** Cuántos respaldos automáticos se conservan; se poda el más antiguo. */
+export const RESPALDOS_MAX = 5;
+
+/** Por qué se creó un respaldo automático. */
+export const MOTIVO_RESPALDO = Object.freeze({
+  /** Subió la versión de la base de Dexie (cambio de stores/índices). */
+  CAMBIO_DE_ESQUEMA: "cambioDeEsquema",
+  /** El snapshot guardado es de otra `SCHEMA_VERSION` que la aplicación ya no lee. */
+  ESQUEMA_INCOMPATIBLE: "esquemaIncompatible",
+  /** Rescatado de una clave `pnlq:backup:v*` que quedó suelta en localStorage. */
+  LOCAL_STORAGE: "localStorage",
+});
 
 let dbInstance = null;
 let dbLoadPromise = null;
@@ -68,6 +110,31 @@ export async function getDb() {
         auditoria: "++id, fecha, accion",
         pendientes: "++id, creadoEn, tipo",
       });
+      // v2 solo AÑADE el store de respaldos; Dexie conserva los stores
+      // declarados en versiones anteriores sin repetirlos. El `.upgrade()` no
+      // corre en una instalación nueva (solo al subir desde una v1 existente),
+      // que es justo lo que se quiere: no hay nada que respaldar.
+      db.version(2)
+        .stores({ respaldos: "++id, creadoEn, motivo, huella" })
+        .upgrade(async (tx) => {
+          try {
+            const filas = await tx.table("state").toArray();
+            const tabla = tx.table("respaldos");
+            for (const fila of filas) {
+              await insertarRespaldo(tabla, {
+                motivo: MOTIVO_RESPALDO.CAMBIO_DE_ESQUEMA,
+                origen: "indexeddb",
+                schemaVersion: fila?.schemaVersion ?? null,
+                savedAt: fila?.savedAt ?? null,
+                payload: fila?.payload,
+              });
+            }
+          } catch {
+            // Un respaldo que falla NUNCA debe impedir que la base abra: si
+            // esta función lanza, Dexie aborta la migración y la aplicación
+            // se queda sin almacenamiento durable.
+          }
+        });
       dbInstance = db;
       return db;
     } catch {
@@ -93,7 +160,19 @@ export async function loadFromDexieWithMeta() {
   try {
     const row = await db.state.get(SNAPSHOT_ID);
     if (!row) return null;
-    if (row.schemaVersion !== SCHEMA_VERSION) return null;
+    if (row.schemaVersion !== SCHEMA_VERSION) {
+      // El snapshot es de otra versión del payload: se aparta ANTES de
+      // descartarlo, porque el primer `saveToDexie()` posterior lo
+      // sobrescribirá con un `put` sobre esta misma clave (A2).
+      await guardarRespaldoDeMigracion({
+        motivo: MOTIVO_RESPALDO.ESQUEMA_INCOMPATIBLE,
+        origen: "indexeddb",
+        schemaVersion: row.schemaVersion ?? null,
+        savedAt: row.savedAt ?? null,
+        payload: row.payload,
+      });
+      return null;
+    }
     return { state: row.payload ?? null, revision: row.revision ?? 0, savedAt: row.savedAt ?? null };
   } catch {
     return null;
@@ -234,7 +313,13 @@ export async function contarPendientes() {
   }
 }
 
-/** Limpia toda la base. Usado por "Reiniciar datos semilla". */
+/**
+ * Limpia toda la base. Usado por "Reiniciar datos semilla".
+ *
+ * `respaldos` queda FUERA a propósito: es la red de la que depende justamente
+ * esta operación, y borrarla junto con el estado dejaría a quien reinicia sin
+ * nada a lo que volver. Se eliminan a mano desde «Datos · respaldo».
+ */
 export async function wipeDexie() {
   const db = await getDb();
   if (!db) return false;
@@ -250,6 +335,189 @@ export async function wipeDexie() {
       return false;
     }
   });
+}
+
+// ---------------------------------------------------------------------
+// Respaldos automáticos de migración (A2)
+// ---------------------------------------------------------------------
+
+/** Tamaño real en bytes UTF-8; cae a la longitud del texto si no hay TextEncoder. */
+function medirBytes(texto) {
+  try {
+    return new TextEncoder().encode(texto).length;
+  } catch {
+    return texto.length;
+  }
+}
+
+/**
+ * Inserta un respaldo en la tabla dada y poda los más antiguos.
+ *
+ * Recibe la TABLA y no la base para poder usarse también dentro de la
+ * transacción de `.upgrade()`, donde la instancia todavía no está publicada.
+ * Devuelve el id insertado, o `null` si no había nada que guardar o si ese
+ * mismo respaldo ya estaba (evita duplicar el snapshot en cada arranque
+ * mientras la incompatibilidad persista).
+ */
+async function insertarRespaldo(tabla, { motivo, origen, schemaVersion, savedAt, payload }) {
+  if (payload === null || payload === undefined) return null;
+  let texto;
+  try {
+    texto = JSON.stringify(payload);
+  } catch {
+    return null;
+  }
+  if (!texto || texto === "null") return null;
+
+  const bytes = medirBytes(texto);
+  // La huella identifica el CONTENIDO respaldado, no el momento de la copia:
+  // dos arranques seguidos con el mismo snapshot incompatible no deben crear
+  // dos filas y expulsar respaldos buenos al podar.
+  const huella = `${motivo}:${schemaVersion ?? "?"}:${savedAt ?? "?"}:${bytes}`;
+  if ((await tabla.where("huella").equals(huella).count()) > 0) return null;
+
+  const id = await tabla.add({
+    creadoEn: new Date().toISOString(),
+    motivo,
+    origen,
+    schemaVersion: schemaVersion ?? null,
+    savedAt: savedAt ?? null,
+    bytes,
+    huella,
+    payload,
+  });
+
+  // Poda: `primaryKeys()` recorre el índice sin cargar los payloads.
+  const ids = await tabla.orderBy("creadoEn").primaryKeys();
+  if (ids.length > RESPALDOS_MAX) {
+    await tabla.bulkDelete(ids.slice(0, ids.length - RESPALDOS_MAX));
+  }
+  return id;
+}
+
+/**
+ * Guarda un respaldo automático. Nunca lanza ni propaga: un respaldo que
+ * falla no puede impedir que la aplicación cargue.
+ */
+export async function guardarRespaldoDeMigracion(datos) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    return await insertarRespaldo(db.respaldos, datos);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lista los respaldos automáticos, del más reciente al más antiguo, SIN el
+ * payload: la vista solo necesita saber qué hay y cuánto pesa.
+ */
+export async function listarRespaldosDeMigracion() {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const filas = await db.respaldos.orderBy("creadoEn").reverse().toArray();
+    return filas.map(({ payload, huella, ...meta }) => meta);
+  } catch {
+    return [];
+  }
+}
+
+/** Devuelve un respaldo completo (con payload) para descargarlo. */
+export async function obtenerRespaldoDeMigracion(id) {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    return (await db.respaldos.get(id)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reinserta un respaldo eliminado, conservando su id original. Es la mitad
+ * «Deshacer» del borrado de la vista: mismo patrón idempotente que
+ * `reinsertarEn()` en undo.js, de modo que pulsar dos veces no duplica nada.
+ */
+export async function restaurarRespaldoDeMigracion(fila) {
+  const db = await getDb();
+  if (!db || !fila || fila.id === undefined || fila.id === null) return null;
+  try {
+    const existente = await db.respaldos.get(fila.id);
+    if (existente) return fila.id;
+    return await db.respaldos.add(fila);
+  } catch {
+    return null;
+  }
+}
+
+/** Elimina un respaldo automático. Devuelve `true` si la operación corrió. */
+export async function eliminarRespaldoDeMigracion(id) {
+  const db = await getDb();
+  if (!db) return false;
+  try {
+    await db.respaldos.delete(id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Rescata las copias que `loadStateWithMeta()` (storage.js) deja en
+ * localStorage bajo `pnlq:backup:v*` cuando encuentra un snapshot de otra
+ * versión. Hasta A2 esas claves se escribían y nadie volvía a leerlas: ocupaban
+ * el localStorage —que es pequeño y compartido con el estado vivo— sin que
+ * hubiera forma de recuperarlas.
+ *
+ * La clave de localStorage solo se borra si la copia a IndexedDB salió bien, o
+ * si su contenido no es recuperable (JSON roto o sin `state`): en ese caso no
+ * hay nada que rescatar y dejarla ahí solo gasta espacio.
+ *
+ * Devuelve `{ rescatados, descartados }`.
+ */
+export async function rescatarRespaldosDeLocalStorage() {
+  const resultado = { rescatados: 0, descartados: 0 };
+  const db = await getDb();
+  if (!db) return resultado;
+  if (typeof window === "undefined" || !window.localStorage) return resultado;
+
+  let claves;
+  try {
+    claves = Object.keys(window.localStorage).filter((k) => k.startsWith(LS_BACKUP_PREFIX));
+  } catch {
+    return resultado;
+  }
+
+  for (const clave of claves) {
+    try {
+      const raw = window.localStorage.getItem(clave);
+      let parsed = null;
+      try {
+        parsed = raw ? JSON.parse(raw) : null;
+      } catch {
+        parsed = null;
+      }
+      if (!parsed?.state) {
+        window.localStorage.removeItem(clave);
+        resultado.descartados += 1;
+        continue;
+      }
+      await insertarRespaldo(db.respaldos, {
+        motivo: MOTIVO_RESPALDO.LOCAL_STORAGE,
+        origen: "localStorage",
+        schemaVersion: parsed.schemaVersion ?? null,
+        savedAt: parsed.savedAt ?? null,
+        payload: parsed.state,
+      });
+      window.localStorage.removeItem(clave);
+      resultado.rescatados += 1;
+    } catch {
+      // Esta clave se queda donde está; se reintentará en el próximo arranque.
+    }
+  }
+  return resultado;
 }
 
 // Exports auxiliares usados por tests (no romper si Dexie no inicia).
