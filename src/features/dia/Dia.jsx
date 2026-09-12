@@ -8,8 +8,8 @@ import BottomSheet from "../../ui/BottomSheet.jsx";
 import { codigoCls } from "../../ui/styles.js";
 import { meses, diasLargos } from "../../data/calendario.js";
 import { pad2, fecha } from "../../domain/fechas.js";
-import { codigoRolFuncionario, esRolActivo, categoriaDe } from "../../domain/roles.js";
-import { actividadesEnDia } from "../../domain/actividades.js";
+import { codigoRolFuncionario, esRolActivo, esTeletrabajo, categoriaDe } from "../../domain/roles.js";
+import { actividadesEnDia, teletrabajoDeActividad } from "../../domain/actividades.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { useSwipe } from "../../lib/useSwipe.js";
@@ -103,8 +103,11 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     const rol = codigoRolFuncionario(personas, roleData, yearD, monthIdx, p.nombre, dayD, feriados);
     const cat = categoriaDe(rol);
     const enTurno = esRolActivo(rol);
+    // Trabajar y estar presente dejaron de coincidir con el teletrabajo (RT5):
+    // `enTurno` dice que trabaja, `enTeletrabajo` dónde.
+    const enTeletrabajo = esTeletrabajo(rol);
     const acts = actividadesEnDia(actividadesPlan, diaVista).filter((a) => (a.funcionarios || []).includes(p.nombre));
-    return { ...p, rol, cat, enTurno, acts, tieneActividad: acts.length > 0, tieneViatico: acts.some((a) => a.viatico) };
+    return { ...p, rol, cat, enTurno, enTeletrabajo, acts, tieneActividad: acts.length > 0, tieneViatico: acts.some((a) => a.viatico) };
   });
 
   const enTurnoConAct = statusDia.filter((p) => p.enTurno && p.tieneActividad);
@@ -128,15 +131,28 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       .map((nombre) => personaPorNombre.get(nombre)?.puestoOperativo)
       .filter(Boolean),
   )].sort(compararTexto);
+  // Quiénes teletrabajan hoy, derivado del rol del día (RT2): no hay campo
+  // `esTeletrabajo` en la actividad, a propósito.
+  const enTeletrabajoHoy = new Set(
+    statusDia.filter((p) => p.enTeletrabajo).map((p) => p.nombre),
+  );
   const opcionesFiltroActividades = tipoFiltroActividades === "funcionario"
     ? funcionariosConActividades
     : tipoFiltroActividades === "puesto"
     ? puestosConActividades
+    : tipoFiltroActividades === "trabajo"
+    ? [t("dia.filtroActividades.presencial"), t("dia.filtroActividades.teletrabajo")]
     : [];
   const valorFiltroActivo = opcionesFiltroActividades.includes(valorFiltroActividades)
     ? valorFiltroActividades
     : opcionesFiltroActividades[0] || "";
   const actsVisibles = actsDelDia.filter((act) => {
+    if (tipoFiltroActividades === "trabajo") {
+      const hayTeletrabajo = act.funcionarios.some((n) => enTeletrabajoHoy.has(n));
+      return valorFiltroActivo === t("dia.filtroActividades.teletrabajo")
+        ? hayTeletrabajo
+        : !hayTeletrabajo;
+    }
     if (tipoFiltroActividades === "funcionario") return act.funcionarios.includes(valorFiltroActivo);
     if (tipoFiltroActividades === "puesto") {
       return act.funcionarios.some((nombre) => personaPorNombre.get(nombre)?.puestoOperativo === valorFiltroActivo);
@@ -152,6 +168,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       turno: enTurno.length,
       conActividad: enTurno.filter((p) => p.tieneActividad).length,
       sinActividad: enTurno.filter((p) => !p.tieneActividad).length,
+      teletrabajo: enTurno.filter((p) => p.enTeletrabajo).length,
     };
   });
   const totalPuesto = statsPuesto.reduce(
@@ -160,8 +177,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       turno: a.turno + s.turno,
       conActividad: a.conActividad + s.conActividad,
       sinActividad: a.sinActividad + s.sinActividad,
+      teletrabajo: a.teletrabajo + s.teletrabajo,
     }),
-    { fuera: 0, turno: 0, conActividad: 0, sinActividad: 0 },
+    { fuera: 0, turno: 0, conActividad: 0, sinActividad: 0, teletrabajo: 0 },
   );
   const catLabel = { L: "Libre", V: "Vacaciones", I: "Incapacidad", O: "Otro", "": "Sin marcar" };
   const catCls = {
@@ -313,6 +331,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             </tfoot>
           </table>
         </div>
+        {/* RT8: no se añade una columna a una tabla que en móvil ya va apretada
+            con cinco; el dato aparece solo cuando hay a quién contar. */}
+        {totalPuesto.teletrabajo > 0 && (
+          <p className="mt-2 rounded-xl border border-cyan-300 bg-cyan-50 p-2 text-xs font-semibold text-cyan-950">
+            {t("dia.teletrabajoResumen", { n: totalPuesto.teletrabajo })}
+          </p>
+        )}
       </Card>
 
       {/* Actividades del día — abierta por defecto: es información accionable.
@@ -338,9 +363,10 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-muted">
             {t("dia.filtroActividades.mostrar")}
           </div>
-          <div role="group" aria-label={t("dia.filtroActividades.aria")} className="grid grid-cols-3 gap-1 rounded-xl bg-surface-alt p-1">
+          <div role="group" aria-label={t("dia.filtroActividades.aria")} className="grid grid-cols-2 gap-1 rounded-xl bg-surface-alt p-1 sm:grid-cols-4">
             {[
               ["general", t("dia.filtroActividades.general")],
+              ["trabajo", t("dia.filtroActividades.trabajo")],
               ["funcionario", t("dia.filtroActividades.funcionario")],
               ["puesto", t("dia.filtroActividades.puesto")],
             ].map(([tipo, label]) => (
@@ -435,12 +461,18 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       {act.funcionarios.map((n) => (
                         <span
                           key={n}
+                          title={enTeletrabajoHoy.has(n) ? t("dia.teletrabajoBadge") : undefined}
                           className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
-                            conf.includes(n) ? "border-red-400 bg-surface text-critical" : "border-ok/50 bg-surface text-ok-fg"
+                            conf.includes(n)
+                              ? "border-red-400 bg-surface text-critical"
+                              : enTeletrabajoHoy.has(n)
+                              ? "border-cyan-500 bg-surface text-cyan-800"
+                              : "border-ok/50 bg-surface text-ok-fg"
                           }`}
                         >
                           {n}
                           {conf.includes(n) ? " ⚠" : ""}
+                          {!conf.includes(n) && enTeletrabajoHoy.has(n) ? " ⌂" : ""}
                         </span>
                       ))}
                     </div>

@@ -9,6 +9,7 @@ import {
 } from "../roles.js";
 import { puedeAtenderVisitantes, teletrabajoIncompatible } from "../cobertura.js";
 import { conflictosActividadDia } from "../conflictos.js";
+import { teletrabajoDeActividad } from "../actividades.js";
 
 /**
  * RT1–RT5. La decisión que gobierna todo: el teletrabajo es rol ACTIVO (la
@@ -178,5 +179,45 @@ describe("RT — el rol E no altera lo que ya funcionaba", () => {
       { ...actividad("Gira"), funcionarios: [] }, 1, 2026, 8, personas, dia1("E1"), null,
     );
     expect(r).toEqual([]);
+  });
+});
+
+describe("actividades.teletrabajoDeActividad — RT2 se deriva, no se guarda", () => {
+  const personas = [
+    { id: "f1", nombre: "Ana", puestoOperativo: "Puesto Orosi" },
+    { id: "f2", nombre: "Bruno", puestoOperativo: "Puesto Orosi" },
+  ];
+  const roleData = {
+    [rolKey(2026, 8, "Puesto Orosi", "Ana", 1)]: "E1",
+    [rolKey(2026, 8, "Puesto Orosi", "Bruno", 1)]: "T1",
+    // Día 2: Ana pasa a presencial. Una misma actividad de dos días no podría
+    // representarse con un único campo `esTeletrabajo` en la actividad.
+    [rolKey(2026, 8, "Puesto Orosi", "Ana", 2)]: "T2",
+  };
+  const actividad = {
+    id: "a1",
+    titulo: "Informe mensual",
+    inicio: "2026-09-01",
+    fin: "2026-09-02",
+    funcionarios: ["Ana", "Bruno"],
+  };
+  const quienes = (dia) => teletrabajoDeActividad(actividad, dia, 2026, 8, personas, roleData, null);
+
+  it("señala solo a quien tiene rol E ese día", () => {
+    expect(quienes(1)).toEqual(["Ana"]);
+  });
+
+  it("la misma actividad cambia de respuesta según el día", () => {
+    expect(quienes(1)).toEqual(["Ana"]);
+    expect(quienes(2)).toEqual([]);
+  });
+
+  it("una actividad sin funcionarios devuelve lista vacía", () => {
+    const vacia = { ...actividad, funcionarios: [] };
+    expect(teletrabajoDeActividad(vacia, 1, 2026, 8, personas, roleData, null)).toEqual([]);
+  });
+
+  it("tolera una actividad nula", () => {
+    expect(teletrabajoDeActividad(null, 1, 2026, 8, personas, roleData, null)).toEqual([]);
   });
 });
