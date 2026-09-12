@@ -1,67 +1,62 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 03:10 por Claude Code
+> Última actualización: 2026-09-12 03:30 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
-## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
+## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
 
-**Historia, porque explica la forma del repositorio.** Esta sesión trabajó en la
-rama `claude/festive-allen-hl6igv`. En paralelo, otra IA (Grok) trabajó **sobre
-`main`**, contra `PROTOCOLO.md` §5 («una IA por vez»), y publicó su propia
-infraestructura de toast/undo en v1.15.0. El choque se resolvió fusionando
-`main` dentro de esta rama y comparando las dos implementaciones función por
-función (ver «Decisiones»). El historial de Grok se conserva íntegro aquí.
+**Historia, porque explica la forma del repositorio.** Esta rama trabajó en
+paralelo con otra IA (Grok) que tocaba `main` directamente, contra
+`PROTOCOLO.md` §5. El choque se resolvió fusionando `main` dentro de la rama y
+comparando las dos implementaciones función por función. El historial de Grok se
+conserva íntegro más abajo.
 
-**Estado actual.** Se han fusionado DOS PR de esta rama, los dos con squash:
-el [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) (`main` a
-v1.22.0, todo hasta RF9) y el
-[#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) (`main` a
-**v1.25.0**, commit `eef5ab1`, con los puestos operativos).
+**Estado actual.** Se fusionaron TRES PR de esta rama, los tres con aplastado
+(squash):
 
-El trabajo posterior —el cierre de la Fase 2 y la ficha individual de la Fase 3,
-v1.29.0— está en la rama `claude/festive-allen-hl6igv`, **rebasada sobre el
-`main` del #92** y abierto en el **PR
-[#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93)**. La rebase se hizo comprobando antes que el árbol del commit
-`d20adfe` era idéntico al de `origin/main`, así que el squash no se perdió nada;
-por eso el push posterior necesitó `--force-with-lease` (autorizado, y con
-`respaldo-pre-rebase-f3` como red local).
+| PR | Deja `main` en | Qué llevaba |
+|----|----------------|-------------|
+| [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) | v1.22.0 | Fase 1 y hasta RF9 |
+| [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) | v1.25.0 | Puestos operativos |
+| [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) | **v1.34.1** | Cierre de la Fase 2 y la Fase 3 entera |
 
-**Regla para la próxima sesión:** `git fetch origin` ANTES de nada y comprueba
-si `main` se movió. Si la rama de trabajo tiene commits que `main` no tiene,
-rebásalos sobre `main` en vez de fusionar: el merge con squash deja el
-historial divergente aunque el contenido sea idéntico.
+`main` está en el commit `7d1e689` y **la rama `claude/festive-allen-hl6igv` se
+reinició desde ahí**: no arrastra nada pendiente. El despliegue automático a
+GitHub Pages se dispara con cada push a `main`.
+
+**Reglas para la próxima sesión, las dos importantes:**
+
+1. `git fetch origin main` ANTES de nada. Si la rama tiene commits que `main` no
+   tiene, **rebásalos sobre `main`, no fusiones al revés**: el aplastado deja el
+   historial divergente aunque el contenido sea idéntico.
+2. **Un PR fusionado no se reutiliza.** El #93 está cerrado. El trabajo nuevo va
+   en un PR nuevo sobre esta misma rama.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**LA FASE 3 ESTÁ CERRADA ENTERA.** Los cuatro puntos que pedía `PROTOCOLO.md`
-§7 están entregados: ficha individual (VF1–VF8), virtualización de la
-cuadrícula de Roles (A1), estado de filtros en la URL y exportación CSV (B1).
-Además se saldaron los dos sueltos auditados (A-P12 y A-P17) y **la cobertura
-crítica, que llevaba desde el principio descrita en el glosario y sin conectar
-a nada**.
+**El roadmap acordado de `PROTOCOLO.md` §7 está agotado.** Fases 1, 2 y 3
+entregadas y fusionadas. No hay ninguna tarea pendiente que el protocolo pida.
 
-Con esto se agota el roadmap acordado, salvo lo que `PROTOCOLO.md` §7 declara
-**fuera de alcance hasta decidir si existe backend**: A3 (sincronización y
-heartbeat), RF10 (autenticación), C4 (API externa) e i18n multi-idioma. Nada de
-eso debe arrancarse sin esa decisión.
+Lo que queda, en orden:
 
-**Lo único abierto con trabajo técnico claro** es la mitad de A-P12 que quedó
-fuera a propósito: **navegación por celdas con flechas en la cuadrícula de
-Roles**. No se hizo, y la razón importa: hoy las celdas son botones
-deshabilitados salvo en las filas en edición, así que hacerla funcionar exige el
-patrón ARIA completo de cuadrícula (`role="grid"` con tabindex móvil), que es
-rediseñar el modelo de foco del componente más denso de la aplicación justo
-después de haberle cambiado el renderizado con la virtualización. Si se aborda:
+**1. Probar la aplicación con las personas del parque.** Es lo más valioso que
+puede hacerse ahora, y no es código. Tres fases de mejoras se han construido
+sobre un diagnóstico de hace meses; antes de añadir nada más conviene ver qué
+pasa cuando alguien la usa en el puesto, con guantes y bajo sol, y volver con lo
+que salga. **No inventes funciones nuevas sin ese contraste.**
 
-- Es su propia tarea, con su propia verificación en navegador.
-- Cuidado con la virtualización: moverse a un mes colapsado exige desplazarlo a
-  la vista ANTES de intentar enfocar nada, porque sus celdas no existen en el
-  DOM.
-- Las tres invariantes de la cuadrícula (abajo) siguen mandando.
+**2. Navegación por celdas con flechas en la cuadrícula de Roles**, la mitad de
+A-P12 que quedó fuera a propósito. La razón importa: hoy las celdas son botones
+deshabilitados salvo en las filas en edición, así que exige el patrón ARIA
+completo de cuadrícula (`role="grid"` con tabindex móvil), que es rediseñar el
+modelo de foco del componente más denso de la aplicación. Si se aborda, es su
+propia tarea con su propia verificación en navegador, y cuidado con la
+virtualización: moverse a un mes colapsado exige desplazarlo a la vista ANTES de
+intentar enfocar nada, porque sus celdas no existen en el DOM.
 
-Si no hay nada de eso que hacer, lo más útil es **probar la aplicación con
-personas reales del parque** y volver con lo que salga, en vez de seguir
-añadiendo funciones sin pedir.
+**3. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
+fuera de alcance A3 (sincronización), RF10 (autenticación), C4 (API externa) e
+i18n multi-idioma.
 
 ⚠️ **Si tocas la cuadrícula de Roles, estas tres invariantes no se rompen:**
 
@@ -77,14 +72,12 @@ añadiendo funciones sin pedir.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.34.1** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
-  el `main` del PR #92 (`eef5ab1`), abierta en el PR
-  [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) — Último
-  commit: `08194d8` «[F3][FIX] cinco hallazgos de revisión»
+- Versión: **1.34.1**, ya en `main` (`7d1e689`) y desplegada
+- Rama: **`claude/festive-allen-hl6igv`**, reiniciada desde `main`. Sin trabajo
+  pendiente y sin PR abierto.
 - Tests: ✅ **724/724** (63 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
-- `main` está en v1.25.0; esta rama lleva por delante el cierre de la Fase 2
-  (RT2/RT6/RT8) y el bloque VF entero.
+- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/
 
 ## ✅ Hecho en esta sesión
 
@@ -496,11 +489,14 @@ atajo de búsqueda y aviso de proceso al importar.
 
 ## ⚠️ Advertencias / trampas conocidas
 
-- **El trabajo pendiente de fusionar vive en `claude/festive-allen-hl6igv`** y en
-  el PR [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93). Los PR
-  #91 y #92 ya se fusionaron; `main` está en v1.25.0 y la rama en v1.29.0.
-  **Un PR fusionado no se reutiliza**: si el #93 se fusiona y hay trabajo nuevo,
-  se abre otro.
+- **No queda trabajo sin fusionar.** Los PR #91, #92 y #93 están todos
+  fusionados y `main` va en v1.34.1. **Un PR fusionado no se reutiliza**: el
+  trabajo nuevo va en un PR nuevo sobre esta misma rama, que ya arranca desde
+  `main`.
+- **El commit de fusión del #93 en `main` lleva dos líneas de basura al final**
+  (`</commit_message>` y `</invoke>`), por un error al redactarlo. Es cosmético
+  y está solo en el mensaje, no en el código. NO se corrige: arreglarlo obliga a
+  reescribir el historial de `main`, que es peor que el problema.
 - `npm ci` normal falla por el proxy al compilar `sharp`; usar
   `npm ci --ignore-scripts`.
 - **Una prueba de componente aislado no demuestra que la vista funcione.** El
