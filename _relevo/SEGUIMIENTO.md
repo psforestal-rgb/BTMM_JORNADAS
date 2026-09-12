@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 13:25 por Claude Code
+> Última actualización: 2026-09-12 13:35 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -47,7 +47,26 @@ sobre un diagnóstico de hace meses; antes de añadir nada más conviene ver qu�
 pasa cuando alguien la usa en el puesto, con guantes y bajo sol, y volver con lo
 que salga. **No inventes funciones nuevas sin ese contraste.**
 
-**2. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
+**2. Dos mejoras de `docs/DOCUMENTO_FINAL_MEJORAS.md` siguen sin hacer, y
+ninguna depende de la decisión del servidor:**
+
+- **A2 · Respaldo automático en migraciones.** `crearRespaldo` solo se dispara
+  hoy desde Configuración (restaurar predeterminados) y desde la importación CSV
+  de Funcionarios. Un cambio de esquema de Dexie NO crea respaldo: hoy no ha
+  hecho falta porque el esquema sigue en la versión 1 y
+  `migrateFromLocalStorageIfNeeded` rechaza los payloads incompatibles en vez de
+  tocarlos, pero **el primer cambio de versión real correría sin red**. Y esta
+  sesión descubrió que `crearRespaldo` llevaba tiempo guardando de menos sin que
+  nadie lo notara, que es justo el fallo que un respaldo previo a la migración
+  debería cubrir.
+- **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe y está escrito
+  (185 líneas, una parte para guardaparques y otra para administración), pero
+  vive en el repositorio y **no dentro de la aplicación**. Quien está en el
+  puesto sin señal no puede leerlo. La ayuda en pantalla hoy es solo la
+  contextual del formulario de funcionario (`src/ui/Ayuda.jsx`) y la hoja de
+  ayuda de la vista Día.
+
+**3. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
 fuera de alcance A3 (sincronización), RF10 (autenticación), C4 (API externa) e
 i18n multi-idioma.
 
@@ -170,7 +189,7 @@ i18n multi-idioma.
 
 Tests: de 290 a 724 (+434). Ninguna función existente se eliminó.
 
-### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
+### 🔎 Auditoría de puntos de dolor (2026-09-11, revisada el 2026-09-12)
 
 ⚠️ **Los dos documentos usan numeraciones `P` distintas e incompatibles.**
 `PROTOCOLO.md` §7 usa la de `docs/DOCUMENTO_FINAL_MEJORAS.md` (18 puntos);
@@ -187,16 +206,18 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 | A-P6 | F-P9 | Controles inconsistentes / demasiado pequeños | ✅ **RESUELTO** | 41 botones a 48 px + `src/lib/__tests__/objetivosTactiles.test.js` |
 | A-P3 | F-P2 / F-P10 | Modal de Funcionario demasiado largo, sin pasos | ✅ **RESUELTO** | `ModalFuncionario.jsx`: 3 pasos con indicador y pestañas |
 | A-P1 | — | Sobrecarga cognitiva en Funcionarios | ✅ **RESUELTO** | filtros visibles + formulario en 3 pasos |
-| A-P14 | F-P13 / F-P14 | Validación solo al guardar, errores poco descriptivos | 🟡 **VIGENTE** | `ModalFuncionario.jsx` no valida nada salvo nombre vacío |
-| A-P8 | F-P5 | Tabla de Roles muy densa | 🟡 **VIGENTE** | `RolesMensualGrid.jsx` (873 líneas) → A1, Fase 3 |
-| A-P12 | F-P14 / F-P17 | Sin atajos de teclado | 🟡 **VIGENTE** | no hay `Ctrl+F` ni navegación por celdas |
-| A-P17 | — | Sin estado «cargando» al guardar | 🟢 **MENOR** | todo es síncrono en memoria; solo aplicaría a import/export |
+| A-P14 | F-P13 / F-P14 | Validación solo al guardar, errores poco descriptivos | ✅ **RESUELTO** (RF3) | `ModalFuncionario.jsx`: `FieldValidado` valida al salir del foco y el último paso resume `validarFuncionario` |
+| A-P8 | F-P5 | Tabla de Roles muy densa | ✅ **RESUELTO** (A1) | virtualizada por meses; la densidad visual se mantiene a propósito (ver decisiones) |
+| A-P12 | F-P14 / F-P17 | Sin atajos de teclado | ✅ **RESUELTO** | atajo «/» al buscador y navegación por celdas con flechas en Roles |
+| A-P17 | — | Sin estado «cargando» al guardar | ✅ **RESUELTO** | aviso de proceso al importar CSV; el resto es síncrono en memoria |
 | A-P4 | — | Navegación no intuitiva en Roles | ✅ RESUELTO antes de esta sesión | `Roles.jsx:156-265` |
 | A-P10 | — | «Restaurar mes» poco descubrible | ✅ RESUELTO / no aplica | vive en `Datos.jsx` y `Configuracion.jsx` |
 | — | F-P3 / F-P11 | Navegación difícil de recorrer | ✅ RESUELTO antes de esta sesión | `Sidebar.jsx`, `BottomNav.jsx` |
 | — | F-P6 | Información saturada en la vista Día | ✅ RESUELTO en móvil | `DiaLayout.jsx`, `DiaResumenMovil.jsx` |
 | A-P13 | F-P16 | Contraste bajo / colores poco intuitivos | ✅ RESUELTO antes de esta sesión | `ui/styles.js`, tema `hc` |
 | A-P18 | F-P18 | Texto pequeño en móvil | ✅ RESUELTO antes de esta sesión | sprint móvil, commit `f951d3e` |
+
+**No queda ningún punto de dolor de las dos auditorías sin resolver.**
 
 ## 🔜 Pendiente (en orden)
 
