@@ -78,6 +78,11 @@ export default function Datos() {
     const backup = crearRespaldo();
     descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text);
     const { parsed, archivo } = pendingImport;
+    // Cada clave que `crearRespaldo()` guarda tiene que restaurarse aquí.
+    // `REPLACE_STATE` parte de `seedState`, así que una clave omitida no
+    // conserva el valor actual: VUELVE A LA SEMILLA. Omitir `puestos` borraba
+    // los puestos editados por la persona usuaria, y omitir `historial` borraba
+    // el rastro de auditoría que el propio archivo traía dentro.
     ctx.replaceState({
       personas: parsed.state.personas ?? ctx.personas,
       actividadesPlan: parsed.state.actividadesPlan ?? ctx.actividadesPlan,
@@ -85,6 +90,8 @@ export default function Datos() {
       roleData: parsed.state.roleData ?? ctx.roleData,
       reglas: parsed.state.reglas ?? ctx.reglas,
       migraciones: parsed.state.migraciones ?? ctx.migraciones,
+      puestos: parsed.state.puestos ?? ctx.puestos,
+      historial: parsed.state.historial ?? ctx.historial,
     });
     setImportOk({ exportadoEn: parsed.exportadoEn, archivo });
     setPendingImport(null);
@@ -226,7 +233,7 @@ export default function Datos() {
 
         <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title={t("datos.reiniciarTitulo")} description={t("datos.reiniciarSub")} size="sm" actions={<><button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">{t("acciones.cancelar")}</button><button type="button" onClick={onReset} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">{t("datos.confirmarReiniciar")}</button></>}><div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{t("datos.reiniciarRec")}</div></Modal>
         <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
-          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
+          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div><div><dt>Puestos</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.puestos?.length ?? 0}</dd></div><div><dt>Rastro de cambios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.historial?.length ?? 0}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="text-xs text-slate-600">{pendingImport.parsed.state.puestos ? "Los puestos operativos del archivo reemplazarán a los actuales." : "Este respaldo es anterior a los puestos editables; se mantienen los puestos actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
         </Modal>
       </Card>
 

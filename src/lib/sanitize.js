@@ -12,11 +12,24 @@
  * correspondiente si existe, o por un default seguro). `sanitizeImportedState`
  * nunca lanza: cualquier error interno se traga y se devuelve el mejor
  * resultado parcial disponible.
+ *
+ * La excepción son los campos que son IDENTIDAD del registro (el `inicio` de
+ * una actividad, el `funcionario`/`fecha` de una reposición, el `nombre` de un
+ * puesto, el `tipo` de una entrada del rastro): ahí no hay default honesto al
+ * que caer y el registro entero se descarta.
+ *
+ * Cubre todo lo que viaja en un respaldo (ver `crearRespaldo` en respaldo.js):
+ * personas, actividadesPlan, reposiciones, roleData, reglas, puestos e
+ * historial. **Cada clave nueva que se añada al respaldo hay que añadirla
+ * también aquí**, o entrará al estado sin revisar.
  */
 
 import { baseFuncionarios } from "../data/seedFuncionarios.js";
 import { mergeReglas } from "../config/reglas.js";
 import { TIPOS_DIA, MOTIVOS, MAGNITUDES } from "../domain/reposicion.js";
+import { coloresPuesto } from "../data/opciones.js";
+import { normalizarTag } from "../domain/puestos.js";
+import { MAX_ENTRADAS, TIPO } from "../domain/historial.js";
 
 const ESTADOS_VALIDOS = ["Activo", "Incapacitado", "De vacaciones", "Inactivo"];
 
@@ -30,6 +43,16 @@ const MAX_ACTIVIDADES = 20000;
 const MAX_REPOSICIONES = 20000;
 const MAX_ROLEDATA_KEYS = 300000;
 const MAX_ROLEDATA_KEY_LEN = 200;
+const MAX_PUESTOS = 200;
+const MAX_CAMBIOS_POR_ENTRADA = 60;
+
+// Paleta CERRADA (ver `coloresPuesto` en data/opciones.js): la cuadrícula de
+// Roles aplica estas clases tal cual, así que un valor libre saldría sin estilo
+// o con un contraste ilegible bajo el sol.
+const CLASES_COLOR_PUESTO = coloresPuesto.map((c) => c.clases);
+const COLOR_PUESTO_POR_DEFECTO = CLASES_COLOR_PUESTO[0] ?? "";
+
+const TIPOS_HISTORIAL = new Set(Object.values(TIPO));
 
 const seedById = new Map(baseFuncionarios.map((f) => [f.id, f]));
 
@@ -186,6 +209,94 @@ function sanitizeReposicion(reposicion) {
   return out;
 }
 
+/**
+ * Puesto operativo tal como vive en el estado: `{ nombre, tag, color }`.
+ *
+ * El `nombre` es la IDENTIDAD del puesto —`funcionario.puestoOperativo` y
+ * `reglas.puestosRequierenVisitantesDiario` lo referencian así, no por un id—,
+ * de modo que un puesto sin nombre no es reparable y se descarta, igual que una
+ * reposición sin `funcionario`. El `color` cae al primero de la paleta si no
+ * pertenece a la lista cerrada, que es la misma regla que ya aplica la
+ * importación CSV (`planificarImportacionPuestos`).
+ */
+function sanitizePuesto(puesto) {
+  if (!isPlainObject(puesto)) return null;
+  const out = { ...puesto };
+  const nombre = sanitizeFreeText(out.nombre, 80, "");
+  if (!nombre) return null;
+  out.nombre = nombre;
+  // El código corto se normaliza igual que en el dominio (mayúsculas, sin
+  // espacios). Si queda vacío, el puesto se conserva: la validación de
+  // «Configuración» lo marcará, y perder el puesto entero dejaría huérfanas a
+  // las personas que lo referencian por nombre.
+  out.tag = sanitizeStructured(normalizarTag(out.tag), 8, /^[A-Z0-9-]+$/, "");
+  out.color = CLASES_COLOR_PUESTO.includes(out.color) ? out.color : COLOR_PUESTO_POR_DEFECTO;
+  return out;
+}
+
+/** Un cambio dentro de una entrada del rastro: `{ campo, antes, despues }`. */
+function sanitizeValorDeCambio(valor) {
+  if (typeof valor === "boolean") return valor;
+  if (typeof valor === "number") return Number.isFinite(valor) ? valor : "";
+  return sanitizeFreeText(valor, 200, "");
+}
+
+function sanitizeCambio(cambio) {
+  if (!isPlainObject(cambio)) return null;
+  const campo = sanitizeStructured(cambio.campo, 40, /^[A-Za-z0-9_]+$/, "");
+  if (!campo) return null;
+  return { campo, antes: sanitizeValorDeCambio(cambio.antes), despues: sanitizeValorDeCambio(cambio.despues) };
+}
+
+/**
+ * Entrada del rastro de cambios (`domain/historial.js`).
+ *
+ * Se descarta la entrada entera cuando el `tipo` no es uno de los válidos:
+ * `crearEntrada()` tampoco crea entradas así, y la vista traduce
+ * `historial.tipo.<tipo>` —un tipo inventado saldría en pantalla como la clave
+ * cruda del diccionario—. Una `fecha` ilegible, en cambio, solo se vacía: la
+ * entrada sigue diciendo qué cambió y sobre quién.
+ */
+function sanitizeEntradaHistorial(entrada) {
+  if (!isPlainObject(entrada)) return null;
+  if (!TIPOS_HISTORIAL.has(entrada.tipo)) return null;
+
+  const fechaCruda = typeof entrada.fecha === "string" ? entrada.fecha.trim().slice(0, 40) : "";
+  const fecha = fechaCruda && !Number.isNaN(Date.parse(fechaCruda)) ? fechaCruda : "";
+
+  const cambios = Array.isArray(entrada.cambios)
+    ? entrada.cambios.map(sanitizeCambio).filter(Boolean).slice(0, MAX_CAMBIOS_POR_ENTRADA)
+    : [];
+  // La vista usa `key={c.campo}`: dos cambios del mismo campo colisionarían.
+  const vistos = new Set();
+  const cambiosUnicos = cambios.filter((c) => {
+    if (vistos.has(c.campo)) return false;
+    vistos.add(c.campo);
+    return true;
+  });
+
+  const salida = {
+    id: sanitizeFreeText(entrada.id, 40, ""),
+    fecha,
+    tipo: entrada.tipo,
+    funcionario: {
+      nombre: sanitizeFreeText(entrada.funcionario?.nombre, 120, ""),
+      cedula: sanitizeStructured(entrada.funcionario?.cedula, 20, /^[0-9-]+$/, ""),
+    },
+    cambios: cambiosUnicos,
+  };
+
+  if (isPlainObject(entrada.detalle)) {
+    salida.detalle = {
+      archivo: sanitizeFreeText(entrada.detalle.archivo, 120, ""),
+      altas: sanitizeNumeroFinito(entrada.detalle.altas, 0, { min: 0, max: 1000000 }),
+      cambios: sanitizeNumeroFinito(entrada.detalle.cambios, 0, { min: 0, max: 1000000 }),
+    };
+  }
+
+  return salida;
+}
+
 function sanitizeRoleData(roleData) {
   const out = {};
   let count = 0;
@@ -200,8 +311,9 @@ function sanitizeRoleData(roleData) {
 
 /**
  * Sanitiza el contenido de un `state` importado (personas, actividadesPlan,
- * roleData, reglas). No cambia la forma general del objeto ni rechaza
- * registros completos por un campo inválido. Es seguro llamarla con
+ * reposiciones, roleData, reglas, puestos, historial). No cambia la forma
+ * general del objeto ni rechaza registros completos por un campo inválido
+ * salvo en los campos de identidad descritos arriba. Es seguro llamarla con
  * cualquier entrada (incluida `null`/`undefined`/tipos primitivos): nunca
  * lanza y, si `state` no es un objeto sanitizable, lo devuelve tal cual.
  */
@@ -256,6 +368,49 @@ export function sanitizeImportedState(state) {
         })
         .filter(Boolean)
         .slice(0, MAX_REPOSICIONES);
+    }
+
+    if (Array.isArray(out.puestos)) {
+      // Dos puestos con el mismo nombre romperían el agrupado de la cuadrícula
+      // de Roles y la validación de «Configuración»: gana el primero.
+      const nombresVistos = new Set();
+      out.puestos = out.puestos
+        .map((p) => {
+          try {
+            return sanitizePuesto(p);
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+        .filter((p) => {
+          const clave = p.nombre.toLocaleLowerCase("es-CR");
+          if (nombresVistos.has(clave)) return false;
+          nombresVistos.add(clave);
+          return true;
+        })
+        .slice(0, MAX_PUESTOS);
+    }
+
+    if (Array.isArray(out.historial)) {
+      // La vista usa `key={e.id}`: los ids repetidos o ausentes colisionarían,
+      // así que se completan aquí en vez de confiar en el archivo.
+      const idsVistos = new Set();
+      out.historial = out.historial
+        .map((e) => {
+          try {
+            return sanitizeEntradaHistorial(e);
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+        .map((e, i) => {
+          const id = e.id && !idsVistos.has(e.id) ? e.id : `importado-${i}`;
+          idsVistos.add(id);
+          return e.id === id ? e : { ...e, id };
+        })
+        .slice(0, MAX_ENTRADAS);
     }
 
     if (isPlainObject(out.roleData)) {
