@@ -7,7 +7,7 @@ import { PLANIFICACION_2026_TEXTO } from "./planificacion2026Fuente/index.js";
  * las actividades oficiales de hoy en adelante; si coincide, no hace nada.
  * Formato sugerido: fecha de la sincronización (YYYY-MM-DD[-sufijo]).
  */
-export const PLANIFICACION_VERSION = "2026-07-21-agenda-viaticos";
+export const PLANIFICACION_VERSION = "2026-09-11-doc-completo";
 
 function actividadAdicional({ id, titulo, fecha, funcionarios, lugar = "", observaciones = "" }) {
   return {
@@ -147,6 +147,9 @@ const otrosAlias = {
 };
 
 const diasSemana = new Set(["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"]);
+
+/** Año que se asume si una tabla apareciera sin año en su encabezado. */
+const ANIO_POR_DEFECTO = 2026;
 const ascii = (texto) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 const contieneAlias = (texto, alias) => new RegExp(`(^|[^A-Z])${alias}([^A-Z]|$)`).test(texto);
 
@@ -276,6 +279,11 @@ function repararCortes(textos) {
 export function convertirPlanificacion2026(texto) {
   const grupos = new Map();
   let mes = 0;
+  // El documento no se limita a 2026: abre en DICIEMBRE 2025 y cierra en
+  // ENERO 2027. Una versión anterior solo reconocía «<MES> 2026» y descartaba
+  // en silencio esos dos meses, justo los que enlazan con el rol institucional
+  // (que arranca en diciembre de 2025). El año se toma del encabezado.
+  let anio = ANIO_POR_DEFECTO;
   let dia = 0;
   let sitio = "";
 
@@ -288,9 +296,10 @@ export function convertirPlanificacion2026(texto) {
       linea === "De" ||
       /^Pestaña\s+\d+$/i.test(linea)
     ) continue;
-    const encabezadoMes = linea.match(/^([A-ZÁÉÍÓÚÑ]+) 2026$/);
+    const encabezadoMes = linea.match(/^([A-ZÁÉÍÓÚÑ]+)\s+(\d{4})$/);
     if (encabezadoMes && meses[encabezadoMes[1]]) {
       mes = meses[encabezadoMes[1]];
+      anio = Number(encabezadoMes[2]);
       dia = 0;
       sitio = "";
       continue;
@@ -306,14 +315,14 @@ export function convertirPlanificacion2026(texto) {
       continue;
     }
     if (!mes || !dia || !sitio) continue;
-    const clave = `${mes}-${dia}-${sitio}`;
-    if (!grupos.has(clave)) grupos.set(clave, { mes, dia, sitio, textos: [] });
+    const clave = `${anio}-${mes}-${dia}-${sitio}`;
+    if (!grupos.has(clave)) grupos.set(clave, { anio, mes, dia, sitio, textos: [] });
     grupos.get(clave).textos.push(linea);
   }
 
   const actividades = [];
   for (const grupo of grupos.values()) {
-    const fecha = `2026-${String(grupo.mes).padStart(2, "0")}-${String(grupo.dia).padStart(2, "0")}`;
+    const fecha = `${grupo.anio}-${String(grupo.mes).padStart(2, "0")}-${String(grupo.dia).padStart(2, "0")}`;
     let ultimosFuncionarios = [];
     // Secuencia por celda (fecha + sitio) para un id determinista y estable.
     // Un id posicional global (`plan2026-0001`) se renumera si la fuente

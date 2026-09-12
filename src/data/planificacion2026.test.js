@@ -122,6 +122,40 @@ YC patrullaje`;
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("toma el año del encabezado, no lo asume: diciembre 2025 y enero 2027 también entran", () => {
+    const texto = [
+      "DICIEMBRE 2025",
+      "\t1",
+      "PNTMM",
+      "KM atiende turismo",
+      "ENERO 2027",
+      "\t16",
+      "PNTMM",
+      "MIF",
+    ].join("\n");
+
+    const actividades = convertirPlanificacion2026(texto);
+
+    expect(actividades.map((a) => ({ inicio: a.inicio, titulo: a.titulo }))).toEqual([
+      { inicio: "2025-12-01", titulo: "atiende turismo" },
+      { inicio: "2027-01-16", titulo: "MIF" },
+    ]);
+  });
+
+  it("la fuente institucional cubre los tres años del documento", async () => {
+    const actividades = await cargarPlanificacion2026();
+    const anios = new Set(actividades.map((a) => a.inicio.slice(0, 4)));
+
+    // El documento abre en DICIEMBRE 2025 —el mes con el que arranca el rol
+    // institucional— y cierra en ENERO 2027. Una versión anterior solo
+    // reconocía «<MES> 2026»: descartaba diciembre de 2025 entero y fechaba el
+    // contenido de enero de 2027 dentro de diciembre de 2026.
+    expect([...anios].sort()).toEqual(["2025", "2026", "2027"]);
+    expect(actividades.some((a) => a.inicio.startsWith("2025-12"))).toBe(true);
+    expect(actividades.some((a) => a.inicio === "2026-12-16" && a.titulo === "MIF")).toBe(false);
+    expect(actividades.some((a) => a.inicio === "2027-01-16" && a.titulo === "MIF")).toBe(true);
+  });
+
   it("expone una versión de planificación no vacía", () => {
     expect(typeof PLANIFICACION_VERSION).toBe("string");
     expect(PLANIFICACION_VERSION.length).toBeGreaterThan(0);

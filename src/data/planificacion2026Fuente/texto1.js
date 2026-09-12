@@ -1,3 +1,6 @@
+// Generado desde la exportación «text/plain» de PLANIFICACION BTMM 2026
+// (Google Docs). NO editar a mano: se regenera entero al sincronizar.
+// Parte 1 de 9.
 export default String.raw`Pestaña 1
 
 
@@ -540,6 +543,7 @@ GP patrullaje
 
 
 
+
 PVM 
 MH mantenimiento
  
@@ -560,6 +564,7 @@ ES mantenimiento
 
 PLE
 GP mantenimiento
+
 
 
 
@@ -593,6 +598,7 @@ GP mantenimiento
 
 
 
+
 PVM 
 MH realiza informe
 
@@ -612,6 +618,7 @@ JV atiende turismo
 
 PLE
 GP RBCV
+
 
 
 
@@ -643,6 +650,7 @@ GP patrullaje los 3000
 
 
 
+
 PVM 
 MH mantenimiento
 
@@ -661,6 +669,7 @@ JB atencion turismo
 
 PLE
 MS y GP Reten
+
 
 
 
@@ -773,6 +782,7 @@ CC en RBCV
 
 	
 
+	
 
 
 
@@ -783,4 +793,415 @@ ENERO 2026
 	MIÉRCOLES
 	JUEVES
 	VIERNES
+	SÁBADO
+	
+
+	
+
+	
+
+	
+
+	1
+PNTMM
+YC mantenimiento atencion de visitantes
+FC gestiones varias
+
+
+
+
+PNLQ
+MS y CC Cerros
+CC realiza el informe 
+ES atiende turismo
+
+
+
+
+PLE
+MS y CC Cerros
+
+
+
+
+PVM
+MS y CC Cerros
+	2
+PNTMM
+Exoneración 30 pax guías scouts
+YC patrullaje en PANU santa ana con Mahyar se posterg{o
+FC mantenimiento atencion de visitantes
+
+
+
+
+PNLQ
+MS, ES  y CC Reten
+MS realiza informe 
+KV atiende turismo
+DT mantenimiento
+
+
+PLE
+MS, ES y CC Reten
+
+
+
+
+PVM
+CC va a cambio de aceite
+
+
+	3
+PNTMM
+YC covirena Embalse el llano, guabata
+YC realiza el informe
+FC mantenimiento atencion de visitantes
+
+
+PNLQ
+MS y CC Providencia
+CC realiza el informe 
+JB atención turismo/informes pendientes PPC operativo especial 
+MS, ES, KV y DT comisión para el caso de AA
+
+
+PLE
+MS informes pendientes
+comisión para el caso de AA
+
+
+PVM
+CC comisión para el caso de AA
+	4
+PNTMM
+YC mantenimiento atencion de visitantes
+FC gestiones varias
+
+
+
+
+PNLQ
+JB, MS y ES RBCV
+JB realiza atiende turismo
+
+
+
+
+PLE
+MS y ES
+RBCV
+
+
+
+
+PVM
+CC informes 
+	5
+PNTMM
+YC  informe operativo especial con JB
+FC mantenimiento atencion de visitantes
+Reunión RLCVS
+KM informe PPC
+
+
+
+
+PNLQ
+JB informe operativo especial con YC 
+ES mantenimiento
+DT informes y mantenimiento
+KV atencion de turismo
+
+
+PLE
+GP mantenimiento
+MS mantenimiento informes sale
+
+
+PVM
+MH ingresa mantenimiento
+CC informes sale 
+
+
+	 6
+PNTMM
+FC mantenimiento atencion de visitantes
+Reunión RLCVS
+
+
+
+
+PNLQ
+JB informe especial con YC 
+ES mantenimiento
+KV y ES informes y mantenimiento separación de residuos
+DT atencion de turismo
+
+
+
+
+PLE
+GP mantenimiento
+
+
+
+
+PVM
+MH mantenimiento e informes
+
+
+
+
+	7
+PNTMM
+FC mantenimiento atencion de visitantes
+Reunión RLCVS
+KM ingresa mantenimiento
+
+
+
+
+PNLQ
+KV, DT y ES van a PZ con reciclaje
+JV ingresa
+JB atencion de turismo y va a Tapanti
+
+
+
+
+PLE
+GP mantenimiento
+
+
+
+
+PVM
+MH mantenimiento e informes 
+	8
+PNTMM
+FC Reunión RLCVS
+KM atencion de visitantes
+JB gestiones con KM}
+3 estudiantes TCU
+
+
+PNLQ
+DT mantenimiento y atencion al turismo
+KV informes y viaticos y luego cita medica
+JV mantenimiento
+LV ingresa
+
+
+
+
+PLE
+GP mantenimiento
+
+
+
+
+PVM
+MH mantenimiento e informes
+	9
+PNTMM
+FC Reunión RLCVS
+KM atencion de visitantes
+JB apoya Tapanti
+3 estudiantes TCU
+
+
+PNLQ
+KV, JV y GP patrullaje Cerros
+LV atiende turismo
+DT mantenimiento 
+
+
+
+
+PLE
+KV, JV y GP patrullaje Cerros 
+
+
+
+
+PVM
+MH mantenimiento e informes
+
+
+
+	10
+PNTMM
+KM atencion de visitantes
+3 estudiantes TCU
+
+
+
+
+PNLQ
+JB atiende turismo sale
+LV, JV, DT entrenamiento MIF en PANU Laren Ross
+GP atiende turismo
+JB informes atiende turismo
+
+
+PLE
+GP apoya PNLQ atiende turismo
+
+
+
+
+PVM
+MH mantenimiento y sale
+JV pernocta
+	11
+PNTMM
+KM atencion de visitantes
+
+
+
+
+PNLQ
+JV y LV atiende turismo
+
+
+
+
+
+
+PLE
+GP mantenimiento apoyo PNLQ
+
+
+
+
+PVM
+LV pernocta 
+	12
+PNTMM
+FC Reunión RLCVS
+KM atencion visitantes
+ME reunion feria biocultural
+
+
+
+
+PNLQ
+LV atención de visitantes
+KV y JV informe denuncia
+SEMEC
+
+
+PLE
+GP mantenimiento atencion investigadores
+
+
+
+
+PVM
+SEMEC
+JV pernocta
+
+
+
+
+	13
+PNTMM
+FC Reunión RLCVS
+YC sanes/pendientes/SEMEC/turismo
+ME pendientes 
+KM turismo/sale 
+
+
+PNLQ
+DT informes en LE
+JV y LV mantenimiento
+KV atencion turismo
+
+
+
+
+PLE
+DT informes
+GP mantenimiento
+
+
+
+
+PVM
+CC ingresa mantenimiento
+	14
+PNTMM
+FC Reunión RLCVS
+YC reunión con Mariali tema SANES/turismo 
+ME reunión comisión de emergencias paraíso/administrativos/turismo
+
+
+PNLQ
+JV y DT reciclaje PZ
+JB atencion turismo
+LV informes
+
+
+PLE
+GP mantenimiento
+
+
+
+
+PVM
+CC mantenimiento
+	15
+PNTMM
+TCU 2 PAX
+YC SANES/PP 
+voluntariado/reunión personal 
+ME reunión tema puente en municipalidad  
+FC ingresa va a PNLQ, reunion RLCVS
+
+
+PNLQ
+Reunión personal 
+KV planifica actividades EA de fechas efemérides y próximos 3 meses para todo el bloque, incluir escuelas del humo y pejivalle y colegio ambientalista buscar contactos 
+DT apoyo a Mariali con SANES/medidas de parqueo 
+JV apoyo a Mariali con SANES/medidas de parqueo 
+LV atención turismo
+ES va a Tapanti con ME
+
+
+PLE
+GP Reunión personal 
+
+
+PVM
+CC mantenimiento 
+	16
+PNTMM 
+TCU 2 PAX
+FC , reunión RLCV
+ME ES y YC mantenimiento de senderos
+
+
+
+PNLQ
+LV atiende turismo
+3 PAX UCR voluntarios
+DT mantenimiento
+KV atención turismo
+JV, JB sabana indio
+
+
+
+
+PLE
+GP mantenimiento
+
+
+
+
+PVM
+CC mantenimiento
+	17
+PNTMM
+ASVO 2 pax
 `;

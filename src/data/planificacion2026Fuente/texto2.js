@@ -1,413 +1,7 @@
-export default String.raw`	SÁBADO
-	
-
-	
-
-	
-
-	
-
-	1
-PNTMM
-YC mantenimiento atencion de visitantes
-FC gestiones varias
-
-
-
-
-PNLQ
-MS y CC Cerros
-CC realiza el informe 
-ES atiende turismo
-
-
-
-
-PLE
-MS y CC Cerros
-
-
-
-
-PVM
-MS y CC Cerros
-	2
-PNTMM
-Exoneración 30 pax guías scouts
-YC patrullaje en PANU santa ana con Mahyar se posterg{o
-FC mantenimiento atencion de visitantes
-
-
-
-
-PNLQ
-MS, ES  y CC Reten
-MS realiza informe 
-KV atiende turismo
-DT mantenimiento
-
-
-PLE
-MS, ES y CC Reten
-
-
-
-
-PVM
-CC va a cambio de aceite
-
-
-	3
-PNTMM
-YC covirena Embalse el llano, guabata
-YC realiza el informe
-FC mantenimiento atencion de visitantes
-
-
-PNLQ
-MS y CC Providencia
-CC realiza el informe 
-JB atención turismo/informes pendientes PPC operativo especial 
-MS, ES, KV y DT comisión para el caso de AA
-
-
-PLE
-MS informes pendientes
-comisión para el caso de AA
-
-
-PVM
-CC comisión para el caso de AA
-	4
-PNTMM
-YC mantenimiento atencion de visitantes
-FC gestiones varias
-
-
-
-
-PNLQ
-JB, MS y ES RBCV
-JB realiza atiende turismo
-
-
-
-
-PLE
-MS y ES
-RBCV
-
-
-
-
-PVM
-CC informes 
-	5
-PNTMM
-YC  informe operativo especial con JB
-FC mantenimiento atencion de visitantes
-Reunión RLCVS
-KM informe PPC
-
-
-
-
-PNLQ
-JB informe operativo especial con YC 
-ES mantenimiento
-DT informes y mantenimiento
-KV atencion de turismo
-
-
-PLE
-GP mantenimiento
-MS mantenimiento informes sale
-
-
-PVM
-MH ingresa mantenimiento
-CC informes sale 
-
-
-	 6
-PNTMM
-FC mantenimiento atencion de visitantes
-Reunión RLCVS
-
-
-
-
-PNLQ
-JB informe especial con YC 
-ES mantenimiento
-KV y ES informes y mantenimiento separación de residuos
-DT atencion de turismo
-
-
-
-
-PLE
-GP mantenimiento
-
-
-
-
-PVM
-MH mantenimiento e informes
-
-
-
-	7
-PNTMM
-FC mantenimiento atencion de visitantes
-Reunión RLCVS
-KM ingresa mantenimiento
-
-
-
-
-PNLQ
-KV, DT y ES van a PZ con reciclaje
-JV ingresa
-JB atencion de turismo y va a Tapanti
-
-
-
-
-PLE
-GP mantenimiento
-
-
-
-
-PVM
-MH mantenimiento e informes 
-	8
-PNTMM
-FC Reunión RLCVS
-KM atencion de visitantes
-JB gestiones con KM}
-3 estudiantes TCU
-
-
-PNLQ
-DT mantenimiento y atencion al turismo
-KV informes y viaticos y luego cita medica
-JV mantenimiento
-LV ingresa
-
-
-
-
-PLE
-GP mantenimiento
-
-
-
-
-PVM
-MH mantenimiento e informes
-	9
-PNTMM
-FC Reunión RLCVS
-KM atencion de visitantes
-JB apoya Tapanti
-3 estudiantes TCU
-
-
-PNLQ
-KV, JV y GP patrullaje Cerros
-LV atiende turismo
-DT mantenimiento 
-
-
-
-
-PLE
-KV, JV y GP patrullaje Cerros 
-
-
-
-
-PVM
-MH mantenimiento e informes
-
-
-
-	10
-PNTMM
-KM atencion de visitantes
-3 estudiantes TCU
-
-
-
-
-PNLQ
-JB atiende turismo sale
-LV, JV, DT entrenamiento MIF en PANU Laren Ross
-GP atiende turismo
-JB informes atiende turismo
-
-
-PLE
-GP apoya PNLQ atiende turismo
-
-
-
-
-PVM
-MH mantenimiento y sale
-JV pernocta
-	11
-PNTMM
-KM atencion de visitantes
-
-
-
-
-PNLQ
-JV y LV atiende turismo
-
-
-
-
-
-
-PLE
-GP mantenimiento apoyo PNLQ
-
-
-
-
-PVM
-LV pernocta 
-	12
-PNTMM
-FC Reunión RLCVS
-KM atencion visitantes
-ME reunion feria biocultural
-
-
-
-
-PNLQ
-LV atención de visitantes
-KV y JV informe denuncia
-SEMEC
-
-
-PLE
-GP mantenimiento atencion investigadores
-
-
-
-
-PVM
-SEMEC
-JV pernocta
-
-
-
-	13
-PNTMM
-FC Reunión RLCVS
-YC sanes/pendientes/SEMEC/turismo
-ME pendientes 
-KM turismo/sale 
-
-
-PNLQ
-DT informes en LE
-JV y LV mantenimiento
-KV atencion turismo
-
-
-
-
-PLE
-DT informes
-GP mantenimiento
-
-
-
-
-PVM
-CC ingresa mantenimiento
-	14
-PNTMM
-FC Reunión RLCVS
-YC reunión con Mariali tema SANES/turismo 
-ME reunión comisión de emergencias paraíso/administrativos/turismo
-
-
-PNLQ
-JV y DT reciclaje PZ
-JB atencion turismo
-LV informes
-
-
-PLE
-GP mantenimiento
-
-
-
-
-PVM
-CC mantenimiento
-	15
-PNTMM
-TCU 2 PAX
-YC SANES/PP 
-voluntariado/reunión personal 
-ME reunión tema puente en municipalidad  
-FC ingresa va a PNLQ, reunion RLCVS
-
-
-PNLQ
-Reunión personal 
-KV planifica actividades EA de fechas efemérides y próximos 3 meses para todo el bloque, incluir escuelas del humo y pejivalle y colegio ambientalista buscar contactos 
-DT apoyo a Mariali con SANES/medidas de parqueo 
-JV apoyo a Mariali con SANES/medidas de parqueo 
-LV atención turismo
-ES va a Tapanti con ME
-
-
-PLE
-GP Reunión personal 
-
-
-PVM
-CC mantenimiento 
-	16
-PNTMM 
-TCU 2 PAX
-FC , reunión RLCV
-ME ES y YC mantenimiento de senderos
-
-
-
-PNLQ
-LV atiende turismo
-3 PAX UCR voluntarios
-DT mantenimiento
-KV atencion turismo
-JV, JB sabana indio
-
-
-
-
-PLE
-GP mantenimiento
-
-
-
-
-PVM
-CC mantenimiento
-	17
-PNTMM
-ASVO 2 pax
-TCU 3 PAX
+// Generado desde la exportación «text/plain» de PLANIFICACION BTMM 2026
+// (Google Docs). NO editar a mano: se regenera entero al sincronizar.
+// Parte 2 de 9.
+export default String.raw`TCU 3 PAX
 YC trabajos en baranda
 ES trabajos en baranda 
 ME trabajos en baranda
@@ -512,7 +106,7 @@ ME atencion turismo y FBT
 
 PNLQ
 KV y JB reciclaje PZ
-DT atencion turismo
+DT atención turismo
 
 
 
@@ -535,14 +129,14 @@ ME atencion turismo y FBT
 
 PNLQ
 DT mantenimiento senderos
-KV atencion turismo
-JB inspeccion con MS y ES
+KV atención turismo
+JB inspección con MS y ES
 
 
 
 
 PLE
-MS inspeccion con JB
+MS inspección con JB
 
 
 
@@ -736,6 +330,7 @@ GP atiende turismo PNLQ
 
 
 
+
 PVM
 nvestigadores dantas 4p
 
@@ -763,9 +358,11 @@ PLE
 
 
 
+
 PVM
 nvestigadores dantas 4p
 Alex pernocta
+
 
 
 
@@ -795,6 +392,7 @@ PVM
 ES  pernocta
 
 	
+
 
 
 
@@ -968,4 +566,642 @@ ME turismo y feria
 
 
 PNLQ
+JB capacitación VDA
+3 voluntarios UCR
+ES mantenimiento ronda VM
+KV atiende turismo
+DT traslado a tapanti y cartago
+
+
+PLE
+MS y GP  mantenimiento ronda VM
+
+
+
+
+PVM
+CC Mantenimiento ronda 
+ 
+	7
+PNTMM
+ME turismo y feria
+
+
+
+
+PNLQ
+JB atiende turismo
+
+
+
+
+
+
+PLE
+KV y DT Taller turismo comunitario
+MS mantenimiento
+
+
+PVM
+CC mantenimiento
+ 
+	8
+PNTMM
+ME atencion turismo
+
+
+
+
+PNLQ
+JB apoyo a Panthera en RBCV
+ES atiende turismo
+Carrera Providencia
+
+
+
+
+PLE
+MS apoyo a PNLQ
+
+
+
+
+PVM
+CC mantenimiento
+ 
+	9
+PNTMM
+ME atencion turismo
+JV mantenimiento
+FC ingresa va a PNLQ
+
+
+PNLQ
+3 voluntarios UCR
+JB gestion informes
+KV informe bandera azul
+DT atiende turismo
+JV ingresa va a Tapanti
+
+
+PLE
+pernocta FC
+MS informes y sale
+
+
+PVM
+CC mantenimiento
+ 
+	10
+PNTMM
+FC reunion ADI trinidad 3pm Feria Danta
+JV gestion con voluntarios
+
+
+PNLQ
+3 voluntarios UCR
+reunion ADI trinidad 3pm Feria Danta
+KV atiende turismo
+ES mantenimiento traslado de equipo en VM y apoyo a Panthera
+JB informes sale
+LV mantenimiento atiende turismo
+
+
+PLE
+AA y GP y FC traslado de equipo de VM
+DT informes
+
+
+PVM
+pernocta FC
+AA y GP y FC traslado de equipo de VM
+ 
+	11
+PNTMM
+Reunión CME
+ME: Juicio Juzgado Contravencional Paraíso 13:00
+JV atencion turismo
+salen voluntarios
+
+
+PNLQ
+3 voluntarios UCR
+KV atiende turismo bandera azul
+
+
+PLE
+AA y GP y FC ES traslado de equipo de VM
+
+
+
+
+PVM
+pernocta voluntario
+AA y GP FC ES traslado de equipo de VM
+ 
+	12
+PNTMM
+FC Comite tecnico
+JV atencion turismo
+
+
+
+
+PNLQ
+3 voluntarios UCR
+LV atiende turismo
+DT y ES mantenimiento
+KV gestión
+
+
+
+
+PLE
+AA y GP traslado a Tapanti
+
+
+
+
+PVM
+pernocta GP
+ 
+	13
+PNTMM
+FC Comite tecnico
+JV atencion turismo
+
+
+
+
+PNLQ
+3 voluntarios UCR
+DT atiende Camilo y al turismo
+KV atiende delegación REDD+
+ES mantenimiento traslado de equipo de VM
+
+
+
+
+PLE
+AA y GP traslado de equipo de VM
+
+
+
+
+PVM
+AA y GP traslado de equipo de VM
+pernocta voluntario
+ 
+	14
+PNTMM
+FC atencion turismo
+JV traslado a PNLQ y sale
+
+
+
+
+PNLQ
+3 voluntarios UCR
+LV atiende turismo
+
+
+PLE
+AA y GP mantenimiento
+
+
+
+
+PVM
+pernocta AA
+ 
+	15
+PNTMM
+FC gestión y atención de visitantes
+ingresan 3p TCu UCR
+
+
+
+
+PNLQ
+3 voluntarios UCR
+LV atiende turismo
+
+
+
+
+PLE
+GP y AA patrullaje Ceros
+Traslado a Tapanti GP sale
+
+
+PVM
+Pernocta voluntario
+ 
+	16
+PNTMM
+3p TCu UCR
+FC gestión, reunion ADI Trinidad
+YE ingresa mantenimiento
+
+
+PNLQ
+3 voluntarios UCR
+DT informes visitación y mantenimiento de senderos y puesto
+LV mantenimiento de senderos y puesto
+KV gestión y atención visitantes, KV y LV reunión ADI Trinidad
+
+
+PLE
+AA mantenimiento
+
+
+PVM
+CC mantenimiento
+MS gestion para mantenimiento de la ronda con voluntarios
+ 
+	17
+PNTMM
+3p TCu UCR
+YE atencion turismo
+FC sale días libres
+
+
+PNLQ
+3 voluntarios UCR
+KV atención turismo
+LV mantenimiento
+JB informes
+
+
+PLE
+DT gestión
+AA mantenimiento
+
+
+PVM
+CC mantenimiento 
+ 
+	18
+PNTMM
+3p TCu UCR
+ME: Ingresa, atiende un asunto en la Zup Reunión Orosi
+YE atencion turismo
+
+
+PNLQ
+3 voluntarios UCR
+KV atención turismo
+LV mantenimiento
+JB informes
+
+
+PLE
+AA mantenimiento
+
+
+PVM
+CC mantenimiento 
+ 
+	19
+PNTMM
+3p TCu UCR
+ME:Reunión con  ICE,Camilo,Profe Cristian CATIE.Feria
+YE atencion turismo
+
+
+PNLQ
+3 voluntarios UCR
+KV atención turismo
+LV mantenimiento
+JB informes
+
+
+PLE
+AA mantenimiento
+
+
+PVM
+CC mantenimiento 
+ 
+	20
+PNTMM
+3p TCu UCR
+ME:feria/administrativos 
+YC pendientes
+PNLQ
+YE atencion turismo
+3 voluntarios UCR
+
+
+
+
+PNLQ
+3 voluntarios UCR
+KV atención turismo
+LV mantenimiento
+JB informes
+
+
+PLE
+GP mantenimiento
+
+
+PVM
+CC mantenimiento 
+ 
+	21
+PNTMM
+3p TCu UCR
+ME:voluntariado con TCU en mirador 
+Yeison informes Voluntariado y valoración de daño ambiental 
+Ye atención de turismo 
+
+
+PNLQ
+3 voluntarios UCR
+KV y DT Taller turismo comunitario
+LV atención turismo
+
+
+PLE
+GP mantenimiento
+
+
+PVM
+CC mantenimiento 
+ 
+	22
+PNTMM
+ME:revision agua/otros
+YC valoracion de daño 
+YE atencion de turismo 
+
+
+
+
+PNLQ
+3 voluntarios UCR
+LV atencion turismo
+
+
+
+
+PLE
+
+
+
+
+
+
+PVM
+CC mantenimiento 
+ 
+	23
+PNTMM
+ME: temas feria con TCU
+YE: atencion de turismo
+YC valoracion/mantenimineto agua y sendero con ES
+JV acompaña a franklin tema murcielagos 
+
+
+
+
+PNLQ
+3 voluntarios UCR
+KV 
+
+
+
+
+PLE
+
+
+
+
+
+
+PVM
+CC mantenimiento 
+ 
+	24
+PNTMM
+ME:Reunion Orosi Detalles Feria, subsanar permiso sanitario dejar documento MISA
+JV:Atención Turismo
+YC;Informe valoracion de daño
+YE: mantenimiento
+
+
+
+
+PNLQ
+3 voluntarios UCR
+DT informes 
+KV coordinación manejo de la efectividad
+LV sale
+
+
+PLE
+GP mantenimiento
+
+
+PVM
+CC mantenimiento 
+	25
+PNTMM
+FC ingresa Reunion INA 9am
+ME:Actividades Feria B. Reunion Final Feria
+YC:Continua Informe,otros
+JV:Voluntariado UCR
+FC:Asuntos varios Administrativos
+YE: mantenimiento
+
+
+PNLQ
+3 voluntarios UCR
+DT, KV y JV  capacitacion expedientes SE
+
+
+PLE
+AA mantenimiento
+GP mantenimiento 
+
+
+
+
+PVM
+MS capacitación expedientes SE
+CC mantenimiento 
+ 
+	26
+PNTMM
+YC voluntariado/valoracion 
+JV voluntariado 
+FC varios administrativos
+ME feria y otros
+
+
+
+
+PNLQ
+3 voluntarios UCR
+ES bajan reciclaje a perez y recogen cosas de la feria 
+DT bajan reciclaje a perez y recogen cosas de la feria
+KV atiende turismo/presentacion manejo de la efectividad
+
+
+PLE
+AA tema carreta y recoge inflables con vitor julio 
+GP tema carreta recoge inflables con Victor julio
+
+
+PVM
+CC ayuda a AA tema carreta 
+	27
+PNTMM
+ES transporte de materiales para la Feria
+FC firma periodo de prueba y va a recoger el VIR 
+ME:Recibe menaje UCR,ICE,CCDR, asuntos varios
+Ingresa Meryll Arias
+
+
+
+
+PNLQ
+3 voluntarios UCR
+KV atencion turismo informe
+
+
+
+
+PLE
+AA mantenimiento
+
+
+PVM
+Ingreso 2 investigadoras UNED
+Alex de la Brigada pernocta
+CC sale dias libres
+ 
+	28
+PNTMM
+ME, YV, ES, FC :Feria Biocultural 
+Meryll Arias presente 
+
+
+
+
+PNLQ
+3 voluntarios UCR
+GP apoyo PNLQ 
+Pernoctan investigadores Panthera
+DT, KV y AA apoyan Feria Biocultural Tapanti
+
+
+PLE
+GP apoyo PNLQ 
+AA apoyan Feria Biocultural Tapant
+
+
+
+
+PVM
+2 investigadoras UNED
+Roy de la Brigada pernocta 
+ 
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MARZO 2026
+	DOMINGO
+	LUNES
+	MARTES
+	MIÉRCOLES
+	JUEVES
+	VIERNES
+	SÁBADO
+	1
+PNTMM
+ME, YV, ES, FC :Feria Biocultural 
+
+
+PNLQ
+3 voluntarios UCR
+GP apoyo PNLQ 
+Pernoctan investigadores Panthera
+DT, KV y AA apoyan Feria Biocultural Tapanti
+
+
+PLE
+GP apoyo PNLQ 
+AA apoyan Feria Biocultural Tapanti
+
+
+PVM
+2 investigadoras UNED
+Pernocta Alex de la Brigada
+ 
+	2
+PNTMM
+ME:Entrega de menaje UCR,CCDR, Sara,Nina Otros
+FC atiende turismo
+ES y JV salen en el VIR al PNLQ
+
+
+PNLQ
+3 voluntarios UCR
+Visita de influencer italiana
+JB atiende turismo
+ES y JV salen dias libres
+AA entrega materiales y equipo
+Pernoctan investigadores Panthera
+
+
+
+
+PLE
+AA y GP  entrega materiales y equipo al PNLQ
+AA va a cambio de aceite a PZ 2pm
+
+
+
+
+PVM
+Pernocta Alex de la Brigada
+ 
+	3
+PNTMM
+FC Reunión CxS proyectos
+ME:Reunion INA paraiso
+Reunion muni,ICE
+FC sale a PNLQ
+
+
+PNLQ
+3 voluntarios UCR
+JB y AA llevan al VIR a OSLS
 `;
