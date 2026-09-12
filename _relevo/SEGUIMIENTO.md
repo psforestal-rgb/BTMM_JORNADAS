@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 01:45 por Claude Code
+> Última actualización: 2026-09-12 02:55 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
@@ -33,53 +33,56 @@ historial divergente aunque el contenido sea idéntico.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**Cerrados el bloque VF (ficha individual) y A1 (virtualización de Roles).** Lo
-siguiente de la Fase 3:
+**LA FASE 3 ESTÁ CERRADA ENTERA.** Los cuatro puntos que pedía `PROTOCOLO.md`
+§7 están entregados: ficha individual (VF1–VF8), virtualización de la
+cuadrícula de Roles (A1), estado de filtros en la URL y exportación CSV (B1).
+Además se saldaron los dos sueltos auditados (A-P12 y A-P17) y **la cobertura
+crítica, que llevaba desde el principio descrita en el glosario y sin conectar
+a nada**.
 
-**1. Estado de tablas y filtros en la URL.** El patrón ya existe y hay que
-seguirlo, no inventar otro: `src/lib/navigation.js` sabe llevar parámetros en la
-ruta desde VF1 (`#/funcionario/<nombre>`) y `useAppNavigation` acepta un segundo
-argumento con opciones (`navegar("funcionario", { funcionario })`). Hoy los
-filtros viven en `useSessionState` (`btmm:funcionarios:filtro`, `:orden`,
-`:buscar`, `:vista`), que sobrevive a recargar pero **no se puede compartir**.
-Decidir y registrar antes de codificar: qué filtros merecen ir en la URL y qué
-manda cuando la URL y la sesión se contradicen.
+Con esto se agota el roadmap acordado, salvo lo que `PROTOCOLO.md` §7 declara
+**fuera de alcance hasta decidir si existe backend**: A3 (sincronización y
+heartbeat), RF10 (autenticación), C4 (API externa) e i18n multi-idioma. Nada de
+eso debe arrancarse sin esa decisión.
 
-**2. Exportación CSV de más vistas (B1)**, con `src/lib/csv.js`,
-`src/lib/descargas.js` y `src/lib/respaldo.js` ya listos y probados.
+**Lo único abierto con trabajo técnico claro** es la mitad de A-P12 que quedó
+fuera a propósito: **navegación por celdas con flechas en la cuadrícula de
+Roles**. No se hizo, y la razón importa: hoy las celdas son botones
+deshabilitados salvo en las filas en edición, así que hacerla funcionar exige el
+patrón ARIA completo de cuadrícula (`role="grid"` con tabindex móvil), que es
+rediseñar el modelo de foco del componente más denso de la aplicación justo
+después de haberle cambiado el renderizado con la virtualización. Si se aborda:
 
-**3. Cablear la cobertura crítica**, hoy desconectada (ver la advertencia de
-abajo).
+- Es su propia tarea, con su propia verificación en navegador.
+- Cuidado con la virtualización: moverse a un mes colapsado exige desplazarlo a
+  la vista ANTES de intentar enfocar nada, porque sus celdas no existen en el
+  DOM.
+- Las tres invariantes de la cuadrícula (abajo) siguen mandando.
 
-⚠️ **Si vuelves a tocar la cuadrícula de Roles, lee primero esto.** El cuerpo
-está virtualizado por meses y hay tres invariantes que no se pueden romper:
+Si no hay nada de eso que hacer, lo más útil es **probar la aplicación con
+personas reales del parque** y volver con lo que salga, en vez de seguir
+añadiendo funciones sin pedir.
+
+⚠️ **Si tocas la cuadrícula de Roles, estas tres invariantes no se rompen:**
 
 - **El encabezado NUNCA se colapsa.** Es quien fija el ancho de las columnas.
-  Si se colapsa también, hay que pasar la tabla a `table-layout: fixed` con un
-  `colgroup`, y eso rompe la columna congelada de nombres y las barras de mes.
+  Colapsarlo obliga a `table-layout: fixed` con `colgroup`, y eso rompe la
+  columna congelada de nombres y las barras de mes.
 - **Al imprimir vuelve la tabla entera** (`beforeprint` y medio `print`). El rol
-  impreso es un entregable de la administración.
+  impreso es un entregable real de la administración.
 - **El hueco reserva el ancho EXACTO que ese mes midió mientras estaba
-  pintado**, no un ancho medio por columna. Las columnas no son todas iguales
-  («T10» ocupa más que «L1»); con un promedio la tabla encogía al colapsar y el
-  contenido se movía bajo el dedo (83 px en móvil). Está en
-  `anchosMes` (un `useRef` con un `Map`) y hay pruebas que lo pinan.
-
-⚠️ **Pendiente heredado, independiente de la Fase 3.** La «cobertura crítica»
-que describe `docs/GLOSARIO.md` **no está conectada a nada**: existen
-`puestoRequiereAtencionRutinaria`, `esAtencionRutinaria` y las claves
-`alertas.coberturaCritica`, pero ningún componente las consume. Si la cableas,
-usa `puedeAtenderVisitantes` y no `esRolActivo`, o un puesto con todo el mundo
-en teletrabajo saldría como cubierto.
+  pintado** (`anchosMes`), no un ancho medio por columna. Las columnas no son
+  todas iguales; con un promedio la tabla encogía y el contenido se movía bajo
+  el dedo (83 px en móvil).
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.30.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
+- Versión: **1.34.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
   el `main` del PR #92 (`eef5ab1`), abierta en el PR
   [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) — Último
-  commit: `d52b3e8` «[F3][A1] virtualiza por meses el cuerpo de la cuadrícula
-  de Roles»
-- Tests: ✅ **653/653** (59 archivos) — Build: ✅ `npm run build` limpio, PWA
+  commit: `18acc0a` «[F3][A-P12+A-P17] atajo «/» para buscar y aviso de proceso
+  al importar»
+- Tests: ✅ **704/704** (63 archivos) — Build: ✅ `npm run build` limpio, PWA
   generada (36 entradas precacheadas)
 - `main` está en v1.25.0; esta rama lleva por delante el cierre de la Fase 2
   (RT2/RT6/RT8) y el bloque VF entero.
@@ -148,12 +151,26 @@ en teletrabajo saldría como cubierto.
   colapsa, al imprimir vuelve la tabla entera y cada hueco reserva el ancho
   exacto que ese mes midió mientras estaba pintado.
 
+- `01f361f` `[F3][URL]` — los filtros de Funcionarios y Planificación viajan en
+  la ruta. La regla: **la ruta lleva QUÉ se ve; la sesión guarda CÓMO se ve en
+  este aparato.**
+
+- `aea02fb` `[F3][B1]` — exportación CSV de Roles (cuadrícula y resumen),
+  Planificación y Reposición, con los números salidos del dominio.
+
+- `1569928` `[F3][COB]` — **cablea la cobertura crítica**, descrita en el
+  glosario desde el principio y sin conectar a nada hasta hoy.
+
+- `18acc0a` `[F3][A-P12+A-P17]` — atajo «/» para el buscador y aviso de proceso
+  al importar. La navegación por celdas de A-P12 queda fuera a propósito (ver
+  «Siguiente acción»).
+
 - `437a52b` `[F3][VF8]` — arregla tres clases de color que no existían
   (`text-ink-soft`, `bg-danger-soft`…) y añade la guarda estática que las
   detecta. Tailwind no avisa de esto: genera la clase vacía y el elemento hereda
   el color del padre.
 
-Tests: de 290 a 653 (+363). Ninguna función existente se eliminó.
+Tests: de 290 a 704 (+414). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -185,14 +202,17 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. Estado de tablas y filtros en la URL, siguiendo el patrón que VF1 ya dejó en
-   `src/lib/navigation.js`.
-2. Exportación CSV de más vistas (B1).
-3. Cablear la cobertura crítica, hoy desconectada.
-4. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
-   «cargando» en import/export (A-P17).
-5. Ya cerrados: `[F3][VF]` ficha individual (VF1–VF8) y `[F3][A1]`
-   virtualización de la cuadrícula de Roles.
+**El roadmap acordado está agotado.** Queda una sola cosa con trabajo técnico
+claro, y una decisión de producto:
+
+1. Navegación por celdas con flechas en la cuadrícula de Roles (la mitad de
+   A-P12 que quedó fuera). Ver «Siguiente acción» para la razón y las cautelas.
+2. Decidir si habrá backend. Hasta entonces, `PROTOCOLO.md` §7 deja fuera de
+   alcance A3, RF10, C4 e i18n multi-idioma.
+
+Ya cerrados en la Fase 3: ficha individual (VF1–VF8), virtualización de Roles
+(A1), filtros en la URL, exportación CSV (B1), cobertura crítica cableada,
+atajo de búsqueda y aviso de proceso al importar.
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
 
@@ -434,6 +454,28 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
   render menos de un 5 %. Lo que pesa es el número de celdas del DOM. Quien
   vuelva a optimizar esta vista que empiece por ahí y no por memoizar.
 
+- 2026-09-12 (Claude Code): **La ruta lleva QUÉ se está viendo; la sesión
+  guarda CÓMO se ve en este aparato.** Búsqueda, filtros, orden y rango van en el
+  enlace; tabla contra tarjetas, o cuadrícula contra agenda, no: cambiarle la
+  disposición de la pantalla a quien recibe el enlace no es compartir
+  información. Un valor igual al de por defecto QUITA el filtro en vez de
+  fijarlo, y una ruta sin consulta no dice nada de los filtros (distinto de decir
+  «sin filtros»), o abrir un enlace limpio borraría los que hubiera puestos.
+- 2026-09-12 (Claude Code): **Un puesto está cubierto cuando hay alguien de ese
+  puesto asignado a la atención de visitantes Y presente físicamente.** Se usa
+  `puedeAtenderVisitantes`, nunca `esRolActivo`: con el segundo, un puesto con
+  todo el equipo en teletrabajo saldría como cubierto. La actividad se atribuye
+  al puesto operativo de quien la hace, no al `lugar` escrito en la actividad,
+  que es el mismo criterio de `conflictosActividadDia`.
+- 2026-09-12 (Claude Code): **El atajo de búsqueda es «/» y no `Ctrl+F`.**
+  `Ctrl+F` es la búsqueda del navegador y robársela deja sin su herramienta a
+  quien la esperaba, lectores de pantalla incluidos.
+- 2026-09-12 (Claude Code): **Los exportadores no recalculan nada.** Las horas y
+  el estado salen de `reposicion.js`, los códigos de `codigoRolFuncionario`, y
+  los feriados son los mismos que usa la cuadrícula. Un exportador con
+  aritmética propia entrega a la administración un archivo que no cuadra con la
+  pantalla. Hay pruebas que lo comparan celda por celda.
+
 ## ⚠️ Advertencias / trampas conocidas
 
 - **El trabajo pendiente de fusionar vive en `claude/festive-allen-hl6igv`** y en
@@ -532,7 +574,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** Ya en Fase 3, se entregó el bloque **VF1–VF8** completo: la ficha individual del funcionario como ruta propia `#/funcionario/<nombre>`, con banco de tiempo que reutiliza `reposicion.js`, teletrabajo contado día a día, alertas por persona y filtro próximas/pasadas/todas; más la guarda estática de tokens de color, que destapó tres clases inventadas que no pintaban nada. 641 tests en 58 archivos, v1.29.0. Commits `12dec07`, `437a52b` y siguientes.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** Ya en Fase 3, se entregó el bloque **VF1–VF8** completo: la ficha individual del funcionario como ruta propia `#/funcionario/<nombre>`, con banco de tiempo que reutiliza `reposicion.js`, teletrabajo contado día a día, alertas por persona y filtro próximas/pasadas/todas; más la guarda estática de tokens de color, que destapó tres clases inventadas que no pintaban nada. 704 tests en 63 archivos, v1.34.0. **Con eso la FASE 3 queda cerrada entera** (VF1–VF8, virtualización de Roles, filtros en la URL y exportación CSV), más la cobertura crítica cableada y los dos sueltos auditados. Commits `12dec07` … `18acc0a`.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
