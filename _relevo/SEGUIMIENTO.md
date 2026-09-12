@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 00:10 por Claude Code
+> Última actualización: 2026-09-12 00:35 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: el PR #91 ya se fusionó; esta rama lleva lo posterior
@@ -28,67 +28,57 @@ historial divergente aunque el contenido sea idéntico.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**`[F2][RT2+RT6+RT8]` completar el rol `E` de teletrabajo.** El núcleo de dominio
-ya está hecho y probado; queda la parte de interfaz y datos.
+**LA FASE 2 ESTÁ CERRADA.** RF1–RF9, RP1–RP8 y RT1–RT8, los tres bloques
+completos. Arranca la **FASE 3**, y el primer bloque es la **Vista Minimalista
+de Funcionario (VF1–VF8)**.
 
-Estado del bloque RT:
+⚠️ **La regla que más importa de toda la Fase 3**, y está en `PROTOCOLO.md` §1 y
+en «Decisiones» desde el primer día: **el Banco de Tiempo (VF3) DEBE reutilizar
+la función de dominio existente. Está prohibido crear un segundo cálculo
+paralelo.** Antes de escribir una línea, localiza el cálculo vigente en
+`src/domain/reposicion.js` (`saldoHoras`, `cuotasDe`, `resumenReposiciones`,
+`historialPorFuncionario`) y úsalo. Si te parece que no encaja, **adáptalo ahí**,
+no lo reescribas en la vista.
 
-| Req | Estado |
-|-----|--------|
-| RT1 código `E` · RT3 conflictos · RT4 incompatibilidad · RT5 cobertura · RT7 indicador visual | ✅ |
-| **RT2 campo `esTeletrabajo` en actividades** | 🔴 |
-| **RT6 filtro por tipo de trabajo** | 🔴 |
-| **RT8 reportes de teletrabajo** | 🔴 |
+Qué pide cada requisito y con qué se apoya:
 
-Lo que ya puedes dar por cierto y **no volver a decidir**:
+| Req | Qué pide | Piezas que YA existen |
+|-----|----------|------------------------|
+| VF1 | Acceso desde Funcionarios y Roles | `useAppNavigation` y `src/lib/navigation.js` (enlaces profundos, 4 pruebas) |
+| VF2 | Información básica | la ficha entera ya está en `personas` |
+| VF3 | **Banco de Tiempo** | `src/domain/reposicion.js` — **reutilizar, no reescribir** |
+| VF4 | Actividades programadas | `actividadesEnDia`, `teletrabajoDeActividad` |
+| VF5 | Resumen de roles | `codigoRolFuncionario`, `categoriaDe`, `etiquetaRol` |
+| VF6 | Alertas específicas | `src/domain/alertas.js` (18 pruebas entre los dos archivos) |
+| VF7 | Filtro próximas/pasadas/todas | patrón de filtro de `src/features/dia/Dia.jsx` |
+| VF8 | Diseño limpio y responsive | `Card`, `EmptyState`, tokens semánticos |
 
-- `esRolActivo` incluye `E`; `esRolPresencial` y `esTeletrabajo` existen en
-  `src/domain/roles.js`; `puedeAtenderVisitantes` y `teletrabajoIncompatible`
-  en `src/domain/cobertura.js`. Hay 21 pruebas en
-  `src/domain/__tests__/teletrabajo.test.js`, cuatro de ellas de regresión.
-- El conflicto de RT4 se lee de `reglas.puestosRequierenVisitantesDiario`, que
-  es editable. Los tres llamadores ya la pasan.
+Decisión que hay que tomar y **registrar antes de codificar**: si la vista es
+una entrada nueva de navegación o un panel dentro de Funcionarios. La app ya se
+criticaba por tener demasiadas entradas (F-P3/F-P11), así que un panel o una
+ruta con parámetro es más coherente que un undécimo botón en la barra.
 
-Qué falta, en orden:
+Después de VF vienen, en orden de valor: **virtualización de la cuadrícula de
+Roles (A1)** —`RolesMensualGrid.jsx` son 873 líneas y ~31 columnas—, **estado de
+tablas y filtros en la URL**, y **exportación CSV de más vistas (B1)**, para la
+que ya están `src/lib/csv.js`, `src/lib/descargas.js` y `src/lib/respaldo.js`.
 
-1. **RT2, campo `esTeletrabajo` en la actividad.** Antes de añadirlo, decide si
-   hace falta: hoy el teletrabajo se marca en el ROL del día, no en la
-   actividad, y tener las dos cosas abriría la puerta a que se contradigan
-   (actividad marcada como teletrabajo en un día de turno presencial). Si se
-   añade, la validación de esa contradicción es obligatoria. **Registra la
-   decisión antes de codificar.**
-2. **RT6, filtro por tipo de trabajo.** La vista Día ya tiene un filtro de
-   actividades (`tipoFiltroActividades` en `src/features/dia/Dia.jsx`). Añadir
-   ahí «presencial / teletrabajo» es más barato que una vista nueva.
-3. **RT8, reportes.** Lo más barato y coherente con lo ya hecho es una columna
-   o un contador de días de teletrabajo, reutilizando `src/lib/csv.js`.
-
-⚠️ **Hallazgo que conviene resolver alguna vez.** La «cobertura crítica» que
-describe `docs/GLOSARIO.md` —un puesto que requiere atención de visitantes y no
-tiene a nadie asignado se marca en rojo en la vista Día— **no está conectada a
-nada**. Existen `puestoRequiereAtencionRutinaria` (`src/domain/cobertura.js`),
-`esAtencionRutinaria` (`src/domain/actividades.js`) y las claves
-`alertas.coberturaCritica` y `alertas.coberturaCriticaSub`, pero **ningún
-componente las consume**: solo las usan sus propias pruebas. Por eso RT4 se
-implementó como conflicto y no colgando de ese indicador. Cablearlo es una
-tarea aparte, y al hacerlo hay que usar `puedeAtenderVisitantes` y no
-`esRolActivo`, o un puesto con todo el mundo en teletrabajo saldría como
-cubierto.
-
-Tras RT, la Fase 2 cierra y arranca la **Fase 3**: Vista Minimalista de
-Funcionario (VF1–VF8, con el Banco de Tiempo **reutilizando** la función de
-dominio existente), virtualización de la cuadrícula de Roles (A1), estado de
-tablas y filtros en la URL, y exportación CSV de más vistas (B1).
+⚠️ **Pendiente heredado, independiente de la Fase 3.** La «cobertura crítica»
+que describe `docs/GLOSARIO.md` **no está conectada a nada**: existen
+`puestoRequiereAtencionRutinaria`, `esAtencionRutinaria` y las claves
+`alertas.coberturaCritica`, pero ningún componente las consume. Si la cableas,
+usa `puedeAtenderVisitantes` y no `esRolActivo`, o un puesto con todo el mundo
+en teletrabajo saldría como cubierto.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.27.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
+- Versión: **1.28.0** — Rama: **`claude/festive-allen-hl6igv`**, rebasada sobre
   el `main` fusionado, abierta en el PR
   [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) — Último
-  commit: `c025d48` «[F2][RT] rol E de teletrabajo: trabajar deja de ser lo
-  mismo que estar presente»
-- Tests: ✅ **577/577** (54 archivos) — Build: ✅ `npm run build` limpio,
-  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.27.0
+  commit: `df5e576` «[F2][RT2+RT6+RT8] teletrabajo derivado del rol, filtro y
+  resumen»
+- Tests: ✅ **585/585** (54 archivos) — Build: ✅ `npm run build` limpio,
+  base path `/BTMM_JORNADAS/` intacto, `dist/version.json` = 1.28.0
 
 ## ✅ Hecho en esta sesión
 
@@ -138,7 +128,10 @@ tablas y filtros en la URL, y exportación CSV de más vistas (B1).
 - `c025d48` `[F2][RT]` — rol `E` de teletrabajo en el dominio: activo pero no
   presencial, con el conflicto de RT4 y el indicador visual.
 
-Tests: de 290 a 577 (+287). Ninguna función existente se eliminó.
+- `df5e576` `[F2][RT2+RT6+RT8]` — teletrabajo derivado del rol, filtro por tipo
+  de trabajo y resumen. **Con esto la FASE 2 queda cerrada entera.**
+
+Tests: de 290 a 585 (+295). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
 
@@ -170,13 +163,11 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 🔜 Pendiente (en orden)
 
-1. `[F2][RT2+RT6+RT8]` — completar el rol `E`. Ver «SIGUIENTE ACCIÓN». Cierra
-   la Fase 2.
-2. Cablear la cobertura crítica, hoy desconectada (ver «SIGUIENTE ACCIÓN»).
-3. FASE 3 — Vista Minimalista de Funcionario (VF1–VF8) reutilizando el cálculo
-   de dominio existente para el Banco de Tiempo, virtualización de Roles (A1),
-   estado de tablas y filtros en la URL, exportación CSV (B1).
-4. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
+1. `[F3][VF]` — Vista Minimalista de Funcionario (VF1–VF8). Ver «SIGUIENTE ACCIÓN».
+2. `[F3][A1]` — virtualización de la cuadrícula de Roles.
+3. Estado de tablas y filtros en la URL; exportación CSV de más vistas (B1).
+4. Cablear la cobertura crítica, hoy desconectada.
+5. Sueltos de menor prioridad, ya auditados: atajos de teclado (A-P12) y estado
    «cargando» en import/export (A-P17).
 
 ## 🧠 Decisiones vigentes (append-only; no revertir sin registrar el reemplazo)
@@ -252,6 +243,12 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - 2026-09-11 (Claude Code): Los avisos de campo se disparan **al salir del
   foco**, no al teclear: mientras alguien escribe, el valor está incompleto por
   definición y avisar es ruido.
+- 2026-09-12 (Claude Code): **El teletrabajo NO es un campo de la actividad: se
+  DERIVA del rol del día.** RT2 pedía un campo `esTeletrabajo` en la actividad y
+  se implementó de otra forma, a propósito. Sería una segunda fuente de verdad
+  que puede contradecir al rol, y además no podría representar una actividad de
+  varios días en la que la persona teletrabaja solo uno. La capacidad que RT2
+  quería la da `teletrabajoDeActividad()` en `src/domain/actividades.js`.
 - 2026-09-12 (Claude Code): **El teletrabajo es rol ACTIVO pero NO presencial.**
   Activo porque la persona trabaja: si no lo fuera, asignarle cualquier
   actividad marcaría conflicto, lo contrario de lo que el rol significa. No
@@ -397,6 +394,12 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 - `src/data/puestos.js` es ahora **solo la semilla**: la lista viva está en el
   estado. Quien necesite los puestos debe leerlos de `useApp()`, nunca importar
   el módulo de datos, o se quedará con la lista del arranque.
+- En las pruebas de la vista Día, el panel de actividades **arranca colapsado**:
+  hay que pulsar «Actividades planificadas (N)» antes de buscar nada dentro.
+- Al añadir una clave a `src/i18n/es-CR.js`, **comprueba en qué grupo cae**. El
+  diccionario devuelve la clave cuando no existe, así que una clave en el grupo
+  equivocado no falla: se muestra literalmente en pantalla. Pasó con
+  `dia.teletrabajoResumen`, que acabó en `roles`.
 - ⚠️ **La cobertura crítica del glosario NO está implementada.** Sus funciones y
   textos existen pero ningún componente los usa. Ver «SIGUIENTE ACCIÓN». Si la
   cableas, usa `puedeAtenderVisitantes` y no `esRolActivo`.
@@ -426,7 +429,7 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 
 ## 📜 Historial de sesiones (nuevo arriba)
 
-### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Del rol `E` de teletrabajo se entrega el núcleo de dominio (RT1, RT3, RT4, RT5, RT7); faltan RT2, RT6 y RT8. 577 tests, v1.27.0.
+### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** 585 tests, v1.28.0.
 
 ### 2026-09-11 — Grok — Fase 0 + auditoría + infra toast/undo v1.15.0. Cableado de vistas pendiente de push.
 
