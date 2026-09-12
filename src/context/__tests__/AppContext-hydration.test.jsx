@@ -108,9 +108,9 @@ describe("AppContext — hidratación async desde Dexie", () => {
     });
     expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-1"]).toBe("T99");
     expect(observedRoleData["2026-5-Puesto Orosi-Errol Salazar-2"]).toBe("T11");
-    // Setiembre entra en el refresco agosto-diciembre: la fuente impone su
-    // valor sobre el del snapshot ("T1" -> "T2").
-    expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("T2");
+    // Setiembre entra en el refresco (es el mes de la sincronización): la
+    // fuente impone su valor sobre el del snapshot ("T1" -> "L5").
+    expect(observedRoleData["2026-9-Puesto Orosi-Errol Salazar-1"]).toBe("L5");
     expect(observedRoleData["2026-8-Puesto Orosi-Enzo Martini-1"]).toBeUndefined();
   });
 

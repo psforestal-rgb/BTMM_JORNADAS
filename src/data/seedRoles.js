@@ -1,12 +1,41 @@
-// Datos normalizados desde “Rol Bloque 2026.xlsm”.
-// La fuente contiene enero-agosto de 2026. Julio-agosto corresponden a la
-// revisión del archivo institucional del 21/07/2026; los meses sin datos
-// quedan en blanco.
-// Conversión: número -> T; L/V/IN se preservan; F/FA/G y otros -> O-<código>.
+// Rol institucional normalizado desde «Rol Bloque 2026.xlsx» (revisión del
+// 11/09/2026, siete pestañas de dos meses: diciembre de 2025 a diciembre de 2026).
+//
+// NO editar a mano: se regenera al sincronizar el libro institucional.
+//
+// Conversión de códigos (reversible: el código original sobrevive dentro del
+// valor, así que nada se pierde ni se inventa):
+//   · un número          → T{n}   turno, con su consecutivo de racha
+//   · L{n} · V{n} · LA · LI · L   se conservan tal cual → categoría Libre/Vacaciones
+//   · IN                          se conserva            → categoría Incapacidad
+//   · cualquier otro código       → O-{código}           → categoría Otro
+//
+// Los códigos F, FA, G y CM siguen sin significado documentado: se guardan como
+// O-F, O-FA, O-G y O-CM, de modo que el día queda marcado como «Otro» y el
+// código original se puede recuperar en cuanto la administración lo aclare.
+//
+// Un «·» significa que el libro no dice nada de esa persona ese día.
 import { puestos } from "./puestos.js";
 
-const FUENTE_ROLES_2026 = {
-  "1": {
+const FUENTE_ROL = {
+  "2025-12": {
+    "Errol Salazar": "O-F T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA T1 T2 T3",
+    "Mayra Espinoza": "V1 V2 LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 O-FA L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 O-F T8 T9 T10 L5 L1 L2",
+    "Yeison Cortés": "L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T1 L2 L3 L4 L1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 LA LA T1 T2 T3",
+    "Kenneth Mena": "O-F T3 T4 T5 T6 T7 T8 T9 V1 V2 V3 L1 L2 L3 L4 L5 T1 T2 L6 T3 T4 T5 T6 T7 O-F T9 T10 T11 T12 L1 L2",
+    "Fabricio Carbonell": "L2 L3 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 LA T4 T5 T6 L1 L2 L3 LA T1 T2 T3",
+    "Karen Valle": "O-F T2 T3 T4 LA L1 L2 T1 T2 T3 T4 T5 L1 L2 LA T2 T3 T4 T5 L1 L2 T1 T2 T3 O-F T5 L1 L2 T1 T2 T3",
+    "Josué Brenes": "O-F T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 L1 L2 L3 T1 T2 T3 T4 T5 T6 O-F T8 T9 T10 L1 L2 L3",
+    "Laura Valverde": "O-F T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 LI LI LI LI LI LI LI L4 L5 O-FA O-FA O-FA O-F V1 V2 V3 V4 V5 V6",
+    "Diana Tencio": "O-F T2 T3 T4 T5 L1 L2 T1 T2 LA T4 T5 L1 L2 LA T2 T3 T4 T5 L1 L2 T1 T2 T3 O-F T5 L1 L2 T1 T2 LA",
+    "Jetzelly Villalobos": "O-F T10 T11 T12 L1 L2 L3 L4 L5 L6 LA T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 O-F T3 T4 T5 T6 T7 T8",
+    "Yolanda Elizondo": "O-F T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 V1 V2 V3",
+    "Mariano Solís": "O-F T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 LA LA T1 T2 T3 T4 T5",
+    "Guillermo Pérez": "O-F V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 O-F T10 T11 T12 L1 L2 L3",
+    "Carlos Cordero": "O-F T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5",
+    "Alexander Alvarado": "L3 L4 L5 T1 T2 T3 T4 T5 IN IN IN IN T6 L1 L2 L3 L4 L5 V1 V2 V3 V4 V5 V6 O-F V7 V8 V9 V10 V11 V12"
+  },
+  "2026-1": {
     "Errol Salazar": "O-F T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6",
     "Mayra Espinoza": "L3 L4 L5 O-FA LA LA LA LA LA LA LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2",
     "Yeison Cortés": "O-F T5 T6 T7 T8 L1 L2 L3 L4 V1 V2 L1 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4",
@@ -23,7 +52,7 @@ const FUENTE_ROLES_2026 = {
     "Carlos Cordero": "O-F T7 T8 T9 T10 L1 L2 L3 L4 L5 O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1",
     "Alexander Alvarado": "O-F LI LI LI LI LI LI V13 V14 V15 V16 V17 V18 V19 V20 L1 L2 L3 L4 L5 L6 L7 L8 L9 L10 V1 V2 V3 V4 V5 V6"
   },
-  "2": {
+  "2026-2": {
     "Errol Salazar": "LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 LA T1 T2 T3 T4 T5 T6 T7 T8",
     "Mayra Espinoza": "T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11",
     "Yeison Cortés": "T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 V1 V2 V3 V4 L1 L2 IN IN T1 T2 T3 T4 T5 T6 T7 T8 L1",
@@ -40,7 +69,7 @@ const FUENTE_ROLES_2026 = {
     "Carlos Cordero": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1",
     "Alexander Alvarado": "V7 V8 V9 V10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4"
   },
-  "3": {
+  "2026-3": {
     "Errol Salazar": "T9 T10 L1 L2 L3 L4 L5 LA LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7",
     "Mayra Espinoza": "T12 T13 T14 T15 T16 T17 L1 L2 L3 L4 L5 L6 L7 L8 L9 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1",
     "Yeison Cortés": "L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T1",
@@ -57,7 +86,7 @@ const FUENTE_ROLES_2026 = {
     "Carlos Cordero": "L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 V1 V2 L1 T1 T2 T3 T4 T5 T6 T7 T8",
     "Alexander Alvarado": "T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 · · · · · · · · · · · · · · · · · · · ·"
   },
-  "4": {
+  "2026-4": {
     "Errol Salazar": "T8 T9 T10 L1 L2 L3 L4 L5 LA T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 LA T1 T2 T3 T4 T5 T6 T7 T8 T9",
     "Mayra Espinoza": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 O-FA O-FA V1 V2 V3 L1 L2 T1 T2 T3 T4 T5 T6 T7 T8 L",
     "Yeison Cortés": "L2 L3 L4 L5 L6 T2 L1 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 IN IN IN T3 T4 T5 T6 T7",
@@ -73,7 +102,7 @@ const FUENTE_ROLES_2026 = {
     "Guillermo Pérez": "IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN IN",
     "Carlos Cordero": "T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5"
   },
-  "5": {
+  "2026-5": {
     "Errol Salazar": "T10 T11 T12 L1 L2 L3 L4 L5 L6 LA LA O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3",
     "Mayra Espinoza": "L1 L2 L3 L4 LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8",
     "Yeison Cortés": "O-FA L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 LA T4 T5 T6 T7 T8 L1 L2 L3",
@@ -91,7 +120,7 @@ const FUENTE_ROLES_2026 = {
     "Guillermo Pérez": "IN IN IN IN IN IN IN IN IN IN IN IN IN IN T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5",
     "Carlos Cordero": "T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA V1 V2 V3 V4 V5 V6 V7 V8"
   },
-  "6": {
+  "2026-6": {
     "Errol Salazar": "T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5",
     "Mayra Espinoza": "T9 T10 T11 T12 T13 T14 L1 L2 L3 L4 L5 L6 L7 LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1",
     "Yeison Cortés": "L4 LA T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2",
@@ -109,7 +138,7 @@ const FUENTE_ROLES_2026 = {
     "Guillermo Pérez": "T6 L1 L2 L3 LA V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10",
     "Carlos Cordero": "V9 V10 V11 V12 V13 V14 V15 V16 V17 V18 V19 V20 L1 L2 L3 L4 L5 L6 L7 L8 L9 L10 O-FA V1 V2 V3 V4 V5 V6 V7"
   },
-  "7": {
+  "2026-7": {
     "Errol Salazar": "T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1",
     "Mayra Espinoza": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5",
     "Yeison Cortés": "T3 T4 T5 L1 L2 T1 T2 T3 V1 V2 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5",
@@ -125,61 +154,59 @@ const FUENTE_ROLES_2026 = {
     "Guillermo Pérez": "L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8",
     "Carlos Cordero": "V8 L1 L2 L3 L4 V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 L1 L2 L3 L4 L5 L6 L7 T1 T2 T3 T4 T5"
   },
-  "8": {
-    "Errol Salazar": "T2 T3 T4 T5 T6 T7 T8 L1 T9 T10 T11 T12 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 LA T1",
-    "Mayra Espinoza": "L6 LA V1 V2 V3 V4 V5 V6 V7 V8 L1 L2 L3 L4 LA LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 T5",
-    "Yeison Cortés": "L4 LA T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
-    "Kenneth Mena": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
-    "Fabricio Carbonell": "T9 T10 L1 L2 L3 L4 L5 O-FA O-FA V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T8",
-    "Monserrath Navarro": "· · · · · · · · · · · · · · · · · · · T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12",
-    "Karen Valle": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 T4 T5 L1 L2 T1",
+  "2026-8": {
+    "Errol Salazar": "T2 T3 T4 T5 T6 T7 T8 L1 T9 T10 T11 T12 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4",
+    "Mayra Espinoza": "L6 LA V1 V2 V3 V4 V5 V6 V7 V8 L1 L2 L3 L4 LA LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5",
+    "Yeison Cortés": "L4 LA T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 O-F",
+    "Kenneth Mena": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 L1 L2 L3 L4 L5",
+    "Fabricio Carbonell": "T9 T10 L1 L2 L3 L4 L5 O-FA O-FA V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6",
+    "Monserrath Navarro": "· · · · · · · · · · · · · · · · · · · T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2",
+    "Karen Valle": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 T4 T5 L1 L2 O-F",
     "Laura Valverde": "T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10",
-    "Diana Tencio": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
+    "Diana Tencio": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 O-F",
     "Jetzelly Villalobos": "T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 L1 L2 L3 T1",
-    "Pablo Sánchez": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
-    "Yolanda Elizondo": "T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4",
-    "Mariano Solís": "T12 L1 L2 L3 L4 L5 L6 V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 L1 L2 L3 L4 L5 L6 L7 O-FA T1 T2",
-    "Guillermo Pérez": "T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T10",
-    "Carlos Cordero": "T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5"
+    "Pablo Sánchez": "L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 O-F",
+    "Yolanda Elizondo": "T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 O-FA L1 L2 L3 L4",
+    "Mariano Solís": "T12 L1 L2 L3 L4 L5 L6 V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 V11 V12 V13 V14 L1 L2 L3 L4 L5 L6 L7 T1 T2 T3",
+    "Guillermo Pérez": "T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 O-FA L1 L2 L3",
+    "Carlos Cordero": "T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6"
   },
-  "9": {
-    "Errol Salazar": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1",
-    "Mayra Espinoza": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5",
+  "2026-9": {
+    "Errol Salazar": "L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4",
+    "Mayra Espinoza": "T1 V1 T2 T3 T4 T5 T6 T7 V1 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1",
     "Yeison Cortés": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
-    "Kenneth Mena": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
-    "Fabricio Carbonell": "T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7",
-    "Monserrath Navarro": "L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9",
+    "Fabricio Carbonell": "T7 T8 T9 T10 L1 L2 L3 T1 T2 T3 T4 L4 L5 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6",
+    "Monserrath Navarro": "L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 O-F T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 L1",
     "Karen Valle": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
-    "Laura Valverde": "L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9",
-    "Diana Tencio": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
-    "Jetzelly Villalobos": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 LA",
-    "Pablo Sánchez": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
-    "Yolanda Elizondo": "L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4",
-    "Mariano Solís": "T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
-    "Guillermo Pérez": "T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7",
-    "Carlos Cordero": "L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2"
+    "Laura Valverde": "L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6",
+    "Diana Tencio": "T2 T3 T4 T5 L1 L2 T1 T2 V1 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
+    "Jetzelly Villalobos": "T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3",
+    "Pablo Sánchez": "T2 T3 T4 T5 L1 L2 T1 T2 V1 V1 V1 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
+    "Yolanda Elizondo": "L5 IN IN IN IN IN IN T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8",
+    "Mariano Solís": "T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1",
+    "Guillermo Pérez": "T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA T1 T2 O-CM T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
+    "Carlos Cordero": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5"
   },
-  "10": {
-    "Errol Salazar": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6",
-    "Mayra Espinoza": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3",
+  "2026-10": {
+    "Errol Salazar": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L5 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2",
+    "Mayra Espinoza": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 L5 T1 T2 T3 T4",
     "Yeison Cortés": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
-    "Fabricio Carbonell": "T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1",
-    "Monserrath Navarro": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
+    "Fabricio Carbonell": "T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10",
+    "Monserrath Navarro": "L2 L3 L4 T1 T2 T3 T4 T5 L1 L2 L3 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 O-FA T1",
     "Karen Valle": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
-    "Laura Valverde": "T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10",
+    "Laura Valverde": "T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T8 T10",
     "Diana Tencio": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
-    "Jetzelly Villalobos": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4",
+    "Jetzelly Villalobos": "L4 L5 O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2",
     "Pablo Sánchez": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
-    "Yolanda Elizondo": "L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2",
-    "Mariano Solís": "T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3",
-    "Guillermo Pérez": "T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5",
-    "Carlos Cordero": "L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9"
+    "Yolanda Elizondo": "T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6 T7 T8",
+    "Mariano Solís": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
+    "Guillermo Pérez": "T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T10 L1 L2 L3 L4 L5 T1 T2 T6 T7",
+    "Carlos Cordero": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 LA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2"
   },
-  "11": {
+  "2026-11": {
     "Errol Salazar": "T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6",
     "Mayra Espinoza": "L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3",
     "Yeison Cortés": "L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
-    "Kenneth Mena": "L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
     "Fabricio Carbonell": "L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4",
     "Monserrath Navarro": "T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5",
     "Karen Valle": "L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1",
@@ -192,11 +219,10 @@ const FUENTE_ROLES_2026 = {
     "Guillermo Pérez": "T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8",
     "Carlos Cordero": "T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 L4 T1 T2 T3 T4 T5"
   },
-  "12": {
+  "2026-12": {
     "Errol Salazar": "T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 O-F T5 T6 T7 T8 T9 T10",
     "Mayra Espinoza": "L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 O-F T9 T10 T11 T12 L1 L2",
     "Yeison Cortés": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 O-F L1 L2 V1 V2 V3 V4",
-    "Kenneth Mena": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 O-F L1 L2 T1 T2 T3 T4",
     "Fabricio Carbonell": "L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 V1 V2 V3 V4 V5 V6 L1 L2 L3 O-FA T1 T2",
     "Monserrath Navarro": "T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3",
     "Karen Valle": "T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 O-F L1 L2 T1 T2 T3 T4",
@@ -211,21 +237,45 @@ const FUENTE_ROLES_2026 = {
   }
 };
 
-const DIAS_MES_2026 = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+/** Días de cada mes cubierto por la fuente, en el mismo orden que `MESES_FUENTE`. */
+const MESES_FUENTE = [
+  { anio: 2025, mes: 12, dias: 31 },
+  { anio: 2026, mes: 1, dias: 31 },
+  { anio: 2026, mes: 2, dias: 28 },
+  { anio: 2026, mes: 3, dias: 31 },
+  { anio: 2026, mes: 4, dias: 30 },
+  { anio: 2026, mes: 5, dias: 31 },
+  { anio: 2026, mes: 6, dias: 30 },
+  { anio: 2026, mes: 7, dias: 31 },
+  { anio: 2026, mes: 8, dias: 31 },
+  { anio: 2026, mes: 9, dias: 30 },
+  { anio: 2026, mes: 10, dias: 31 },
+  { anio: 2026, mes: 11, dias: 30 },
+  { anio: 2026, mes: 12, dias: 31 },
+];
 
+export const ROLES_FUENTE_DESDE = "2025-12-01";
 export const ROLES_FUENTE_HASTA = "2026-12-31";
-export const ROLES_FUENTE_VERSION = "2026-08-13-rol-bloque-anio-completo";
+export const ROLES_FUENTE_VERSION = "2026-09-11-rol-bloque-dic25-dic26";
+
+/**
+ * Primer mes que la fuente vuelve a imponer sobre una instalación que ya tiene
+ * datos. Es el mes en que se sincronizó el libro: hacia atrás son meses ya
+ * cumplidos, donde el rol guardado (y cualquier corrección hecha a mano en el
+ * aparato) vale más que la copia del libro.
+ */
+export const ROLES_REIMPOSICION_DESDE = "2026-09";
 
 export const baseRoleData = (() => {
   const result = {};
-  for (let month = 1; month <= 12; month += 1) {
-    const sourceMonth = FUENTE_ROLES_2026[month] || {};
+  for (const { anio, mes, dias } of MESES_FUENTE) {
+    const fuenteMes = FUENTE_ROL[`${anio}-${mes}`] || {};
     for (const puesto of puestos) {
       for (const nombre of puesto.funcionarios) {
-        const tokens = sourceMonth[nombre]?.split(" ") || [];
-        for (let day = 1; day <= DIAS_MES_2026[month - 1]; day += 1) {
-          const token = tokens[day - 1];
-          result[`2026-${month}-${puesto.nombre}-${nombre}-${day}`] = token && token !== "·" ? token : "";
+        const tokens = fuenteMes[nombre]?.split(" ") || [];
+        for (let dia = 1; dia <= dias; dia += 1) {
+          const token = tokens[dia - 1];
+          result[`${anio}-${mes}-${puesto.nombre}-${nombre}-${dia}`] = token && token !== "·" ? token : "";
         }
       }
     }
@@ -233,15 +283,27 @@ export const baseRoleData = (() => {
   return result;
 })();
 
-// Se re-imponen agosto-diciembre 2026 sobre instalaciones existentes (mes
-// actual en adelante), al cargar el año completo desde la fuente. Enero-julio
-// (meses ya cumplidos) quedan fuera para no borrar historia ni ediciones
-// locales del pasado; las instalaciones nuevas sí reciben el año completo.
+/**
+ * Lo que se re-impone sobre una instalación que ya tiene datos guardados.
+ *
+ * Dos reglas, y las dos existen para no borrar trabajo ajeno:
+ *
+ *  1. **Solo del mes de sincronización en adelante** (`ROLES_REIMPOSICION_DESDE`).
+ *     Los meses ya cumplidos no se tocan: ahí manda lo que pasó de verdad, que
+ *     puede incluir correcciones hechas a mano en el aparato.
+ *  2. **Solo las celdas que el libro LLENA.** Una celda vacía en el libro no
+ *     borra lo que el aparato tenga: el libro corrige y agrega, nunca vacía.
+ *     Sin esta regla, que el libro dejara de traer a una persona (le pasa a
+ *     Kenneth Mena de setiembre en adelante) borraría su rol guardado sin que
+ *     nadie lo hubiera pedido.
+ */
 export const roleDataFuenteActualizacion = Object.fromEntries(
-  Object.entries(baseRoleData).filter(([key]) => {
-    const match = key.match(/^2026-(\d+)-/);
-    const month = Number(match?.[1]);
-    return month >= 8 && month <= 12;
+  Object.entries(baseRoleData).filter(([clave, valor]) => {
+    if (!valor) return false;
+    const m = clave.match(/^(\d{4})-(\d+)-/);
+    if (!m) return false;
+    const anioMes = `${m[1]}-${String(m[2]).padStart(2, "0")}`;
+    return anioMes >= ROLES_REIMPOSICION_DESDE;
   }),
 );
 

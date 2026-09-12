@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 describe("AppContext — sincronización institucional de roles", () => {
-  it("aplica una revisión nueva de agosto-diciembre y conserva el pasado", async () => {
+  it("aplica la revisión nueva del mes de sincronización en adelante y conserva el pasado", async () => {
     storage.state = {
       personas: [{ id: "f1", nombre: "Diana Tencio" }],
       actividadesPlan: [],
@@ -63,11 +63,12 @@ describe("AppContext — sincronización institucional de roles", () => {
     await waitFor(() => {
       expect(observado.migraciones.rolesFuenteJulAgo2026).toBe(ROLES_FUENTE_VERSION);
     });
-    // Agosto-diciembre: la fuente manda sobre lo que tuviera el usuario.
-    expect(observado.roleData["2026-8-Puesto Orosi-Errol Salazar-1"]).toBe("T2");
-    expect(observado.roleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("T1");
-    // Julio (pasado), CFG y claves ajenas a la fuente se conservan.
+    // De setiembre (mes de la sincronización) en adelante manda el libro.
+    expect(observado.roleData["2026-9-Puesto Orosi-Errol Salazar-15"]).toBe("L4");
+    // Agosto y julio ya son pasado: manda lo que tuviera el aparato.
+    expect(observado.roleData["2026-8-Puesto Orosi-Errol Salazar-1"]).toBe("T99");
     expect(observado.roleData["2026-7-Puesto Quetzales-Diana Tencio-13"]).toBe("T99");
+    // Las claves CFG y las ajenas a la fuente no se tocan nunca.
     expect(observado.roleData["CFG-2026-8-Puesto Orosi-Errol Salazar"]).toBe("12x6");
     expect(observado.roleData["2026-8-Puesto Personal-Persona local-1"]).toBe("T1");
   });
