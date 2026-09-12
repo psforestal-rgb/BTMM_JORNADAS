@@ -3,7 +3,9 @@ import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { AppProvider } from "../../../context/AppContext.jsx";
+import { ToastProvider } from "../../../context/ToastContext.jsx";
 import Roles from "../Roles.jsx";
+import { rolKey } from "../../../domain/roles.js";
 
 afterEach(() => {
   cleanup();
@@ -34,6 +36,7 @@ const personas = [
 function renderRoles(props = {}) {
   return render(
     <AppProvider>
+      <ToastProvider>
       <Roles
         year={2026}
         month={6}
@@ -47,6 +50,7 @@ function renderRoles(props = {}) {
         hj={8}
         {...props}
       />
+      </ToastProvider>
     </AppProvider>,
   );
 }
@@ -175,5 +179,54 @@ describe("Roles — resumen general al pie de la tabla", () => {
       const sumaPuestos = filasPuesto.reduce((acc, tr) => acc + Number(tr.children[col].textContent), 0);
       expect(totalResumen).toBe(sumaPuestos);
     }
+  });
+});
+
+describe("Roles — el conflicto de teletrabajo llega a la cuadrícula", () => {
+  const personasVisit = [
+    { id: "f1", nombre: "Ana Pérez", puestoOperativo: "Puesto Orosi", estado: "Activo", modalidad: "10x5" },
+  ];
+  const visita = (funcionarios) => ({
+    id: "v1", titulo: "Atención rutinaria de visitantes",
+    inicio: "2026-07-08", fin: "2026-07-08", funcionarios,
+  });
+  const conflictos = () => screen.queryAllByTitle("Clic para resolver: rol vs actividad planificada");
+
+  it("marca a quien atiende visitantes desde teletrabajo en un puesto que lo exige", () => {
+    renderRoles({
+      personas: personasVisit,
+      actividadesPlan: [visita(["Ana Pérez"])],
+      roleData: { [rolKey(2026, 6, "Puesto Orosi", "Ana Pérez", 8)]: "E1" },
+    });
+    // El rol `E` cuenta como activo, así que mirar solo «no trabaja ese día»
+    // dejaba pasar este caso mientras Día y Planificación sí lo marcaban.
+    expect(conflictos().length).toBeGreaterThan(0);
+  });
+
+  it("no lo marca cuando esa persona está presencial", () => {
+    renderRoles({
+      personas: personasVisit,
+      actividadesPlan: [visita(["Ana Pérez"])],
+      roleData: { [rolKey(2026, 6, "Puesto Orosi", "Ana Pérez", 8)]: "T3" },
+    });
+    expect(conflictos()).toHaveLength(0);
+  });
+
+  it("tampoco lo marca por una actividad cualquiera en teletrabajo", () => {
+    renderRoles({
+      personas: personasVisit,
+      actividadesPlan: [{ id: "a", titulo: "Informe técnico", inicio: "2026-07-08", fin: "2026-07-08", funcionarios: ["Ana Pérez"] }],
+      roleData: { [rolKey(2026, 6, "Puesto Orosi", "Ana Pérez", 8)]: "E1" },
+    });
+    expect(conflictos()).toHaveLength(0);
+  });
+
+  it("sigue marcando a quien tiene actividad en un día libre", () => {
+    renderRoles({
+      personas: personasVisit,
+      actividadesPlan: [{ id: "a", titulo: "Informe técnico", inicio: "2026-07-08", fin: "2026-07-08", funcionarios: ["Ana Pérez"] }],
+      roleData: { [rolKey(2026, 6, "Puesto Orosi", "Ana Pérez", 8)]: "L2" },
+    });
+    expect(conflictos().length).toBeGreaterThan(0);
   });
 });

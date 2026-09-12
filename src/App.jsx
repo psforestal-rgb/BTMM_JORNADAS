@@ -16,6 +16,7 @@ import DiaLayout from "./features/dia/DiaLayout.jsx";
 
 const Roles = lazy(() => import("./features/roles/Roles.jsx"));
 const Funcionarios = lazy(() => import("./features/funcionarios/Funcionarios.jsx"));
+const FichaFuncionario = lazy(() => import("./features/funcionarios/FichaFuncionario.jsx"));
 const Planificacion = lazy(() => import("./features/planificacion/Planificacion.jsx"));
 const PlanificacionFuncionario = lazy(() => import("./features/planFuncionario/PlanificacionFuncionario.jsx"));
 const AdelantoViaticos = lazy(() => import("./features/viaticos/AdelantoViaticos.jsx"));
@@ -61,6 +62,10 @@ function AppShell() {
     setReposiciones,
     diaVista,
     setDiaVista,
+    funcionarioVista,
+    setFuncionarioVista,
+    filtrosVista,
+    setFiltrosVista,
     reglas,
   } = useApp();
 
@@ -72,17 +77,29 @@ function AppShell() {
     () => alerts.filter((a) => a.t === "danger" || a.t === "warn").length,
     [alerts],
   );
-  const navigate = useAppNavigation({ view, setView, year, setYear, month, setMonth, diaVista, setDiaVista });
+  const navigate = useAppNavigation({
+    view, setView, year, setYear, month, setMonth, diaVista, setDiaVista,
+    funcionarioVista, setFuncionarioVista,
+    filtrosVista, setFiltrosVista,
+  });
   const keyboardOpen = useVirtualKeyboard();
+
+  /* La ficha individual pertenece a la sección «Funcionarios»: la barra la
+     mantiene marcada mientras se lee una ficha, en vez de quedarse sin ninguna
+     entrada activa. Y una ficha sin nombre no es una vista: se cae a la lista,
+     lo mismo que hace `hashForState`, para que la ruta y lo que se ve nunca
+     digan cosas distintas. */
+  const vistaDeSeccion = view === "funcionario" ? "funcionarios" : view;
+  const fichaAbierta = view === "funcionario" && Boolean(funcionarioVista);
 
   return (
     <div className={`pnlq-app pnlq-print-root min-h-screen overflow-x-clip bg-surface-alt text-ink ${keyboardOpen ? "pnlq-keyboard-open" : ""}`}>
       <ImportadorPlanificacion2026 />
       <div className="flex min-h-screen">
-        <Sidebar view={view} setView={navigate} nAlertas={nAlertas} />
+        <Sidebar view={vistaDeSeccion} setView={navigate} nAlertas={nAlertas} />
         <main className="pnlq-app-main min-w-0 flex-1 overflow-x-clip">
           <Topbar
-            view={view}
+            view={vistaDeSeccion}
             setView={navigate}
             month={month}
             setMonth={setMonth}
@@ -107,7 +124,24 @@ function AppShell() {
                   setView={navigate}
                 />
               )}
-              {view === "funcionarios" && <Funcionarios personas={personas} setPersonas={setPersonas} />}
+              {vistaDeSeccion === "funcionarios" && !fichaAbierta && (
+                <Funcionarios personas={personas} setPersonas={setPersonas} setView={navigate} />
+              )}
+              {fichaAbierta && (
+                <FichaFuncionario
+                  nombre={funcionarioVista}
+                  personas={personas}
+                  setPersonas={setPersonas}
+                  actividadesPlan={actividadesPlan}
+                  roleData={roleData}
+                  reposiciones={reposiciones}
+                  year={year}
+                  month={month}
+                  alerts={alerts}
+                  setView={navigate}
+                  setDiaVista={setDiaVista}
+                />
+              )}
               {view === "roles" && (
                 <Roles
                   year={year}
@@ -122,6 +156,7 @@ function AppShell() {
                   setActividadesPlan={setActividadesPlan}
                   reposiciones={reposiciones}
                   hj={reglas?.horasJornada}
+                  setView={navigate}
                 />
               )}
               {view === "planificacion" && (
@@ -163,7 +198,7 @@ function AppShell() {
           </div>
         </main>
       </div>
-      <BottomNav view={view} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
+      <BottomNav view={vistaDeSeccion} setView={navigate} nAlertas={nAlertas} hidden={keyboardOpen} />
     </div>
   );
 }

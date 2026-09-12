@@ -184,3 +184,118 @@ describe("Configuración — orden de los puestos (RP7)", () => {
     expect(within(panel()).getByRole("button", { name: `Bajar «${nombres.at(-1)}»` }).disabled).toBe(true);
   });
 });
+
+describe("Configuración — exportar e importar puestos (RP6)", () => {
+  let descargas;
+  let BlobReal;
+
+  beforeEach(() => {
+    descargas = [];
+    BlobReal = global.Blob;
+    global.Blob = class {
+      constructor(partes, opciones) {
+        descargas.push({ texto: (partes || []).join(""), tipo: opciones?.type });
+      }
+    };
+    global.URL.createObjectURL = () => "blob:fake";
+    global.URL.revokeObjectURL = () => {};
+  });
+
+  afterEach(() => {
+    global.Blob = BlobReal;
+  });
+
+  const elegir = (texto, nombre = "puestos.csv") => {
+    const input = document.querySelector('input[type="file"]');
+    const archivo = new BlobReal([texto], { type: "text/csv" });
+    archivo.name = nombre;
+    Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+    fireEvent.change(input);
+    return screen.findByRole("dialog", { name: /Revisar antes de importar puestos/i });
+  };
+
+  const sinBom = (texto) => texto.replace(/^﻿/, "");
+
+  it("exporta los puestos con su cabecera en español y tipo CSV", async () => {
+    const { ctx } = await montar();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar los puestos/ }));
+    expect(descargas).toHaveLength(1);
+    expect(descargas[0].tipo).toMatch(/^text\/csv/);
+    const filas = sinBom(descargas[0].texto).split("\r\n");
+    expect(filas[0]).toBe("Nombre del puesto,Código corto,Color en Roles");
+    expect(filas).toHaveLength(ctx().puestos.length + 1);
+    expect(screen.getByText(/Se exportaron \d+ puestos a CSV/)).toBeDefined();
+  });
+
+  it("lo exportado se vuelve a importar sin cambiar nada", async () => {
+    const { ctx } = await montar();
+    fireEvent.click(screen.getByRole("button", { name: /Exportar los puestos/ }));
+    const csv = descargas[0].texto;
+    const antes = JSON.stringify(ctx().puestos);
+    descargas.length = 0;
+
+    const dialogo = await elegir(csv, "reimportado.csv");
+    const altas = within(dialogo).getByText("Se agregan").parentElement;
+    expect(within(altas).getByText("0")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(JSON.stringify(ctx().puestos)).toBe(antes);
+  });
+
+  it("no toca nada hasta confirmar y el respaldo se descarga primero", async () => {
+    const { ctx } = await montar();
+    const antes = ctx().puestos.length;
+    await elegir("Nombre del puesto,Código corto\r\nPuesto Cerro,CE");
+    expect(ctx().puestos).toHaveLength(antes);
+    expect(descargas).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(descargas).toHaveLength(1);
+    expect(descargas[0].tipo).toBe("application/json");
+    // El respaldo incluye los puestos: sin ellos, restaurar los perdería.
+    expect(JSON.parse(descargas[0].texto).state.puestos).toHaveLength(antes);
+    expect(ctx().puestos).toHaveLength(antes + 1);
+  });
+
+  it("importar NUNCA elimina: los puestos ausentes del archivo siguen ahí", async () => {
+    const { ctx } = await montar();
+    const antes = ctx().puestos.map((p) => p.nombre);
+    await elegir("Nombre del puesto,Código corto\r\nPuesto Orosi,OR");
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(ctx().puestos.map((p) => p.nombre)).toEqual(antes);
+  });
+
+  it("avisa de la fila cuyo código ya usa otro puesto, y no la aplica", async () => {
+    const { ctx } = await montar();
+    const antes = ctx().puestos.length;
+    const dialogo = await elegir("Nombre del puesto,Código corto\r\nPuesto Cerro,OR");
+    expect(within(dialogo).getByText(/su código ya lo usa otro puesto: Puesto Cerro \(OR\)/)).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+    expect(ctx().puestos).toHaveLength(antes);
+  });
+
+  it("rechaza un archivo sin la columna del nombre", async () => {
+    await montar();
+    const input = document.querySelector('input[type="file"]');
+    const archivo = new BlobReal(["Código corto\r\nXX"], { type: "text/csv" });
+    archivo.name = "malo.csv";
+    Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+    fireEvent.change(input);
+    await screen.findByText(/no trae la columna «Nombre del puesto»/);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("la vista previa recuerda que la importación no elimina", async () => {
+    await montar();
+    const dialogo = await elegir("Nombre del puesto,Código corto\r\nPuesto Cerro,CE");
+    expect(within(dialogo).getByText(/nunca elimina un puesto/)).toBeDefined();
+  });
+
+  it("cancelar no importa ni descarga respaldo", async () => {
+    const { ctx } = await montar();
+    const antes = ctx().puestos.length;
+    await elegir("Nombre del puesto,Código corto\r\nPuesto Cerro,CE");
+    fireEvent.click(screen.getByRole("button", { name: /^Cancelar$/ }));
+    expect(ctx().puestos).toHaveLength(antes);
+    expect(descargas).toHaveLength(0);
+  });
+});

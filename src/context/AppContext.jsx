@@ -57,6 +57,16 @@ const seedState = {
   actividadesPlan: baseActividadesPlan,
   reposiciones: baseReposiciones,
   diaVista: fechaInicialIso,
+  /* Filtros de cada vista, indexados por vista: `{ funcionarios: {...} }`.
+     Viven aquí y no en cada componente porque quien escribe el hash es uno solo
+     (`useAppNavigation`): si cada vista lo tocara por su cuenta, el siguiente
+     render borraría lo que acabara de poner la anterior. Son efímeros, como
+     `view`. */
+  filtrosVista: {},
+  // Funcionario abierto en la ficha individual (VF1). Es estado de navegación
+  // —vive en el hash `#/funcionario/<nombre>`— y por eso es efímero: no se
+  // persiste ni viaja en el respaldo.
+  funcionarioVista: "",
   // Rastro de cambios sobre las fichas (RF9). Al vivir en `seedState`, un
   // snapshot anterior que no lo traiga lo recibe vacío en
   // `mergePersistedWithSeed`, así que NO hace falta subir `SCHEMA_VERSION`.
@@ -151,6 +161,8 @@ function mergePersistedWithSeed(stored) {
     actividadesPlan,
     reposiciones,
     historial: Array.isArray(stored?.historial) ? stored.historial : [],
+    // Nunca se persiste, así que un snapshot no puede traerlo contaminado.
+    filtrosVista: {},
     // Una lista vacía o corrupta dejaría la app sin puestos y con la vista
     // Roles en blanco: se cae a la semilla antes que a nada.
     puestos:
@@ -196,6 +208,21 @@ function reducer(state, action) {
       return { ...state, compact: resolveUpdater(action.payload, state.compact) };
     case "SET_DIA_VISTA":
       return { ...state, diaVista: resolveUpdater(action.payload, state.diaVista) };
+    case "SET_FILTROS_VISTA": {
+      const vista = action.vista;
+      if (!vista) return state;
+      const previos = state.filtrosVista?.[vista];
+      const siguientes = resolveUpdater(action.payload, previos || {});
+      // Se limpian los valores vacíos aquí y no en cada llamador: un filtro
+      // vacío no es un filtro, y así nunca acaba en el enlace.
+      const limpios = {};
+      for (const [clave, valor] of Object.entries(siguientes || {})) {
+        if (valor !== undefined && valor !== null && valor !== "") limpios[clave] = String(valor);
+      }
+      return { ...state, filtrosVista: { ...(state.filtrosVista || {}), [vista]: limpios } };
+    }
+    case "SET_FUNCIONARIO_VISTA":
+      return { ...state, funcionarioVista: String(resolveUpdater(action.payload, state.funcionarioVista) || "") };
     case "SET_PERSONAS":
       return { ...state, personas: resolveUpdater(action.payload, state.personas) };
     case "SET_ACTIVIDADES_PLAN":
@@ -238,7 +265,7 @@ function reducer(state, action) {
 }
 
 // Campos del estado que NO se persisten (UI ephemera).
-const EPHEMERAL_KEYS = new Set(["view", "compact", "diaVista", "month", "year"]);
+const EPHEMERAL_KEYS = new Set(["view", "compact", "diaVista", "funcionarioVista", "filtrosVista", "month", "year"]);
 
 function pickPersistable(state) {
   const out = {};
@@ -436,6 +463,8 @@ export function AppProvider({ children }) {
   const setYear = useCallback((v) => dispatch({ type: "SET_YEAR", payload: v }), []);
   const setCompact = useCallback((v) => dispatch({ type: "SET_COMPACT", payload: v }), []);
   const setDiaVista = useCallback((v) => dispatch({ type: "SET_DIA_VISTA", payload: v }), []);
+  const setFuncionarioVista = useCallback((v) => dispatch({ type: "SET_FUNCIONARIO_VISTA", payload: v }), []);
+  const setFiltrosVista = useCallback((vista, v) => dispatch({ type: "SET_FILTROS_VISTA", vista, payload: v }), []);
   const setPersonas = useCallback((v) => dispatch({ type: "SET_PERSONAS", payload: v }), []);
   const setActividadesPlan = useCallback((v) => dispatch({ type: "SET_ACTIVIDADES_PLAN", payload: v }), []);
   const setReposiciones = useCallback((v) => dispatch({ type: "SET_REPOSICIONES", payload: v }), []);
@@ -476,6 +505,8 @@ export function AppProvider({ children }) {
       setYear,
       setCompact,
       setDiaVista,
+      setFuncionarioVista,
+      setFiltrosVista,
       setPersonas,
       setActividadesPlan,
       setReposiciones,
@@ -502,6 +533,8 @@ export function AppProvider({ children }) {
       setYear,
       setCompact,
       setDiaVista,
+      setFuncionarioVista,
+      setFiltrosVista,
       setPersonas,
       setActividadesPlan,
       setReposiciones,

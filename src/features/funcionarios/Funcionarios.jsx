@@ -9,6 +9,8 @@ import { fecha } from "../../domain/fechas.js";
 import { useIsMobile } from "../../lib/responsive.js";
 import { useMobile } from "../../lib/useMobile.js";
 import { useSessionState } from "../../lib/useSessionState.js";
+import { useFiltrosDeVista } from "../../lib/useFiltrosDeVista.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { useT } from "../../i18n/useT.js";
 import { useApp } from "../../context/AppContext.jsx";
 import { useToast } from "../../context/ToastContext.jsx";
@@ -16,29 +18,47 @@ import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/c
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo } from "../../lib/respaldo.js";
 import { validarFuncionario } from "../../domain/validaciones.js";
-import { crearEntrada, entradaDeEdicion, TIPO } from "../../domain/historial.js";
+import { crearEntrada, TIPO } from "../../domain/historial.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
 import Modal from "../../ui/Modal.jsx";
 import { planificarImportacion } from "./importarFuncionarios.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
+import { useGuardarFuncionario } from "./useGuardarFuncionario.js";
 import FuncionarioCard from "./FuncionarioCard.jsx";
 
 /* Tope de tamaño, como el que ya protege la importación JSON de «Datos»: un
    archivo enorme o corrupto no debe congelar el hilo principal. */
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
-export default function Funcionarios({ personas, setPersonas }) {
+export default function Funcionarios({ personas, setPersonas, setView }) {
   const t = useT();
   const ctx = useApp();
   const { registrarCambio } = ctx;
   const { conDeshacer, exito, aviso, error } = useToast();
   const archivoRef = useRef(null);
   const [previa, setPrevia] = useState(null);
-  const [q, setQ] = useSessionState("btmm:funcionarios:buscar", "");
-  const [filtro, setFiltro] = useSessionState("btmm:funcionarios:filtro", "todos");
-  const [orden, setOrden] = useSessionState("btmm:funcionarios:orden", "nombre");
+  /* Búsqueda, filtro y orden viajan en la ruta: definen QUÉ se está viendo, así
+     que un enlace a «los guardaparques sin resolución» tiene que poder
+     compartirse. La elección entre tabla y tarjetas NO viaja: es una preferencia
+     del aparato de quien mira. */
+  const { valores: filtrosURL, poner: ponerFiltro } = useFiltrosDeVista("funcionarios", {
+    q: "",
+    filtro: "todos",
+    orden: "nombre",
+  });
+  const q = filtrosURL.q;
+  const setQ = (v) => ponerFiltro("q", typeof v === "function" ? v(q) : v);
+  const filtro = filtrosURL.filtro;
+  const setFiltro = (v) => ponerFiltro("filtro", typeof v === "function" ? v(filtro) : v);
+  const orden = filtrosURL.orden;
+  const setOrden = (v) => ponerFiltro("orden", typeof v === "function" ? v(orden) : v);
   const [modal, setModal] = useState(null);
+  // Trabajo pesado en curso (lectura o análisis de un CSV). Ver A-P17 abajo.
+  const [procesando, setProcesando] = useState(false);
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   const isMobile = useIsMobile();
   // Breakpoint `md` (768 px): por debajo, los filtros siguen colapsados; a
   // partir de ahí hay sitio de sobra para dejarlos siempre a la vista.
@@ -90,19 +110,17 @@ export default function Funcionarios({ personas, setPersonas }) {
     ingreso: "",
     obs: "",
   });
+  // El guardado vive en un hook compartido con la ficha individual: una sola
+  // ruta de alta/edición, un solo sitio donde se registra el rastro RF9.
+  const guardarFuncionario = useGuardarFuncionario(personas, setPersonas);
   const guardar = (obj) => {
-    if (!obj.nombre.trim()) return;
-    const previo = personas.find((x) => x.id === obj.id);
-    const esEdicion = Boolean(previo);
-    setPersonas((prev) => (prev.some((x) => x.id === obj.id) ? prev.map((x) => (x.id === obj.id ? obj : x)) : [obj, ...prev]));
-    setModal(null);
-    // RF9: una edición que no cambió nada no deja rastro (`entradaDeEdicion`
-    // devuelve null), así que abrir y cerrar el formulario no ensucia nada.
-    registrarCambio(
-      esEdicion ? entradaDeEdicion(previo, obj) : crearEntrada({ tipo: TIPO.ALTA, funcionario: obj }),
-    );
-    exito(t(esEdicion ? "funcionarios.guardado" : "funcionarios.creado", { nombre: obj.nombre.trim() }));
+    if (guardarFuncionario(obj)) setModal(null);
   };
+
+  /* VF1: la ficha individual es una ruta propia (`#/funcionario/<nombre>`) y
+     no una entrada más de la barra de navegación. Se entra desde aquí y desde
+     la cuadrícula de Roles, y el enlace se puede compartir. */
+  const verFicha = (f) => setView?.("funcionario", { funcionario: f.nombre });
 
   /* Borrado reversible (F-P12): en vez de un modal de confirmación por clic,
      se elimina de inmediato y el aviso ofrece «Deshacer» durante 10 s. La red
@@ -160,6 +178,15 @@ export default function Funcionarios({ personas, setPersonas }) {
      es después un solo `setPersonas` con el resultado ya calculado. */
   const elegirArchivo = () => archivoRef.current?.click();
 
+  /* A-P17: leer y analizar el CSV es SÍNCRONO y bloquea el hilo principal. Con
+     un archivo grande la pantalla se queda congelada y parece que el botón no
+     hizo nada.
+
+     La exportación NO se aplaza: serializar unas decenas de filas tarda
+     microsegundos, y separar la descarga del gesto que la pidió es arriesgado
+     en navegadores que exigen esa relación directa. El aviso de proceso es
+     para la importación, que es la que bloquea de verdad. */
+
   const alElegirArchivo = (evento) => {
     const archivo = evento.target.files?.[0];
     // Se limpia el input siempre: si no, elegir el MISMO archivo dos veces
@@ -170,14 +197,23 @@ export default function Funcionarios({ personas, setPersonas }) {
       error(t("funcionarios.importa.demasiadoGrande", { mb: Math.round(MAX_CSV_BYTES / 1024 / 1024) }));
       return;
     }
+    setProcesando(true);
     const lector = new FileReader();
-    lector.onerror = () => error(t("funcionarios.importa.errorLectura"));
+    lector.onerror = () => {
+      setProcesando(false);
+      error(t("funcionarios.importa.errorLectura"));
+    };
     lector.onload = () => {
-      try {
-        prepararPrevia(String(lector.result ?? ""), archivo.name);
-      } catch {
-        error(t("funcionarios.importa.errorLectura"));
-      }
+      // El aplazamiento deja al navegador pintar el aviso antes de analizar.
+      window.setTimeout(() => {
+        try {
+          prepararPrevia(String(lector.result ?? ""), archivo.name);
+        } catch {
+          error(t("funcionarios.importa.errorLectura"));
+        } finally {
+          setProcesando(false);
+        }
+      }, 0);
     };
     lector.readAsText(archivo, "UTF-8");
   };
@@ -276,6 +312,12 @@ export default function Funcionarios({ personas, setPersonas }) {
                 {t("funcionarios.vistaTarjetas")}
               </button>
             </div>
+            {/* La región existe siempre, aunque esté vacía: un `role="status"`
+                que aparece junto con su texto no lo anuncia en varios
+                lectores de pantalla. */}
+            <span role="status" aria-live="polite" className="sr-only">
+              {procesando ? t("funcionarios.procesandoAria") : ""}
+            </span>
             <input
               ref={archivoRef}
               type="file"
@@ -288,18 +330,20 @@ export default function Funcionarios({ personas, setPersonas }) {
             <button
               type="button"
               onClick={elegirArchivo}
+              disabled={procesando}
               aria-label={t("funcionarios.importarAria")}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-progress disabled:opacity-60"
             >
-              <Icon name="refresh" size={16} />
-              <span className="hidden sm:inline">{t("funcionarios.importar")}</span>
-              <span className="sm:hidden">{t("funcionarios.importarCorto")}</span>
+              <Icon name="refresh" size={16} className={procesando ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">{procesando ? t("funcionarios.procesando") : t("funcionarios.importar")}</span>
+              <span className="sm:hidden">{procesando ? t("funcionarios.procesandoCorto") : t("funcionarios.importarCorto")}</span>
             </button>
             <button
               type="button"
               onClick={exportarCSV}
+              disabled={procesando}
               aria-label={t("funcionarios.exportarAria")}
-              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-progress disabled:opacity-60"
             >
               <Icon name="file" size={16} />
               <span className="hidden sm:inline">{t("funcionarios.exportar")}</span>
@@ -318,8 +362,11 @@ export default function Funcionarios({ personas, setPersonas }) {
       >
         <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center">
           <input
+            ref={buscadorRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-keyshortcuts="/"
+            title={t("atajos.buscarTitulo")}
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-700 xl:max-w-md"
             placeholder={t("funcionarios.buscarPlaceholder")}
           />
@@ -378,6 +425,7 @@ export default function Funcionarios({ personas, setPersonas }) {
               <FuncionarioCard
                 key={f.id}
                 f={f}
+                onVerFicha={setView ? () => verFicha(f) : null}
                 onEditar={() => setModal({ ...f })}
                 onBorrar={() => eliminar(f.id)}
               />
@@ -455,6 +503,15 @@ export default function Funcionarios({ personas, setPersonas }) {
                     <Badge className={estadoCls(f.estado)}>{f.estado}</Badge>
                   </td>
                   <td className="p-3 text-right">
+                    {setView && (
+                      <button
+                        onClick={() => verFicha(f)}
+                        aria-label={t("funcionarios.verFichaDe", { nombre: f.nombre })}
+                        className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-emerald-800 hover:bg-emerald-50"
+                      >
+                        {t("funcionarios.verFicha")}
+                      </button>
+                    )}
                     <button onClick={() => setModal({ ...f })} className="inline-flex min-h-touch items-center rounded-lg px-3 py-1 font-semibold text-blue-800 hover:bg-blue-50">
                       {t("acciones.editar")}
                     </button>

@@ -8,8 +8,9 @@ import BottomSheet from "../../ui/BottomSheet.jsx";
 import { codigoCls } from "../../ui/styles.js";
 import { meses, diasLargos } from "../../data/calendario.js";
 import { pad2, fecha } from "../../domain/fechas.js";
-import { codigoRolFuncionario, esRolActivo, categoriaDe } from "../../domain/roles.js";
-import { actividadesEnDia } from "../../domain/actividades.js";
+import { codigoRolFuncionario, esRolActivo, esTeletrabajo, categoriaDe } from "../../domain/roles.js";
+import { coberturaVisitantesDelDia } from "../../domain/cobertura.js";
+import { actividadesEnDia, teletrabajoDeActividad } from "../../domain/actividades.js";
 import { conflictosActividadDia } from "../../domain/conflictos.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { useSwipe } from "../../lib/useSwipe.js";
@@ -77,7 +78,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
   const isMobile = useMobile();
   // Los puestos son editables (RP1–RP8): se leen del estado, no del módulo de
   // datos, o la vista se quedaría con la lista del arranque.
-  const { puestos: puestosVigentes } = useApp();
+  const { puestos: puestosVigentes, reglas } = useApp();
+  // Igual que en Planificación: la regla de atención obligatoria es editable.
+  const puestosVisitDiario = reglas?.puestosRequierenVisitantesDiario;
   const opcionesPuestoOperativo = useMemo(
     () => puestosVigentes.map((p) => p.nombre),
     [puestosVigentes],
@@ -101,8 +104,11 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
     const rol = codigoRolFuncionario(personas, roleData, yearD, monthIdx, p.nombre, dayD, feriados);
     const cat = categoriaDe(rol);
     const enTurno = esRolActivo(rol);
+    // Trabajar y estar presente dejaron de coincidir con el teletrabajo (RT5):
+    // `enTurno` dice que trabaja, `enTeletrabajo` dónde.
+    const enTeletrabajo = esTeletrabajo(rol);
     const acts = actividadesEnDia(actividadesPlan, diaVista).filter((a) => (a.funcionarios || []).includes(p.nombre));
-    return { ...p, rol, cat, enTurno, acts, tieneActividad: acts.length > 0, tieneViatico: acts.some((a) => a.viatico) };
+    return { ...p, rol, cat, enTurno, enTeletrabajo, acts, tieneActividad: acts.length > 0, tieneViatico: acts.some((a) => a.viatico) };
   });
 
   const enTurnoConAct = statusDia.filter((p) => p.enTurno && p.tieneActividad);
@@ -126,21 +132,61 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       .map((nombre) => personaPorNombre.get(nombre)?.puestoOperativo)
       .filter(Boolean),
   )].sort(compararTexto);
+  // Quiénes teletrabajan hoy, derivado del rol del día (RT2): no hay campo
+  // `esTeletrabajo` en la actividad, a propósito.
+  const enTeletrabajoHoy = new Set(
+    statusDia.filter((p) => p.enTeletrabajo).map((p) => p.nombre),
+  );
   const opcionesFiltroActividades = tipoFiltroActividades === "funcionario"
     ? funcionariosConActividades
     : tipoFiltroActividades === "puesto"
     ? puestosConActividades
+    : tipoFiltroActividades === "trabajo"
+    ? [t("dia.filtroActividades.presencial"), t("dia.filtroActividades.teletrabajo")]
     : [];
   const valorFiltroActivo = opcionesFiltroActividades.includes(valorFiltroActividades)
     ? valorFiltroActividades
     : opcionesFiltroActividades[0] || "";
   const actsVisibles = actsDelDia.filter((act) => {
+    if (tipoFiltroActividades === "trabajo") {
+      const hayTeletrabajo = act.funcionarios.some((n) => enTeletrabajoHoy.has(n));
+      return valorFiltroActivo === t("dia.filtroActividades.teletrabajo")
+        ? hayTeletrabajo
+        : !hayTeletrabajo;
+    }
     if (tipoFiltroActividades === "funcionario") return act.funcionarios.includes(valorFiltroActivo);
     if (tipoFiltroActividades === "puesto") {
       return act.funcionarios.some((nombre) => personaPorNombre.get(nombre)?.puestoOperativo === valorFiltroActivo);
     }
     return true;
   });
+  /* Cobertura crítica: el glosario la define desde el principio y hasta ahora
+     no la calculaba nadie. Un puesto obligado a atender visitantes está en
+     cobertura crítica cuando no hay NADIE presente asignado a esa atención.
+     Presente, no solo trabajando: con todo el equipo en teletrabajo el puesto
+     está vacío por mucho que el plan diga lo contrario. */
+  const cobertura = useMemo(
+    () =>
+      coberturaVisitantesDelDia({
+        actividadesPlan,
+        iso: diaVista,
+        personas,
+        roleData,
+        year: yearD,
+        month: monthIdx,
+        dia: dayD,
+        feriados,
+        puestos: opcionesPuestoOperativo,
+        puestosRequieren: puestosVisitDiario,
+      }),
+    [actividadesPlan, diaVista, personas, roleData, yearD, monthIdx, dayD, feriados, opcionesPuestoOperativo, puestosVisitDiario],
+  );
+  const coberturaPorPuesto = useMemo(
+    () => new Map(cobertura.map((c) => [c.puesto, c])),
+    [cobertura],
+  );
+  const criticos = useMemo(() => cobertura.filter((c) => c.critico), [cobertura]);
+
   const statsPuesto = opcionesPuestoOperativo.map((puesto) => {
     const delPuesto = statusDia.filter((p) => (p.puestoOperativo || "") === puesto);
     const enTurno = delPuesto.filter((p) => p.enTurno);
@@ -150,6 +196,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       turno: enTurno.length,
       conActividad: enTurno.filter((p) => p.tieneActividad).length,
       sinActividad: enTurno.filter((p) => !p.tieneActividad).length,
+      teletrabajo: enTurno.filter((p) => p.enTeletrabajo).length,
     };
   });
   const totalPuesto = statsPuesto.reduce(
@@ -158,8 +205,9 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       turno: a.turno + s.turno,
       conActividad: a.conActividad + s.conActividad,
       sinActividad: a.sinActividad + s.sinActividad,
+      teletrabajo: a.teletrabajo + s.teletrabajo,
     }),
-    { fuera: 0, turno: 0, conActividad: 0, sinActividad: 0 },
+    { fuera: 0, turno: 0, conActividad: 0, sinActividad: 0, teletrabajo: 0 },
   );
   const catLabel = { L: "Libre", V: "Vacaciones", I: "Incapacidad", O: "Otro", "": "Sin marcar" };
   const catCls = {
@@ -278,6 +326,26 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
       {/* Resumen por puesto — siempre visible: es el dato crítico del día,
           no debe quedar oculto detrás de un colapsable. */}
       <Card title={t("dia.porPuesto")} icon="📍">
+        {/* El aviso va ARRIBA de la tabla y no dentro: es el dato que obliga a
+            actuar hoy, y enterrado en una celda se pierde. */}
+        {criticos.length > 0 && (
+          <div role="alert" className="mb-3 rounded-xl border border-critical bg-critical-soft p-3">
+            <p className="flex items-center gap-2 text-sm font-bold text-critical-fg">
+              <Icon name="danger" size={16} />
+              {t("dia.coberturaCritica", { n: criticos.length })}
+            </p>
+            <ul className="mt-1 space-y-0.5 text-xs font-semibold text-critical-fg">
+              {criticos.map((c) => (
+                <li key={c.puesto}>
+                  {c.soloRemoto
+                    ? t("dia.coberturaCriticaRemoto", { puesto: c.puesto.replace("Puesto ", ""), n: c.asignados.length })
+                    : t("dia.coberturaCriticaSinNadie", { puesto: c.puesto.replace("Puesto ", "") })}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 text-[11px] font-medium text-critical-fg opacity-90">{t("dia.coberturaCriticaAyuda")}</p>
+          </div>
+        )}
         <div className="overflow-hidden rounded-lg border border-line">
           <table className="w-full table-fixed border-collapse text-sm">
             <thead className="bg-surface-alt text-[9px] uppercase leading-[1.15] tracking-tight text-ink-muted sm:text-[11px] sm:tracking-wide">
@@ -292,7 +360,26 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             <tbody className="divide-y divide-line">
               {statsPuesto.map(({ puesto, fuera, turno, conActividad, sinActividad }) => (
                 <tr key={puesto} className="hover:bg-surface-alt">
-                  <th scope="row" className="px-1.5 py-2 text-left text-[11px] font-semibold text-ink sm:px-3 sm:py-3 sm:text-sm">{puesto.replace("Puesto ", "")}</th>
+                  {/* La marca es el borde y el color, no un icono: la primera
+                      columna mide un 26 % en una tabla de ancho fijo y un icono
+                      ahí recortaría el nombre del puesto justo cuando más
+                      importa leerlo. El texto oculto lo anuncia igual. */}
+                  <th
+                    scope="row"
+                    className={`px-1.5 py-2 text-left text-[11px] font-semibold sm:px-3 sm:py-3 sm:text-sm ${
+                      coberturaPorPuesto.get(puesto)?.critico
+                        ? "border-l-4 border-l-critical bg-critical-soft/40 font-bold text-critical-fg"
+                        : "text-ink"
+                    }`}
+                  >
+                    {puesto.replace("Puesto ", "")}
+                    {coberturaPorPuesto.get(puesto)?.critico && (
+                      <span className="sr-only">
+                        {" "}
+                        {t("dia.coberturaCriticaAria", { puesto: puesto.replace("Puesto ", "") })}
+                      </span>
+                    )}
+                  </th>
                   <td className={`px-1 py-2 text-center text-base font-semibold sm:px-3 sm:py-3 sm:text-lg ${fuera > 0 ? "text-ink-muted" : "text-ink-subtle"}`}>{fuera}</td>
                   <td className="px-1 py-2 text-center text-base font-semibold text-ok sm:px-3 sm:py-3 sm:text-lg">{turno}</td>
                   <td className="px-1 py-2 text-center text-base font-semibold text-info sm:px-3 sm:py-3 sm:text-lg">{conActividad}</td>
@@ -311,6 +398,13 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
             </tfoot>
           </table>
         </div>
+        {/* RT8: no se añade una columna a una tabla que en móvil ya va apretada
+            con cinco; el dato aparece solo cuando hay a quién contar. */}
+        {totalPuesto.teletrabajo > 0 && (
+          <p className="mt-2 rounded-xl border border-cyan-300 bg-cyan-50 p-2 text-xs font-semibold text-cyan-950">
+            {t("dia.teletrabajoResumen", { n: totalPuesto.teletrabajo })}
+          </p>
+        )}
       </Card>
 
       {/* Actividades del día — abierta por defecto: es información accionable.
@@ -336,9 +430,10 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
           <div className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-muted">
             {t("dia.filtroActividades.mostrar")}
           </div>
-          <div role="group" aria-label={t("dia.filtroActividades.aria")} className="grid grid-cols-3 gap-1 rounded-xl bg-surface-alt p-1">
+          <div role="group" aria-label={t("dia.filtroActividades.aria")} className="grid grid-cols-2 gap-1 rounded-xl bg-surface-alt p-1 sm:grid-cols-4">
             {[
               ["general", t("dia.filtroActividades.general")],
+              ["trabajo", t("dia.filtroActividades.trabajo")],
               ["funcionario", t("dia.filtroActividades.funcionario")],
               ["puesto", t("dia.filtroActividades.puesto")],
             ].map(([tipo, label]) => (
@@ -388,7 +483,7 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
         ) : (
           <div className="space-y-3">
             {actsVisibles.map((act) => {
-              const conf = conflictosActividadDia(act, dayD, yearD, monthIdx, personas, roleData, feriados);
+              const conf = conflictosActividadDia(act, dayD, yearD, monthIdx, personas, roleData, feriados, puestosVisitDiario);
               return (
                 <div
                   key={act.id}
@@ -433,12 +528,18 @@ export default function Dia({ diaVista, setDiaVista, personas, actividadesPlan, 
                       {act.funcionarios.map((n) => (
                         <span
                           key={n}
+                          title={enTeletrabajoHoy.has(n) ? t("dia.teletrabajoBadge") : undefined}
                           className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
-                            conf.includes(n) ? "border-red-400 bg-surface text-critical" : "border-ok/50 bg-surface text-ok-fg"
+                            conf.includes(n)
+                              ? "border-red-400 bg-surface text-critical"
+                              : enTeletrabajoHoy.has(n)
+                              ? "border-cyan-500 bg-surface text-cyan-800"
+                              : "border-ok/50 bg-surface text-ok-fg"
                           }`}
                         >
                           {n}
                           {conf.includes(n) ? " ⚠" : ""}
+                          {!conf.includes(n) && enTeletrabajoHoy.has(n) ? " ⌂" : ""}
                         </span>
                       ))}
                     </div>

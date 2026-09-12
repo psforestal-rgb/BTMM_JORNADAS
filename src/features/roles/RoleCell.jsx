@@ -14,6 +14,7 @@ function RoleCell({ value, onOpen, onConflicto, finde, compact, editable, esInic
     : t("roles.titleSinEdicion");
   return (
     <td
+      data-celda-rol="true"
       className={`border-b border-b-line p-0 text-center font-semibold ${codigoCls(v, finde)} ${
         esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-line"
       } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}

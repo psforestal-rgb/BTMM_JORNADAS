@@ -11,6 +11,7 @@ export default function ModificarRolModal({ data, cerrar, aplicar }) {
     ["V", t("modificarRol.cat.V"), "border-sky-300 bg-sky-100 text-sky-950"],
     ["I", t("modificarRol.cat.I"), "border-rose-300 bg-rose-100 text-rose-950"],
     ["O", t("modificarRol.cat.O"), "border-violet-300 bg-violet-100 text-violet-950"],
+    ["E", t("modificarRol.cat.E"), "border-cyan-300 bg-cyan-100 text-cyan-950"],
   ];
   const tituloAria = t("modificarRol.titulo") + " · " + data.funcionario + " · " + fecha(data.iso);
   return (

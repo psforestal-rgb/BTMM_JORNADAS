@@ -9,7 +9,7 @@ import { useT } from "../../i18n/useT.js";
  * Vista en tarjeta de un funcionario. Reproduce toda la información de la
  * fila de la tabla. Optimizada para uso en campo: tamaños táctiles ≥ 48 px.
  */
-export default function FuncionarioCard({ f, onEditar, onBorrar }) {
+export default function FuncionarioCard({ f, onVerFicha, onEditar, onBorrar }) {
   const t = useT();
   return (
     <article className="rounded-lg border border-slate-300 bg-white p-4">
@@ -78,7 +78,18 @@ export default function FuncionarioCard({ f, onEditar, onBorrar }) {
         {!f.policia && !f.brigada && <span className="text-xs text-slate-400">—</span>}
       </section>
 
-      <footer className="mt-3 flex justify-end gap-2 border-t border-slate-200 pt-3">
+      <footer className="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3">
+        {onVerFicha && (
+          <button
+            type="button"
+            onClick={onVerFicha}
+            aria-label={t("funcionarios.verFichaDe", { nombre: f.nombre })}
+            className="inline-flex min-h-touch items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+          >
+            <Icon name="users" size={14} />
+            {t("funcionarios.verFicha")}
+          </button>
+        )}
         <button
           type="button"
           onClick={onEditar}

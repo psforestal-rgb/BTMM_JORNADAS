@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Icon from "../../ui/Icon.jsx";
 import { meses, dias } from "../../data/calendario.js";
 import { opcionesModalidad } from "../../data/opciones.js";
@@ -13,7 +13,13 @@ import {
   categoriaDe,
   formatearCategoria,
 } from "../../domain/roles.js";
-import { actividadesEnDia } from "../../domain/actividades.js";
+import {
+  actividadesEnDia,
+  indexarActividadesPorPersonaDia,
+  tieneActividadEse,
+  tieneVisitEse,
+} from "../../domain/actividades.js";
+import { conflictoDePersonaDia } from "../../domain/conflictos.js";
 import { indexarReposiciones } from "../../domain/reposicion.js";
 import { buildFeriadosSet } from "../../domain/feriados.js";
 import { tieneCoberturaOficial } from "../../data/feriadosCR.js";
@@ -82,6 +88,7 @@ export default function RolesMensualGrid({
   setActividadesPlan,
   reposiciones = [],
   hj,
+  setView,
 }) {
   const t = useT();
   const { reglas } = useApp();
@@ -89,6 +96,9 @@ export default function RolesMensualGrid({
     () => indexarReposiciones(reposiciones, hj),
     [reposiciones, hj],
   );
+  /* VF1: acceso a la ficha individual. Se pasa como callback ya resuelto para
+     que la fila no tenga que conocer la forma de la navegación. */
+  const verFicha = setView ? (nombre) => setView("funcionario", { funcionario: nombre }) : null;
   const [editRows, setEditRows] = useState({});
   const [menu, setMenu] = useState(null);
   const [conflictoActivo, setConflictoActivo] = useState(null);
@@ -104,7 +114,9 @@ export default function RolesMensualGrid({
   const [lastGroupHeight, setLastGroupHeight] = useState(0);
   const [grupoActivoNombre, setGrupoActivoNombre] = useState(null);
   const [mesesCargados, setMesesCargados] = useState(1);
-  const hoy = new Date();
+  /* Estable durante la vida del componente. Antes se creaba un `Date` nuevo en
+     cada render, lo que impedía memoizar nada que dependiera de «hoy». */
+  const hoy = useMemo(() => new Date(), []);
 
   // Meses actualmente cargados (arranca en el mes seleccionado, crece hacia
   // adelante). No se recarga desde `mesesCargados=1` si cambia el mes/año
@@ -152,14 +164,203 @@ export default function RolesMensualGrid({
   // Lista plana y cronológica de todas las columnas de día actualmente
   // cargadas, cada una con su (year, month, dia) explícito — reemplaza al
   // antiguo arreglo `days` (1..N) de un solo mes.
+  /* Cada columna trae ya calculado todo lo que depende SOLO de ella: la fecha
+     ISO, el día de la semana, si es hoy y el primer día laboral de su mes.
+     Antes cada una de estas cuatro cosas se recalculaba dentro de CADA fila,
+     es decir una vez por funcionario y por día. */
   const columnas = useMemo(() => {
     const lista = [];
+    const anioHoy = hoy.getFullYear();
+    const mesHoy = hoy.getMonth();
+    const diaHoy = hoy.getDate();
     rangoMeses.forEach(({ year: y, month: m }) => {
       const n = dim(y, m);
-      for (let d = 1; d <= n; d++) lista.push({ year: y, month: m, dia: d });
+      const inicioMes = inicioPorMes.get(`${y}-${m}`);
+      for (let d = 1; d <= n; d++) {
+        const dow = new Date(y, m, d).getDay();
+        lista.push({
+          year: y,
+          month: m,
+          dia: d,
+          iso: isoFecha(y, m, d),
+          dow,
+          finde: dow === 0 || dow === 6,
+          esHoy: y === anioHoy && m === mesHoy && d === diaHoy,
+          inicioMes,
+        });
+      }
     });
     return lista;
-  }, [rangoMeses]);
+  }, [rangoMeses, inicioPorMes, hoy]);
+
+  /* Quién tiene actividad cada día, en un índice construido una sola vez.
+     La consulta que había aquí (`actividadesEnDia(...).some(...)`) recorría el
+     plan entero y creaba un arreglo nuevo POR CELDA. */
+  const indiceActividades = useMemo(
+    () => indexarActividadesPorPersonaDia(actividadesPlan),
+    [actividadesPlan],
+  );
+
+  /* ── Virtualización por meses (A1) ────────────────────────────────────────
+     El cuerpo de la tabla solo pinta las celdas de los meses cercanos a lo que
+     se está viendo; los demás se sustituyen por UNA celda vacía con `colSpan`
+     por mes y fila. Medido en Chromium: tras desplazarse ocho meses el cuerpo
+     pasaba de 836 a 6348 celdas, y la carga progresiva llega hasta diez años.
+
+     Se virtualiza por MESES y solo el CUERPO, nunca el encabezado, y esa es la
+     decisión que hace que el truco sea seguro: el ancho de cada columna lo fija
+     la fila de días del encabezado, que sigue completa. Si se colapsara también
+     el encabezado habría que pasar la tabla a `table-layout: fixed` con un
+     `colgroup`, y eso sí rompería la columna congelada de nombres y las barras
+     de mes con `colSpan`.
+
+     El ancho total de la tabla no cambia —la celda con `colSpan` ocupa lo mismo
+     que las celdas que sustituye—, así que la posición del scroll se conserva y
+     no hay saltos. */
+  const [anchoColumna, setAnchoColumna] = useState(0);
+  const [anchoNombre, setAnchoNombre] = useState(0);
+  const [ventana, setVentana] = useState({ desde: 0, hasta: Infinity });
+  const [imprimiendo, setImprimiendo] = useState(false);
+
+  // Mide una columna de día y la columna congelada de nombres. Se repite al
+  // cambiar el tamaño de la ventana porque el ancho depende del breakpoint.
+  useEffect(() => {
+    const medir = () => {
+      /* Se mide una celda del CUERPO y no del encabezado. En pantallas
+         anchas las dos miden lo mismo, pero en móvil la celda de rol es más
+         ancha que la del encabezado, así que es ella la que fija el ancho de
+         la columna. Medir el encabezado dejaría el hueco corto y la tabla
+         encogería al colapsar un mes, moviendo el contenido bajo el dedo. */
+      const celda = scrollRef.current?.querySelector("td[data-celda-rol]");
+      const th = theadRef.current?.querySelector("th[data-fecha]");
+      const nombreTh = theadRef.current?.querySelector("th[data-col-nombre]");
+      const ancho = (celda || th) ? (celda || th).getBoundingClientRect().width : 0;
+      const anchoN = nombreTh ? nombreTh.getBoundingClientRect().width : 0;
+      setAnchoColumna((prev) => (Math.abs(prev - ancho) > 0.05 ? ancho : prev));
+      setAnchoNombre((prev) => (Math.abs(prev - anchoN) > 0.5 ? anchoN : prev));
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [compact, columnas.length]);
+
+  /* Al imprimir hace falta la tabla ENTERA: el rol impreso es un entregable de
+     la administración, y una virtualización que no se desactive dejaría en el
+     papel solo los meses que estaban en pantalla. */
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const mq = window.matchMedia("print");
+    setImprimiendo(mq.matches);
+    const alCambiar = (e) => setImprimiendo(e.matches);
+    // Safari < 14 y algunos motores antiguos solo tienen `addListener`.
+    if (typeof mq.addEventListener === "function") mq.addEventListener("change", alCambiar);
+    else if (typeof mq.addListener === "function") mq.addListener(alCambiar);
+    const antes = () => setImprimiendo(true);
+    const despues = () => setImprimiendo(false);
+    window.addEventListener("beforeprint", antes);
+    window.addEventListener("afterprint", despues);
+    return () => {
+      if (typeof mq.removeEventListener === "function") mq.removeEventListener("change", alCambiar);
+      else if (typeof mq.removeListener === "function") mq.removeListener(alCambiar);
+      window.removeEventListener("beforeprint", antes);
+      window.removeEventListener("afterprint", despues);
+    };
+  }, []);
+
+  /* Recalcula la ventana visible en cada scroll, con un margen de una pantalla
+     a cada lado. No lee el DOM columna por columna: los días son todos del
+     mismo ancho, así que la posición de cada uno es aritmética. */
+  useEffect(() => {
+    const contenedor = scrollRef.current;
+    if (!contenedor || !anchoColumna) return undefined;
+    let pedido = null;
+    const recalcular = () => {
+      pedido = null;
+      const ancho = contenedor.clientWidth || 0;
+      const izquierda = contenedor.scrollLeft - anchoNombre;
+      const desde = Math.max(0, Math.floor((izquierda - ancho) / anchoColumna));
+      const hasta = Math.ceil((izquierda + ancho * 2) / anchoColumna);
+      setVentana((prev) => (prev.desde === desde && prev.hasta === hasta ? prev : { desde, hasta }));
+    };
+    const alDesplazar = () => {
+      if (pedido != null) return;
+      pedido = window.requestAnimationFrame(recalcular);
+    };
+    recalcular();
+    contenedor.addEventListener("scroll", alDesplazar, { passive: true });
+    return () => {
+      contenedor.removeEventListener("scroll", alDesplazar);
+      if (pedido != null) window.cancelAnimationFrame(pedido);
+    };
+  }, [anchoColumna, anchoNombre, columnas.length]);
+
+  /* Meses que se pintan enteros. Un mes entra si CUALQUIERA de sus días cae en
+     la ventana; así nunca se parte un mes por la mitad y la celda de hueco
+     coincide exactamente con la barra de mes del encabezado. */
+  const mesesVisibles = useMemo(() => {
+    const visibles = new Set();
+    let indice = 0;
+    for (const { year: y, month: m } of rangoMeses) {
+      const n = dim(y, m);
+      if (indice < ventana.hasta && indice + n > ventana.desde) visibles.add(`${y}-${m}`);
+      indice += n;
+    }
+    // Sin medición todavía (primer render, jsdom sin layout) no se virtualiza
+    // nada: es preferible pintar de más que pintar una tabla vacía.
+    if (visibles.size === 0) rangoMeses.forEach(({ year: y, month: m }) => visibles.add(`${y}-${m}`));
+    return visibles;
+  }, [rangoMeses, ventana]);
+
+  /* Ancho EXACTO de cada mes, medido mientras estaba pintado.
+     Las columnas no son todas igual de anchas: el ancho lo fija el contenido
+     más largo de cada una («T10» ocupa más que «L1»), así que un ancho medio
+     por columna se queda corto en unos meses y largo en otros, y la tabla se
+     movía bajo el dedo al colapsar. Se comprobó en Chromium que un mes pintado
+     mide lo mismo esté o no colapsado el resto, así que guardar su medida y
+     devolvérsela al hueco reproduce la geometría exacta. */
+  const anchosMes = useRef(new Map());
+  useLayoutEffect(() => {
+    const cabecera = theadRef.current;
+    if (!cabecera) return;
+    for (const th of cabecera.querySelectorAll("th[data-mes]")) {
+      if (!mesesVisibles.has(th.dataset.mes)) continue;
+      const ancho = th.getBoundingClientRect().width;
+      if (ancho > 0) anchosMes.current.set(th.dataset.mes, ancho);
+    }
+  });
+
+  /* Tramos del cuerpo: series de columnas que se pintan y huecos que se
+     resumen en una sola celda. Se calcula una vez y lo comparten todas las
+     filas, así que la cuenta de celdas por fila es idéntica en todas. */
+  const tramos = useMemo(() => {
+    const virtualizar = !imprimiendo && anchoColumna > 0;
+    if (!virtualizar) return [{ tipo: "celdas", clave: "todo", columnas }];
+    const lista = [];
+    let bufer = [];
+    const cerrarBufer = () => {
+      if (bufer.length) {
+        lista.push({ tipo: "celdas", clave: `c-${bufer[0].iso}`, columnas: bufer });
+        bufer = [];
+      }
+    };
+    let desde = 0;
+    for (const { year: y, month: m } of rangoMeses) {
+      const n = dim(y, m);
+      if (mesesVisibles.has(`${y}-${m}`)) {
+        for (let i = desde; i < desde + n; i += 1) bufer.push(columnas[i]);
+      } else {
+        cerrarBufer();
+        // Si el mes nunca llegó a pintarse (un salto a una fecha lejana), se
+        // cae al ancho medio por columna. Es una estimación, pero solo afecta
+        // a meses que la persona todavía no ha visto.
+        const exacto = anchosMes.current.get(`${y}-${m}`);
+        lista.push({ tipo: "hueco", clave: `h-${y}-${m}`, n, ancho: exacto || n * anchoColumna });
+      }
+      desde += n;
+    }
+    cerrarBufer();
+    return lista;
+  }, [columnas, rangoMeses, mesesVisibles, imprimiendo, anchoColumna]);
 
   // Carga progresiva: al acercarse al borde derecho de lo ya cargado, se
   // agrega un mes más (hasta el tope de 10 años). El nodo centinela es el
@@ -464,6 +665,7 @@ export default function RolesMensualGrid({
             <tr>
               <th
                 rowSpan={2}
+                data-col-nombre="true"
                 className={`sticky top-0 left-0 z-40 min-w-[5.5rem] max-w-[5.5rem] border-b border-r-2 border-slate-300 p-1.5 text-left text-[11px] font-semibold uppercase shadow-[2px_2px_8px_rgba(15,23,42,0.08)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem] ${grupoActivo ? grupoActivo.color : "bg-surface text-ink-muted"}`}
               >
                 {grupoActivo ? grupoActivo.nombre.replace(/^Puesto\s+/, "") : ""}
@@ -481,6 +683,7 @@ export default function RolesMensualGrid({
               {rangoMeses.map(({ year: y, month: m }) => (
                 <th
                   key={`${y}-${m}`}
+                  data-mes={`${y}-${m}`}
                   colSpan={dim(y, m)}
                   className="sticky top-0 z-30 h-5 border-b border-r-2 border-slate-600 bg-slate-800 p-0 text-white sm:h-6"
                 >
@@ -492,11 +695,7 @@ export default function RolesMensualGrid({
             </tr>
             <tr>
               {columnas.map((col) => {
-                const { year: y, month: m, dia: d } = col;
-                const iso = isoFecha(y, m, d);
-                const dow = new Date(y, m, d).getDay();
-                const isWeekend = dow === 0 || dow === 6;
-                const isToday = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
+                const { year: y, month: m, dia: d, iso, dow, finde: isWeekend, esHoy: isToday } = col;
                 const isFocused = focusDate?.year === y && focusDate?.month === m && focusDate?.day === d;
                 const tone = monthTone(m);
                 return (
@@ -557,6 +756,7 @@ export default function RolesMensualGrid({
                   key={grupo.nombre}
                   grupo={grupo}
                   columnas={columnas}
+                  tramos={tramos}
                   compact={compact}
                   editRows={editRows}
                   toggleEdit={toggleEdit}
@@ -566,14 +766,14 @@ export default function RolesMensualGrid({
                   abrirPatronModal={(grupo, persona) => setPatronModal({ grupo, persona })}
                   abrirConflicto={abrirConflicto}
                   setMenu={setMenu}
-                  inicioDeMes={inicioDeMes}
-                  actividadesPlan={actividadesPlan}
+                  indiceActividades={indiceActividades}
+                  puestosRequieren={reglas?.puestosRequierenVisitantesDiario}
                   trabajadas={trabajadas}
                   reposicionesDia={reposicionesDia}
-                  hoy={hoy}
                   year={year}
                   month={month}
                   t={t}
+                  verFicha={verFicha}
                 />
               ))}
               {/* El resumen general es el último bloque de la tabla, así que
@@ -581,8 +781,8 @@ export default function RolesMensualGrid({
               <ResumenTbody
                 grupos={grupos}
                 columnas={columnas}
+                tramos={tramos}
                 getCelda={getCelda}
-                hoy={hoy}
                 registerBodyRef={lastGroupRef}
                 t={t}
               />
@@ -658,9 +858,36 @@ export default function RolesMensualGrid({
   );
 }
 
+/**
+ * Celda que sustituye a un mes entero fuera de la ventana visible.
+ *
+ * Ocupa exactamente las mismas columnas que las celdas que reemplaza
+ * (`colSpan`), así que el ancho total de la tabla y la posición del scroll no
+ * cambian. Va oculta a lectores de pantalla porque no aporta información: el
+ * contenido real vuelve en cuanto el mes se acerca a la pantalla.
+ */
+function HuecoMes({ n, ancho }) {
+  return (
+    <td
+      aria-hidden="true"
+      colSpan={n}
+      data-hueco="true"
+      /* `width` ADEMÁS de `minWidth`, y sin redondear. El mínimo por sí solo no
+         basta: en el reparto del ancho sobrante, una celda vacía declara un
+         ancho preferido de cero y sus columnas reciben menos que las demás, así
+         que la tabla encogía unos píxeles por cada mes colapsado y el contenido
+         se desplazaba bajo el dedo al desplazarse. Verificado en Chromium a 390
+         y a 1280 px. */
+      style={ancho ? { width: `${ancho}px`, minWidth: `${ancho}px` } : undefined}
+      className="border-b border-b-line border-r border-r-line bg-surface p-0"
+    />
+  );
+}
+
 function RowsGrupo({
   grupo,
   columnas,
+  tramos,
   compact,
   editRows,
   toggleEdit,
@@ -670,15 +897,15 @@ function RowsGrupo({
   abrirPatronModal,
   abrirConflicto,
   setMenu,
-  inicioDeMes,
-  actividadesPlan,
+  indiceActividades,
+  puestosRequieren,
   trabajadas,
   reposicionesDia,
   registerBodyRef,
-  hoy,
   year,
   month,
   t,
+  verFicha,
 }) {
   return (
     <tbody data-grupo={grupo.nombre} ref={registerBodyRef}>
@@ -745,29 +972,51 @@ function RowsGrupo({
                       >
                         {t("roles.aplicarPatronAbrir")}
                       </button>
+                      {/* VF1: acceso a la ficha individual desde Roles. Va en
+                          el panel de edición de la fila y no junto al nombre
+                          porque la celda del nombre mide 5,5 rem en móvil: un
+                          segundo botón ahí duplicaría el alto de TODAS las
+                          filas de una cuadrícula que es densa a propósito. */}
+                      {verFicha && (
+                        <button
+                          type="button"
+                          onClick={() => verFicha(nombre)}
+                          className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-2 text-[10px] font-semibold text-ink hover:bg-surface-alt sm:text-[11px]"
+                        >
+                          {t("roles.verFicha")}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             </td>
-            {columnas.map((col) => {
-              const { year: y, month: m, dia: d } = col;
-              const dow = new Date(y, m, d).getDay();
-              const iso = isoFecha(y, m, d);
+            {tramos.map((tramo) =>
+              tramo.tipo === "hueco" ? (
+                <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
+              ) : (
+                tramo.columnas.map((col) => {
+              const { year: y, month: m, dia: d, iso, finde, esHoy, inicioMes } = col;
               const val = getCelda(grupo, nombre, y, m, d);
-              const tieneActividad = actividadesEnDia(actividadesPlan || [], iso).some((a) =>
-                (a.funcionarios || []).includes(nombre),
-              );
-              const conflicto = tieneActividad && !esRolActivo(val);
-              const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
-              const esInicio = editing && d === inicioDeMes(y, m);
+              /* La regla completa, no solo «no trabaja ese día»: desde que el
+                 rol `E` cuenta como activo, mirar únicamente `esRolActivo`
+                 dejaba pasar el teletrabajo en atención de visitantes que Día y
+                 Planificación sí marcaban. */
+              const conflicto = conflictoDePersonaDia({
+                rol: val,
+                tieneActividad: tieneActividadEse(indiceActividades, nombre, iso),
+                tieneVisit: tieneVisitEse(indiceActividades, nombre, iso),
+                puesto: grupo.nombre,
+                puestosRequieren,
+              });
+              const esInicio = editing && d === inicioMes;
               return (
                 <RoleCell
                   key={`${grupo.nombre}-${nombre}-${iso}`}
                   value={val}
                   compact={compact}
                   editable={editing}
-                  finde={dow === 0 || dow === 6}
+                  finde={finde}
                   esInicio={esInicio}
                   conflicto={conflicto}
                   repoTrabajada={trabajadas[`${nombre}|${iso}`]}
@@ -780,7 +1029,9 @@ function RowsGrupo({
                   onConflicto={() => abrirConflicto(grupo, nombre, y, m, d, val)}
                 />
               );
-            })}
+                })
+              ),
+            )}
           </tr>
         );
       })}
@@ -788,14 +1039,16 @@ function RowsGrupo({
         <td className="sticky left-0 z-10 min-w-[5.5rem] max-w-[5.5rem] border-b border-r border-line bg-surface-alt p-1.5 text-[10px] font-bold uppercase text-ink-muted shadow-[2px_0_8px_rgba(15,23,42,0.06)] sm:min-w-[10rem] sm:max-w-[10rem] sm:p-3 sm:text-xs lg:min-w-[13rem] lg:max-w-[13rem]">
           {t("roles.cantidadEnTurno")}
         </td>
-        {columnas.map((col) => {
-          const { year: y, month: m, dia: d } = col;
-          const iso = isoFecha(y, m, d);
+        {tramos.map((tramo) =>
+          tramo.tipo === "hueco" ? (
+            <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
+          ) : (
+            tramo.columnas.map((col) => {
+          const { year: y, month: m, dia: d, iso, esHoy } = col;
           const count = grupo.funcionarios.reduce(
             (acc, nombre) => (esRolActivo(getCelda(grupo, nombre, y, m, d)) ? acc + 1 : acc),
             0,
           );
-          const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
           return (
             <td
               key={`${grupo.nombre}-cantidad-${iso}`}
@@ -806,7 +1059,9 @@ function RowsGrupo({
               {count}
             </td>
           );
-        })}
+            })
+          ),
+        )}
       </tr>
     </tbody>
   );
@@ -818,7 +1073,7 @@ function RowsGrupo({
  * incapacitados y otros (permisos, oficina, etc.). Los puntos de color de
  * cada fila reutilizan los colores semánticos de los códigos de rol.
  */
-function ResumenTbody({ grupos, columnas, getCelda, hoy, registerBodyRef, t }) {
+function ResumenTbody({ grupos, columnas, tramos, getCelda, registerBodyRef, t }) {
   const filas = [
     { cat: "T", label: t("roles.resumenEnTurno"), dot: "bg-emerald-700" },
     { cat: "L", label: t("roles.resumenLibres"), dot: "bg-amber-700" },
@@ -826,17 +1081,24 @@ function ResumenTbody({ grupos, columnas, getCelda, hoy, registerBodyRef, t }) {
     { cat: "I", label: t("roles.resumenIncapacidad"), dot: "bg-rose-700" },
     { cat: "O", label: t("roles.resumenOtros"), dot: "bg-violet-700" },
   ];
-  // Una sola pasada por columna: las cinco filas comparten estos totales.
-  const totales = columnas.map(({ year: y, month: m, dia: d }) => {
-    const acc = { T: 0, L: 0, V: 0, I: 0, O: 0 };
-    for (const grupo of grupos) {
-      for (const nombre of grupo.funcionarios) {
-        const cat = categoriaDe(getCelda(grupo, nombre, y, m, d));
-        if (cat) acc[cat] += 1;
+  /* Una sola pasada por columna VISIBLE: las cinco filas comparten estos
+     totales, y los meses colapsados no se cuentan porque no se pintan. Se
+     indexa por fecha ISO y no por posición: con los huecos, la posición dentro
+     de la fila ya no coincide con la posición dentro de `columnas`. */
+  const totales = new Map();
+  for (const tramo of tramos) {
+    if (tramo.tipo !== "celdas") continue;
+    for (const { year: y, month: m, dia: d, iso } of tramo.columnas) {
+      const acc = { T: 0, L: 0, V: 0, I: 0, O: 0 };
+      for (const grupo of grupos) {
+        for (const nombre of grupo.funcionarios) {
+          const cat = categoriaDe(getCelda(grupo, nombre, y, m, d));
+          if (cat) acc[cat] += 1;
+        }
       }
+      totales.set(iso, acc);
     }
-    return acc;
-  });
+  }
   return (
     <tbody data-grupo={GRUPO_RESUMEN} ref={registerBodyRef}>
       <tr className="pnlq-roles-resumen">
@@ -854,11 +1116,13 @@ function ResumenTbody({ grupos, columnas, getCelda, hoy, registerBodyRef, t }) {
               <span className="truncate">{label}</span>
             </span>
           </td>
-          {columnas.map((col, i) => {
-            const { year: y, month: m, dia: d } = col;
-            const iso = isoFecha(y, m, d);
-            const esHoy = y === hoy.getFullYear() && m === hoy.getMonth() && d === hoy.getDate();
-            const n = totales[i][cat];
+          {tramos.map((tramo) =>
+            tramo.tipo === "hueco" ? (
+              <HuecoMes key={tramo.clave} n={tramo.n} ancho={tramo.ancho} />
+            ) : (
+              tramo.columnas.map((col) => {
+            const { iso, esHoy } = col;
+            const n = totales.get(iso)[cat];
             return (
               <td
                 key={`resumen-${cat}-${iso}`}
@@ -869,7 +1133,9 @@ function ResumenTbody({ grupos, columnas, getCelda, hoy, registerBodyRef, t }) {
                 {n}
               </td>
             );
-          })}
+              })
+            ),
+          )}
         </tr>
       ))}
     </tbody>

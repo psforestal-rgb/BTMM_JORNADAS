@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useApp } from "../../context/AppContext.jsx";
 import Card from "../../ui/Card.jsx";
 import Icon from "../../ui/Icon.jsx";
@@ -6,6 +6,13 @@ import { meses } from "../../data/calendario.js";
 import { useT } from "../../i18n/useT.js";
 import RolesMensualGrid from "./RolesMensualGrid.jsx";
 import RolesPrintHeader, { RolesPrintFooter } from "./RolesPrintMatter.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
+import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
+import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
+import { toLocalFileTimestamp } from "../../domain/fechas.js";
+import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { filasDeResumenRoles, filasDeRoles, isoDelPeriodo, nombreArchivo } from "../../lib/exportaciones.js";
 
 export default function Roles({
   year,
@@ -20,11 +27,19 @@ export default function Roles({
   setActividadesPlan,
   reposiciones = [],
   hj,
+  setView,
 }) {
   const t = useT();
   // Puestos vigentes desde el estado (RP1–RP8).
   const { puestos } = useApp();
+  const { exito, aviso, error } = useToast();
+  // Los mismos feriados que usa la cuadrícula: si el exportador usara otros,
+  // el primer día laboral cambiaría y el archivo no cuadraría con la pantalla.
+  const feriados = useFeriadosDelAno(year);
   const [busqueda, setBusqueda] = useState("");
+  // A-P12: «/» salta al buscador de la vista.
+  const buscadorRef = useRef(null);
+  useAtajoBusqueda(buscadorRef);
   // Búsqueda por fecha: centra la tabla en el día elegido. La tabla carga
   // meses solo hacia adelante desde su mes inicial, así que si la fecha
   // buscada queda antes de ese mes (o más allá del tope de carga), primero
@@ -136,6 +151,29 @@ export default function Roles({
     setFuncionariosSeleccionados((prev) => [...new Set([...prev, nombre])]);
   };
 
+  /* Exporta los puestos y funcionarios SELECCIONADOS y el mes que se está
+     viendo, que es lo que la persona tiene delante. Los códigos salen de
+     `codigoRolFuncionario`, el mismo del que se pinta la cuadrícula. */
+  const exportar = (constructor, sufijo, mensaje) => {
+    const nFuncionarios = gruposFiltrados.reduce((acc, g) => acc + g.funcionarios.length, 0);
+    if (nFuncionarios === 0) {
+      aviso(t("roles.exportadoVacio"));
+      return;
+    }
+    const { filas, columnas } = constructor({
+      grupos: gruposFiltrados, personas, roleData, year, month, feriados, t,
+    });
+    const ok = descargarArchivo(
+      nombreArchivo(sufijo, isoDelPeriodo(year, month), toLocalFileTimestamp()),
+      csvDescargable(filas, columnas),
+      TIPO_CSV,
+    );
+    if (ok) exito(t(mensaje, { n: nFuncionarios }));
+    else error(t("roles.exportarError"));
+  };
+  const exportarRolCSV = () => exportar(filasDeRoles, "rol", "roles.exportado");
+  const exportarResumenCSV = () => exportar(filasDeResumenRoles, "rol-resumen", "roles.exportado");
+
   return (
     <section className="space-y-4">
       {/* Sin fondo propio ni relleno lateral: la tarjeta principal de Roles
@@ -162,9 +200,12 @@ export default function Roles({
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface px-2">
               <Icon name="search" size={14} className="shrink-0 text-ink-subtle" />
               <input
+                ref={buscadorRef}
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
+                aria-keyshortcuts="/"
+                title={t("atajos.buscarTitulo")}
                 placeholder={t("roles.buscarFuncionario")}
                 aria-label={t("roles.buscarFuncionario")}
                 className="min-h-touch w-full bg-transparent py-2 text-xs font-semibold text-ink outline-none"
@@ -292,6 +333,32 @@ export default function Roles({
               {t("roles.irAFecha")}
             </button>
           </form>
+
+          {/* Exportación (B1). Dos archivos distintos a propósito: la
+              cuadrícula día a día sirve para revisar, y el resumen por
+              categoría es lo que la administración suele adjuntar. Meter los
+              dos en una hoja obligaría a elegir un ancho común que no le sirve
+              bien a ninguno. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={exportarRolCSV}
+              aria-label={t("roles.exportarAria")}
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="file" size={14} />
+              {t("roles.exportar")}
+            </button>
+            <button
+              type="button"
+              onClick={exportarResumenCSV}
+              aria-label={t("roles.exportarResumenAria")}
+              className="inline-flex min-h-touch items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="chart" size={14} />
+              {t("roles.exportarResumen")}
+            </button>
+          </div>
         </div>
 
         <div className="pnlq-print-page">
@@ -309,6 +376,7 @@ export default function Roles({
             setActividadesPlan={setActividadesPlan}
             reposiciones={reposiciones}
             hj={hj}
+            setView={setView}
           />
           <RolesPrintFooter />
         </div>
@@ -319,6 +387,7 @@ export default function Roles({
           <span className="rounded-lg border border-sky-300 bg-sky-200 px-2 py-1 text-sky-950">{t("roles.leyenda.vacaciones")}</span>
           <span className="rounded-lg border border-rose-300 bg-rose-200 px-2 py-1 text-rose-950">{t("roles.leyenda.incapacidad")}</span>
           <span className="rounded-lg border border-violet-300 bg-violet-200 px-2 py-1 text-violet-950">{t("roles.leyenda.otro")}</span>
+          <span className="rounded-lg border border-cyan-300 bg-cyan-200 px-2 py-1 text-cyan-950">{t("roles.leyenda.teletrabajo")}</span>
         </div>
       </Card>
     </section>

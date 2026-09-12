@@ -4,6 +4,7 @@ import {
   moverPuesto,
   normalizarTag,
   personasEnPuesto,
+  planificarImportacionPuestos,
   quitarPuesto,
   reemplazarPuesto,
   renombrarPuesto,
@@ -169,5 +170,164 @@ describe("puestos.moverPuesto", () => {
 
   it("tolera una lista que no es un arreglo", () => {
     expect(moverPuesto(null, "A", 1)).toEqual([]);
+  });
+});
+
+describe("puestos.planificarImportacionPuestos (RP6)", () => {
+  const COLORES = [
+    { id: "a", clases: "bg-a" },
+    { id: "b", clases: "bg-b" },
+  ];
+  const base = [
+    { nombre: "Puesto Orosi", tag: "OR", color: "bg-a" },
+    { nombre: "Puesto Quetzales", tag: "QZ", color: "bg-b" },
+  ];
+  const plan = (filas, puestos = base) => planificarImportacionPuestos(puestos, filas, COLORES);
+
+  it("NUNCA elimina: un archivo incompleto no vacía la lista", () => {
+    const r = plan([{ nombre: "Puesto Orosi", tag: "OR" }]);
+    expect(r.resultado.map((p) => p.nombre)).toEqual(["Puesto Orosi", "Puesto Quetzales"]);
+  });
+
+  it("da de alta un puesto que no existía", () => {
+    const r = plan([{ nombre: "Puesto Cerro", tag: "CE", color: "bg-b" }]);
+    expect(r.nuevos).toHaveLength(1);
+    expect(r.resultado.at(-1)).toEqual({ nombre: "Puesto Cerro", tag: "CE", color: "bg-b" });
+  });
+
+  it("actualiza por nombre, conservando la posición", () => {
+    const r = plan([{ nombre: "Puesto Orosi", tag: "ORO", color: "bg-b" }]);
+    expect(r.actualizados).toHaveLength(1);
+    expect(r.resultado[0]).toMatchObject({ nombre: "Puesto Orosi", tag: "ORO", color: "bg-b" });
+    expect(r.resultado.map((p) => p.nombre)).toEqual(["Puesto Orosi", "Puesto Quetzales"]);
+  });
+
+  it("una columna ausente no borra el valor que ya tenía", () => {
+    const r = plan([{ nombre: "Puesto Orosi" }]);
+    expect(r.resultado[0]).toEqual({ nombre: "Puesto Orosi", tag: "OR", color: "bg-a" });
+  });
+
+  it("informa de qué campos cambian", () => {
+    const r = plan([{ nombre: "Puesto Orosi", tag: "ORO" }]);
+    expect(r.actualizados[0].cambios).toEqual(["tag"]);
+  });
+
+  it("omite la fila cuyo código ya usa OTRO puesto, en vez de pisarlo o inventar uno", () => {
+    const r = plan([{ nombre: "Puesto Cerro", tag: "OR" }]);
+    expect(r.omitidos).toEqual([{ fila: 2, motivo: "codigoOcupado", nombre: "Puesto Cerro", tag: "OR" }]);
+    expect(r.resultado).toEqual(base);
+  });
+
+  it("conservar su propio código no cuenta como choque", () => {
+    const r = plan([{ nombre: "Puesto Orosi", tag: "OR", color: "bg-b" }]);
+    expect(r.omitidos).toEqual([]);
+    expect(r.actualizados).toHaveLength(1);
+  });
+
+  it("omite las filas sin nombre y dice cuáles eran", () => {
+    const r = plan([{ nombre: "   ", tag: "ZZ" }, { nombre: "Puesto Cerro", tag: "CE" }]);
+    expect(r.omitidos).toEqual([{ fila: 2, motivo: "sinNombre" }]);
+    expect(r.nuevos).toHaveLength(1);
+  });
+
+  it("un color desconocido cae al primero de la paleta, sin perder el puesto", () => {
+    const r = plan([{ nombre: "Puesto Cerro", tag: "CE", color: "bg-inventado" }]);
+    expect(r.resultado.at(-1).color).toBe("bg-a");
+  });
+
+  it("un color desconocido al actualizar deja el que ya tenía", () => {
+    const r = plan([{ nombre: "Puesto Orosi", tag: "OR", color: "bg-inventado" }]);
+    expect(r.resultado[0].color).toBe("bg-a");
+  });
+
+  it("numera las filas como las ve una hoja de cálculo: la 1 es la cabecera", () => {
+    const r = plan([{ nombre: "Uno", tag: "U1" }, { nombre: "Dos", tag: "D2" }], []);
+    expect(r.nuevos.map((n) => n.fila)).toEqual([2, 3]);
+  });
+
+  it("si el archivo repite un nombre gana la última fila, y se informa", () => {
+    const r = plan(
+      [
+        { nombre: "Puesto Cerro", tag: "CE", color: "bg-a" },
+        { nombre: "puesto cerro", tag: "CE", color: "bg-b" },
+      ],
+      [],
+    );
+    expect(r.resultado).toHaveLength(1);
+    expect(r.resultado[0].color).toBe("bg-b");
+    expect(r.duplicados).toEqual([{ fila: 3, anterior: 2 }]);
+  });
+
+  it("no muta la lista original", () => {
+    const original = [{ nombre: "Puesto Orosi", tag: "OR", color: "bg-a" }];
+    plan([{ nombre: "Puesto Orosi", tag: "ORO" }], original);
+    expect(original[0].tag).toBe("OR");
+  });
+
+  it("tolera entradas no válidas sin lanzar", () => {
+    expect(planificarImportacionPuestos(null, null).resultado).toEqual([]);
+    expect(planificarImportacionPuestos(undefined, undefined).nuevos).toEqual([]);
+  });
+});
+
+describe("importación de puestos — casos que el formulario no permitiría", () => {
+  const COLORES = ["bg-a", "bg-b"];
+  const BASE = [
+    { nombre: "Puesto Orosi", tag: "OR", color: "bg-a" },
+    { nombre: "Puesto Quetzales", tag: "QZ", color: "bg-b" },
+  ];
+
+  it("conserva el nombre que ya estaba cuando el archivo cambia solo la grafía", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "puesto orosi", tag: "OR", color: "bg-a" }], COLORES);
+    // Adoptar «puesto orosi» renombraría el puesto sin arrastrar las fichas de
+    // los funcionarios, que seguirían diciendo «Puesto Orosi», y esa gente
+    // desaparecería del grupo.
+    expect(plan.resultado[0].nombre).toBe("Puesto Orosi");
+    expect(plan.renombresIgnorados).toEqual([
+      { fila: 2, actual: "Puesto Orosi", pedido: "puesto orosi" },
+    ]);
+  });
+
+  it("el cambio de grafía no cuenta como actualización", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "PUESTO OROSI", tag: "OR", color: "bg-a" }], COLORES);
+    expect(plan.actualizados).toEqual([]);
+  });
+
+  it("un puesto nuevo sin código corto se omite en vez de crearse vacío", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Nuevo", tag: "", color: "bg-a" }], COLORES);
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos).toEqual([{ fila: 2, motivo: "sinCodigo", nombre: "Puesto Nuevo" }]);
+    expect(plan.resultado).toHaveLength(2);
+  });
+
+  it("dos nuevos sin código no se cuelan con el mismo código vacío", () => {
+    const plan = planificarImportacionPuestos(
+      BASE,
+      [{ nombre: "Uno", tag: "" }, { nombre: "Dos", tag: "" }],
+      COLORES,
+    );
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos.map((o) => o.motivo)).toEqual(["sinCodigo", "sinCodigo"]);
+  });
+
+  it("reimportar la propia exportación no cambia ni cuenta nada", () => {
+    const plan = planificarImportacionPuestos(BASE, BASE.map((p) => ({ ...p })), COLORES);
+    expect(plan.actualizados).toEqual([]);
+    expect(plan.nuevos).toEqual([]);
+    expect(plan.omitidos).toEqual([]);
+    expect(plan.resultado).toEqual(BASE);
+  });
+
+  it("un cambio de verdad sí se cuenta", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Orosi", tag: "ORO", color: "bg-a" }], COLORES);
+    expect(plan.actualizados).toHaveLength(1);
+    expect(plan.actualizados[0].cambios).toEqual(["tag"]);
+    expect(plan.resultado[0].tag).toBe("ORO");
+  });
+
+  it("una fila sin código sobre un puesto existente conserva el suyo", () => {
+    const plan = planificarImportacionPuestos(BASE, [{ nombre: "Puesto Orosi", tag: "", color: "bg-b" }], COLORES);
+    expect(plan.resultado[0].tag).toBe("OR");
+    expect(plan.actualizados[0].cambios).toEqual(["color"]);
   });
 });

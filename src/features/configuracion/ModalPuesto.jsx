@@ -1,24 +1,17 @@
 import { useId, useState } from "react";
 import Modal from "../../ui/Modal.jsx";
+import { coloresPuesto } from "../../data/opciones.js";
 import { normalizarTag, validarPuesto } from "../../domain/puestos.js";
 import { useT } from "../../i18n/useT.js";
 
 /**
  * Alta y edición de un puesto operativo (RP1, RP4, RP7).
  *
- * El color se elige de una paleta cerrada y no como texto libre: el valor es
- * una pareja de clases de Tailwind que la cuadrícula de Roles aplica tal cual,
- * y un valor inventado saldría sin estilo o, peor, con un contraste ilegible
- * bajo el sol.
+ * La paleta vive en `src/data/opciones.js` porque la comparten este formulario
+ * y la validación del import de RP6: si estuviera aquí, el dominio tendría que
+ * importar un componente para saber qué colores son válidos.
  */
-export const PALETA = [
-  { id: "naranja-claro", clases: "bg-orange-100 text-orange-950" },
-  { id: "naranja", clases: "bg-orange-700 text-white" },
-  { id: "cielo", clases: "bg-sky-100 text-sky-950" },
-  { id: "esmeralda", clases: "bg-emerald-100 text-emerald-950" },
-  { id: "violeta", clases: "bg-violet-100 text-violet-950" },
-  { id: "pizarra", clases: "bg-slate-200 text-slate-900" },
-];
+export { coloresPuesto as PALETA };
 
 const cls =
   "w-full min-h-touch rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand";
@@ -82,7 +75,7 @@ export default function ModalPuesto({ valor, lista, nombreOriginal = null, cerra
         <div role="group" aria-label={t("puestos.colorAria")}>
           <span className="mb-1 block text-xs font-bold uppercase text-ink-muted">{t("puestos.color")}</span>
           <div className="flex flex-wrap gap-2">
-            {PALETA.map((c) => (
+            {coloresPuesto.map((c) => (
               <button
                 key={c.id}
                 type="button"

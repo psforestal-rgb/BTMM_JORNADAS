@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
@@ -9,11 +9,17 @@ import {
   agregarPuesto,
   personasEnPuesto,
   moverPuesto,
+  planificarImportacionPuestos,
   quitarPuesto,
   reemplazarPuesto,
   renombrarPuesto,
   validarPuesto,
 } from "../../domain/puestos.js";
+import { coloresPuesto } from "../../data/opciones.js";
+import { csvDescargable, filasAObjetos, parsearCSV, TIPO_CSV } from "../../lib/csv.js";
+import { descargarArchivo } from "../../lib/descargas.js";
+import { crearRespaldo } from "../../lib/respaldo.js";
+import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import ModalPuesto, { PALETA } from "./ModalPuesto.jsx";
 import { VIATICOS_OBJETIVO_OPCIONES, validarReglas, REGLAS_DEFAULT } from "../../config/reglas.js";
 import { FERIADOS_CR } from "../../data/feriadosCR.js";
@@ -25,8 +31,13 @@ import Modal from "../../ui/Modal.jsx";
  * Editor administrativo de reglas duras configurables. Cada cambio se
  * confirma explícitamente para evitar apagar alertas por error.
  */
+/* Mismo tope que protege la importación de «Datos» y la de funcionarios: un
+   archivo enorme o corrupto no debe congelar el hilo principal. */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+
 export default function Configuracion() {
   const t = useT();
+  const ctxCompleto = useApp();
   const {
     reglas,
     setReglas,
@@ -38,12 +49,14 @@ export default function Configuracion() {
     personas,
     setPersonas,
   } = useApp();
-  const { conDeshacer, exito, error } = useToast();
+  const { conDeshacer, exito, aviso, error } = useToast();
   const opcionesPuestoOperativo = useMemo(
     () => puestosVigentes.map((p) => p.nombre),
     [puestosVigentes],
   );
   const [modalPuesto, setModalPuesto] = useState(null);
+  const [previaPuestos, setPreviaPuestos] = useState(null);
+  const archivoPuestosRef = useRef(null);
   const [draft, setDraft] = useState(reglas);
   const [confirmar, setConfirmar] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -124,6 +137,84 @@ export default function Configuracion() {
       },
       { detalle: t("toast.puedeDeshacer") },
     );
+  };
+
+  /* ── Exportar e importar puestos (RP6) ────────────────────────────────
+     Mismas tres columnas del formulario y en el mismo orden: el archivo que
+     sale es exactamente el que vuelve a entrar. */
+  const COLUMNAS_PUESTOS = ["nombre", "tag", "color"].map((clave) => ({
+    clave,
+    titulo: t(`puestos.col.${clave}`),
+  }));
+
+  const exportarPuestos = () => {
+    const ok = descargarArchivo(
+      `puestos-${toLocalFileTimestamp()}.csv`,
+      csvDescargable(puestosVigentes, COLUMNAS_PUESTOS),
+      TIPO_CSV,
+    );
+    if (ok) exito(t("puestos.exportado", { n: puestosVigentes.length }));
+    else error(t("puestos.exportarError"));
+  };
+
+  const elegirArchivoPuestos = () => archivoPuestosRef.current?.click();
+
+  const alElegirArchivoPuestos = (evento) => {
+    const archivo = evento.target.files?.[0];
+    // Se limpia siempre: si no, elegir el MISMO archivo dos veces seguidas no
+    // dispara `change` y parecería que el botón no responde.
+    evento.target.value = "";
+    if (!archivo) return;
+    if (archivo.size > MAX_CSV_BYTES) {
+      error(t("puestos.importa.demasiadoGrande", { mb: Math.round(MAX_CSV_BYTES / 1024 / 1024) }));
+      return;
+    }
+    const lector = new FileReader();
+    lector.onerror = () => error(t("puestos.importa.errorLectura"));
+    lector.onload = () => {
+      try {
+        prepararPreviaPuestos(String(lector.result ?? ""), archivo.name);
+      } catch {
+        error(t("puestos.importa.errorLectura"));
+      }
+    };
+    lector.readAsText(archivo, "UTF-8");
+  };
+
+  const prepararPreviaPuestos = (texto, nombreArchivo) => {
+    const lectura = filasAObjetos(parsearCSV(texto), COLUMNAS_PUESTOS);
+    // Sin la columna del nombre no hay forma de saber a qué puesto se refiere
+    // cada fila: el nombre es la identidad en todo el sistema.
+    if (lectura.faltantes.includes(t("puestos.col.nombre"))) {
+      error(t("puestos.importa.sinNombre"));
+      return;
+    }
+    if (lectura.objetos.length === 0) {
+      aviso(t("puestos.importa.sinFilas"));
+      return;
+    }
+    const plan = planificarImportacionPuestos(puestosVigentes, lectura.objetos, coloresPuesto);
+    setPreviaPuestos({ archivo: nombreArchivo, lectura, plan });
+  };
+
+  const aplicarImportacionPuestos = () => {
+    if (!previaPuestos) return;
+    // El respaldo se descarga ANTES de tocar nada y, si falla, no se importa.
+    const backup = crearRespaldo(
+      { ...ctxCompleto, puestos: puestosVigentes },
+      "antes-de-importar-puestos",
+    );
+    if (!descargarArchivo(backup.name, backup.text)) {
+      error(t("puestos.importa.respaldoFallo"));
+      return;
+    }
+    const { plan } = previaPuestos;
+    setPuestos(plan.resultado);
+    setPreviaPuestos(null);
+    exito(t("puestos.importa.hecho", {
+      altas: plan.nuevos.length,
+      cambios: plan.actualizados.length,
+    }));
   };
 
   // RP7: el orden se guarda con la lista, no se recalcula.
@@ -243,19 +334,48 @@ export default function Configuracion() {
               );
             })}
           </ul>
-          <button
-            type="button"
-            onClick={() =>
-              setModalPuesto({
-                valor: { nombre: "", tag: "", color: PALETA[0].clases },
-                nombreOriginal: null,
-              })
-            }
-            className="mt-3 inline-flex min-h-touch items-center gap-1 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg"
-          >
-            <Icon name="plus" size={16} />
-            {t("puestos.agregar")}
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setModalPuesto({
+                  valor: { nombre: "", tag: "", color: PALETA[0].clases },
+                  nombreOriginal: null,
+                })
+              }
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg"
+            >
+              <Icon name="plus" size={16} />
+              {t("puestos.agregar")}
+            </button>
+            <button
+              type="button"
+              onClick={exportarPuestos}
+              aria-label={t("puestos.exportarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="file" size={16} />
+              {t("puestos.exportar")}
+            </button>
+            <input
+              ref={archivoPuestosRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={alElegirArchivoPuestos}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <button
+              type="button"
+              onClick={elegirArchivoPuestos}
+              aria-label={t("puestos.importarAria")}
+              className="inline-flex min-h-touch items-center gap-1 rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink hover:bg-surface-alt"
+            >
+              <Icon name="refresh" size={16} />
+              {t("puestos.importar")}
+            </button>
+          </div>
         </details>
 
         {/* Cobertura */}
@@ -533,6 +653,99 @@ export default function Configuracion() {
           </p>
         )}
       </Modal>
+      {previaPuestos && (
+        <Modal
+          open
+          onClose={() => setPreviaPuestos(null)}
+          title={t("puestos.importa.titulo")}
+          description={previaPuestos.archivo}
+          size="md"
+          actions={
+            <div className="ml-auto flex flex-wrap gap-2">
+              <button type="button" onClick={() => setPreviaPuestos(null)} className="min-h-touch rounded-xl border border-line bg-surface px-4 text-sm font-semibold">
+                {t("acciones.cancelar")}
+              </button>
+              <button type="button" onClick={aplicarImportacionPuestos} className="min-h-touch rounded-xl bg-brand px-4 text-sm font-semibold text-brand-fg">
+                {t("puestos.importa.confirmar")}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-sm">
+            <p className="text-ink-muted">{t("puestos.importa.sub")}</p>
+            <dl className="grid grid-cols-3 gap-2 rounded-xl bg-surface-alt p-3 text-center">
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("puestos.importa.altas")}</dt>
+                <dd className="text-2xl font-bold text-ok">{previaPuestos.plan.nuevos.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("puestos.importa.cambios")}</dt>
+                <dd className="text-2xl font-bold text-info">{previaPuestos.plan.actualizados.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-ink-muted">{t("puestos.importa.intactos")}</dt>
+                <dd className="text-2xl font-bold text-ink">
+                  {puestosVigentes.length - previaPuestos.plan.actualizados.length}
+                </dd>
+              </div>
+            </dl>
+            <ul className="space-y-1 text-xs text-ink-muted">
+              {(() => {
+                const sinNombre = previaPuestos.plan.omitidos.filter((o) => o.motivo === "sinNombre");
+                const porCodigo = previaPuestos.plan.omitidos.filter((o) => o.motivo === "codigoOcupado");
+                const sinCodigo = previaPuestos.plan.omitidos.filter((o) => o.motivo === "sinCodigo");
+                const renombres = previaPuestos.plan.renombresIgnorados || [];
+                return (
+                  <>
+                    {sinNombre.length > 0 && (
+                      <li>{t("puestos.importa.omitidasSinNombre", { n: sinNombre.length })}</li>
+                    )}
+                    {sinCodigo.length > 0 && (
+                      <li>
+                        {t("puestos.importa.omitidasSinCodigo", {
+                          cols: sinCodigo.map((o) => o.nombre).join(", "),
+                        })}
+                      </li>
+                    )}
+                    {renombres.length > 0 && (
+                      <li>
+                        {t("puestos.importa.renombresIgnorados", {
+                          cols: renombres.map((r) => `${r.pedido} → ${r.actual}`).join(", "),
+                        })}
+                      </li>
+                    )}
+                    {porCodigo.length > 0 && (
+                      <li>
+                        {t("puestos.importa.omitidasCodigo", {
+                          cols: porCodigo.map((o) => `${o.nombre} (${o.tag})`).join(", "),
+                        })}
+                      </li>
+                    )}
+                  </>
+                );
+              })()}
+              {previaPuestos.lectura.filasVacias > 0 && (
+                <li>{t("puestos.importa.vacias", { n: previaPuestos.lectura.filasVacias })}</li>
+              )}
+              {previaPuestos.plan.duplicados.length > 0 && (
+                <li>{t("puestos.importa.duplicadas", { n: previaPuestos.plan.duplicados.length })}</li>
+              )}
+              {previaPuestos.lectura.faltantes.length > 0 && (
+                <li>{t("puestos.importa.faltantes", { cols: previaPuestos.lectura.faltantes.join(", ") })}</li>
+              )}
+              {previaPuestos.lectura.desconocidas.length > 0 && (
+                <li>{t("puestos.importa.desconocidas", { cols: previaPuestos.lectura.desconocidas.join(", ") })}</li>
+              )}
+            </ul>
+            <p className="rounded-xl border border-line bg-surface-alt p-3 text-xs text-ink">
+              {t("puestos.importa.noElimina")}
+            </p>
+            <p className="rounded-xl border border-line bg-surface-alt p-3 text-xs text-ink">
+              {t("puestos.importa.respaldo")}
+            </p>
+          </div>
+        </Modal>
+      )}
       {modalPuesto && (
         <ModalPuesto
           valor={modalPuesto.valor}

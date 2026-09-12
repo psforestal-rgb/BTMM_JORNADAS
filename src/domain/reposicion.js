@@ -140,6 +140,22 @@ export function resumenReposiciones(items = [], hj = HORAS_JORNADA_DEFAULT) {
   return { total: items.length, pendientes, parciales, repuestos, saldoHoras: r2(saldo) };
 }
 
+/**
+ * Formato breve de un saldo en horas, en días cuando calza con la jornada.
+ *
+ * Vive aquí y no en quien lo pinta porque lo usan a la vez las alertas y la
+ * ficha individual: dos copias acabarían diciendo cosas distintas del mismo
+ * saldo.
+ */
+export function textoSaldoCorto(horas, hj = HORAS_JORNADA_DEFAULT) {
+  const h = r2(horas);
+  if (h <= 0) return "0 h";
+  const dias = h / hj;
+  if (Number.isInteger(dias)) return dias === 1 ? "1 día" : `${dias} días`;
+  if (h === hj / 2) return "medio día";
+  return `${h} h`;
+}
+
 /** Ordena por fecha trabajada descendente (lo más reciente primero). */
 export function ordenarPorFecha(items = []) {
   return [...items].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
