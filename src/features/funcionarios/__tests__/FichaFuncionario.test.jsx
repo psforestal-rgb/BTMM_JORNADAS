@@ -105,7 +105,9 @@ describe("Ficha de funcionario — datos básicos (VF2)", () => {
   it("enseña nombre, puesto operativo y los datos de la ficha", () => {
     montar();
     expect(screen.getByRole("heading", { name: "Ana Pérez" })).toBeDefined();
-    expect(screen.getByText("Puesto Quetzales")).toBeDefined();
+    // El puesto sale en la cabecera y otra vez en el historial de puestos, así
+    // que `getByText` a secas ya no basta.
+    expect(screen.getAllByText("Puesto Quetzales").length).toBeGreaterThan(0);
     expect(screen.getByText("1-0000-0001")).toBeDefined();
     expect(screen.getByText("ana@sinac.go.cr")).toBeDefined();
     expect(screen.getByText("Guardaparques")).toBeDefined();
