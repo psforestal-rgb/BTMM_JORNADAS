@@ -104,7 +104,7 @@ main
 ```
 
 Cada sub-rama parte de la anterior **ya mergeada**, no en paralelo, para
-evitare conflictos. Si se requiere paralelizar (Fase 3 y Fase 4 son
+evitar conflictos. Si se requiere paralelizar (Fase 3 y Fase 4 son
 independientes), trabajar en worktrees separados y planificar el merge.
 
 ---
@@ -364,7 +364,7 @@ Antes de iniciar la implementación de cualquier fase:
 8. Repetir.
 
 **Si una fase falla en QA**: revert del PR de la fase, análisis
-o causa, replanteo. No avanzar a la siguiente fase hasta
+de causa, replanteo. No avanzar a la siguiente fase hasta
 estabilizar la anterior.
 
 ---
@@ -416,4 +416,4 @@ Si apruebas este plan:
 5. Quedamos en pausa hasta tu aprobación para avanzar a la Fase 2.
 
 **Hasta que apruebes, no se realiza ninguna modificación al
- código.**
+código.**
