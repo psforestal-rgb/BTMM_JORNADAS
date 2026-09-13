@@ -645,8 +645,8 @@ export default function RolesMensualGrid({
    * trasladaron. Cada celda se lee y se escribe con su propio puesto; si no,
    * al trasladar a alguien su rol pasado saldría en blanco.
    */
-  const puestoDe = (grupo, persona, y, m) =>
-    puestoDelRol(fichaPorNombre.get(persona), y, m) || grupo.nombre;
+  const puestoDe = (grupo, persona, y, m, dia = null) =>
+    puestoDelRol(fichaPorNombre.get(persona), y, m, dia) || grupo.nombre;
 
   const getCfg = (grupo, persona, y, m) =>
     roleData[rolCfgKey(y, m, puestoDe(grupo, persona, y, m), persona)] ||
@@ -663,7 +663,7 @@ export default function RolesMensualGrid({
     }));
 
   const getCelda = (grupo, persona, y, m, dia) =>
-    roleData[rolKey(y, m, puestoDe(grupo, persona, y, m), persona, dia)] ??
+    roleData[rolKey(y, m, puestoDe(grupo, persona, y, m, dia), persona, dia)] ??
     generarValorPatron(getCfg(grupo, persona, y, m), dia, inicioDeMes(y, m), y, m);
 
   // Código de rol vigente en una fecha concreta (override explícito si lo
@@ -671,7 +671,7 @@ export default function RolesMensualGrid({
   // llenado por rango para leer el día anterior (ancla de "continuar") en
   // cualquier mes, incluso fuera del rango cargado.
   const valorEnFecha = (grupo, persona, y, m, d) =>
-    roleData[rolKey(y, m, puestoDe(grupo, persona, y, m), persona, d)] ??
+    roleData[rolKey(y, m, puestoDe(grupo, persona, y, m, d), persona, d)] ??
     generarValorPatron(getCfg(grupo, persona, y, m), d, inicioDeMes(y, m), y, m);
 
   // Cuenta cuántos días del rango [desdeISO, hastaISO] ya tienen un rol
@@ -686,7 +686,8 @@ export default function RolesMensualGrid({
     while (cursor <= fin) {
       const cy = cursor.getFullYear();
       const cm = cursor.getMonth();
-      const v = roleData[rolKey(cy, cm, puestoDe(grupo, persona, cy, cm), persona, cursor.getDate())];
+      const cd = cursor.getDate();
+      const v = roleData[rolKey(cy, cm, puestoDe(grupo, persona, cy, cm, cd), persona, cd)];
       if (v != null && v !== "") n += 1;
       cursor.setDate(cursor.getDate() + 1);
     }
@@ -706,7 +707,7 @@ export default function RolesMensualGrid({
     const cambios = {};
     const mesesTocados = new Set();
     for (const { year: y, month: m, day: d, valor } of filas) {
-      cambios[rolKey(y, m, puestoDe(grupo, persona, y, m), persona, d)] = valor;
+      cambios[rolKey(y, m, puestoDe(grupo, persona, y, m, d), persona, d)] = valor;
       mesesTocados.add(`${y}-${m}`);
     }
     for (const clave of mesesTocados) {
@@ -753,7 +754,7 @@ export default function RolesMensualGrid({
     let consecutivo = 0;
     for (let d = 1; d <= diasDelMes; d += 1) {
       const cat = categorias[d] || "";
-      const key = rolKey(y, m, puestoDe(grupo, persona, y, m), persona, d);
+      const key = rolKey(y, m, puestoDe(grupo, persona, y, m, d), persona, d);
       if (!cat) {
         categoriaAnterior = null;
         consecutivo = 0;

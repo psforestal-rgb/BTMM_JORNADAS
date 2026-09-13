@@ -28,8 +28,10 @@ describe("seedRoles — Rol Bloque (revisión 11/09/2026)", () => {
     expect(ROLES_FUENTE_DESDE).toBe("2025-12-01");
     expect(ROLES_FUENTE_HASTA).toBe("2026-12-31");
     expect(baseRoleData["2025-12-Puesto Orosi-Errol Salazar-1"]).toBe("O-F");
-    expect(baseRoleData["2025-12-Puesto Esperanza-Carlos Cordero-1"]).toBe("O-F");
-    // 13 meses × 18 personas × días del mes.
+    // Carlos Cordero estuvo en Villa Mills hasta marzo: su rol de diciembre se
+    // archiva ahí, no en La Esperanza, que es donde está desde abril.
+    expect(baseRoleData["2025-12-Puesto Villa Mills-Carlos Cordero-1"]).toBe("O-F");
+    expect(baseRoleData["2026-4-Puesto Esperanza-Carlos Cordero-1"]).toBeTruthy();
     const meses = new Set(
       Object.keys(baseRoleData).map((k) => k.match(/^(\d{4})-(\d+)-/).slice(1, 3).join("-")),
     );

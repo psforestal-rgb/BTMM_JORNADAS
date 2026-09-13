@@ -1,4 +1,5 @@
 import { puestos } from "./puestos.js";
+import { historialSemillaDe } from "./historialPuestos2026.js";
 
 export const baseFuncionarios = puestos.flatMap((p, gi) =>
   p.funcionarios.map((nombre, pi) => {
@@ -12,7 +13,16 @@ export const baseFuncionarios = puestos.flatMap((p, gi) =>
         ? "De vacaciones"
         : nombre === "Guillermo Pérez"
         ? "Incapacitado"
+        : // Salió del bloque hacia otra Área de Conservación; su historial de
+          // puestos se cierra el 31/08/2026 (ver historialPuestos2026.js).
+          nombre === "Kenneth Mena"
+        ? "Inactivo"
         : "Activo";
+    // El rol institucional dice por qué puestos pasó cada quien y cuándo. Si
+    // alguien no está en él, arranca con un tramo abierto en su puesto actual.
+    const historialPuestos = historialSemillaDe(nombre) || [
+      { puesto: p.nombre, desde: "", hasta: null },
+    ];
     return {
       id: `f${n}`,
       nombre,
@@ -50,8 +60,9 @@ export const baseFuncionarios = puestos.flatMap((p, gi) =>
       ong: esOng,
       jefe: "Administración PNLQ",
       estado,
-      ingreso: "2026-01-01",
-      puestoOperativo: p.nombre,
+      ingreso: historialPuestos[0].desde || "2026-01-01",
+      puestoOperativo: historialPuestos[historialPuestos.length - 1].puesto,
+      historialPuestos,
       obs: `${p.nombre}${sinRes ? " · Dato pendiente: resolución acumulativa" : ""}`,
     };
   })

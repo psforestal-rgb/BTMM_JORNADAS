@@ -1,5 +1,5 @@
-import { dim, primerDiaLaboral } from "./fechas.js";
-import { puestoEnMes } from "./historialPuestos.js";
+import { dim, isoFecha, primerDiaLaboral } from "./fechas.js";
+import { puestoEnFecha, puestoEnMes } from "./historialPuestos.js";
 
 /**
  * Dominio de roles mensuales (códigos T/L/V/I/O por funcionario y día).
@@ -178,12 +178,20 @@ export function funcionarioPorNombre(personas, nombre) {
  * con ESTE valor y no con `f.puestoOperativo`, o al trasladar a alguien su rol
  * pasado se leería bajo el puesto equivocado y saldría en blanco.
  *
- * `month` es 0-indexado, igual que en `rolKey`. Si el historial no cubre ese
- * mes se cae al puesto de la ficha, que es como se comportaba antes.
+ * `month` es 0-indexado, igual que en `rolKey`. Con `dia` resuelve por DÍA, que
+ * es lo que hace falta para las claves de celda: un traslado puede caer a mitad
+ * de mes y entonces la primera quincena pertenece a un puesto y la segunda a
+ * otro. Sin `dia` resuelve por mes, que es lo que corresponde a las claves de
+ * modalidad (`rolCfgKey`), que son mensuales. Si el historial no cubre esa
+ * fecha se cae al puesto de la ficha, como se comportaba antes.
  */
-export function puestoDelRol(funcionario, year, month) {
+export function puestoDelRol(funcionario, year, month, dia = null) {
   if (!funcionario) return "";
-  return puestoEnMes(funcionario, year, month + 1) || funcionario.puestoOperativo || "Puesto Quetzales";
+  const porHistorial =
+    dia === null
+      ? puestoEnMes(funcionario, year, month + 1)
+      : puestoEnFecha(funcionario, isoFecha(year, month, dia));
+  return porHistorial || funcionario.puestoOperativo || "Puesto Quetzales";
 }
 
 export function modalidadFuncionario(personas, roleData, year, month, nombre) {
@@ -195,7 +203,7 @@ export function modalidadFuncionario(personas, roleData, year, month, nombre) {
 export function codigoRolFuncionario(personas, roleData, year, month, nombre, dia, feriados = null) {
   const f = funcionarioPorNombre(personas, nombre);
   if (!f) return "";
-  const puesto = puestoDelRol(f, year, month);
+  const puesto = puestoDelRol(f, year, month, dia);
   const inicio = primerDiaLaboral(year, month, feriados);
   return (
     roleData[rolKey(year, month, puesto, nombre, dia)] ??
