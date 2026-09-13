@@ -48,6 +48,11 @@ export default function Configuracion() {
     setPuestos,
     personas,
     setPersonas,
+    // El rol lleva el nombre del puesto DENTRO de cada clave, así que un
+    // renombre tiene que reescribirlas o el rol ya trabajado se queda
+    // archivado bajo un nombre que ya no existe.
+    roleData,
+    setRoleData,
   } = useApp();
   const { conDeshacer, exito, aviso, error } = useToast();
   const opcionesPuestoOperativo = useMemo(
@@ -74,9 +79,11 @@ export default function Configuracion() {
   );
 
   /* ── CRUD de puestos (RP1–RP8) ────────────────────────────────────────
-     El renombrado NO es una edición más: arrastra el nombre a las fichas y a
-     la regla de cobertura. Si no lo hiciera, las fichas quedarían apuntando a
-     un puesto inexistente y la cobertura crítica dejaría de evaluarse. */
+     El renombrado NO es una edición más: arrastra el nombre a las fichas
+     (puesto actual e historial de traslados), a la regla de cobertura y a las
+     claves del rol. Si no lo hiciera, las fichas quedarían apuntando a un
+     puesto inexistente, sus funcionarios desaparecerían de la cuadrícula y la
+     cobertura crítica dejaría de evaluarse. */
   const guardarPuesto = (valor) => {
     const original = modalPuesto?.nombreOriginal ?? null;
     if (validarPuesto(valor, puestosVigentes, original).length > 0) return;
@@ -92,18 +99,36 @@ export default function Configuracion() {
     setPuestos((prev) => reemplazarPuesto(prev, original, valor));
     if (cambiaNombre) {
       const cascada = renombrarPuesto({
+        // `puestosVigentes` es todavía la lista de ANTES: `setPuestos` no se ha
+        // aplicado en este render. Es justo la que hace falta para partir bien
+        // una clave de rol cuyo nombre de puesto lleve guiones.
         puestos: puestosVigentes,
         personas,
         reglas: draft,
+        roleData,
         antes: original,
         despues: valor.nombre,
       });
       setPersonas(cascada.personas);
+      setRoleData(cascada.roleData);
       // La regla se toca en el borrador Y en el aplicado: el usuario no debería
       // tener que "confirmar reglas" para que un renombre no rompa la cobertura.
       setDraft(cascada.reglas);
       setReglas({ ...reglas, puestosRequierenVisitantesDiario: cascada.reglas.puestosRequierenVisitantesDiario });
-      exito(t("puestos.renombrado", { antes: original, despues: valor.nombre.trim(), n: cascada.afectados }));
+      exito(
+        t("puestos.renombrado", {
+          antes: original,
+          despues: valor.nombre.trim(),
+          n: cascada.afectados,
+          celdas: cascada.celdas,
+        }),
+      );
+      // Una colisión significa que el nombre nuevo YA tenía rol guardado y ese
+      // rol gana. No debería pasar, pero callarlo sería perder días de trabajo
+      // sin decirlo.
+      if (cascada.colisiones > 0) {
+        aviso(t("puestos.renombradoColision", { n: cascada.colisiones }));
+      }
     } else {
       exito(t("puestos.guardado", { nombre: valor.nombre.trim() }));
     }

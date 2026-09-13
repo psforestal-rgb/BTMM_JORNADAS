@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, cleanup, within, waitFor } from "@testing-library/react";
 import { AppProvider, useApp } from "../../../context/AppContext.jsx";
 import { ToastProvider } from "../../../context/ToastContext.jsx";
 import ToastViewport from "../../../ui/Toast.jsx";
@@ -324,6 +324,55 @@ describe("Funcionarios — importación CSV con vista previa y respaldo (RF4+RF8
     expect(JSON.parse(descargas[0].texto).state.personas).toHaveLength(3);
     expect(screen.getByText("4/4")).toBeDefined();
     expect(screen.getByText("Dora Nueva")).toBeDefined();
+  });
+
+  it("una fila que corrige el nombre arrastra el rol, las actividades y las reposiciones", async () => {
+    /* El import empareja por CÉDULA, así que corregir una tilde en la columna
+       del nombre renombra a esa persona sin llamarlo renombre. Sin arrastre, el
+       rol, las actividades y el banco de tiempo de quien aparezca en el archivo
+       se vacían y nadie se entera. */
+    let ctx = null;
+    function Espia() {
+      ctx = useApp();
+      return null;
+    }
+    renderConProvider({}, <Espia />);
+    await waitFor(() => expect(ctx).not.toBeNull());
+
+    const clave = "2026-9-Puesto Orosi-Ana Pérez-15";
+    await act(async () => {
+      ctx.setRoleData({ [clave]: "T3" });
+      ctx.setActividadesPlan([{ id: "a1", inicio: "2026-09-15", funcionarios: ["Ana Pérez"] }]);
+      ctx.setReposiciones([{ id: "r1", funcionario: "Ana Pérez", horas: 8 }]);
+    });
+
+    await elegir(`${CABECERA}\r\nAna Perez Mora,1-0000-0001,`);
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+
+    await waitFor(() => {
+      expect(ctx.roleData["2026-9-Puesto Orosi-Ana Perez Mora-15"]).toBe("T3");
+    });
+    expect(ctx.roleData[clave]).toBeUndefined();
+    expect(ctx.actividadesPlan[0].funcionarios).toEqual(["Ana Perez Mora"]);
+    expect(ctx.reposiciones[0].funcionario).toBe("Ana Perez Mora");
+  });
+
+  it("un import que no cambia ningún nombre no toca el rol", async () => {
+    let ctx = null;
+    function Espia() {
+      ctx = useApp();
+      return null;
+    }
+    renderConProvider({}, <Espia />);
+    await waitFor(() => expect(ctx).not.toBeNull());
+
+    const semilla = { "2026-9-Puesto Orosi-Ana Pérez-15": "T3" };
+    await act(async () => ctx.setRoleData(semilla));
+
+    await elegir(`${CABECERA}\r\nAna Pérez,1-0000-0001,nota nueva`);
+    fireEvent.click(screen.getByRole("button", { name: /Crear respaldo e importar/ }));
+
+    expect(ctx.roleData).toEqual(semilla);
   });
 
   it("fusiona: quien no viene en el archivo sigue estando", async () => {

@@ -379,3 +379,146 @@ export function renumerarFila({ days, categorias, modalidad }) {
   });
   return resultado;
 }
+
+/**
+ * Separa «puesto» de «funcionario» dentro del medio de una clave de `roleData`.
+ *
+ * La clave los pega con un guion y NINGUNO de los dos tiene prohibido llevar
+ * guiones, así que partir por el primero es una apuesta. Cuando se conoce la
+ * lista de puestos se usa el que encaje como prefijo —eso es exacto— y el
+ * primer guion queda solo como último recurso.
+ *
+ * Se prueba primero el nombre MÁS LARGO. Con «Puesto Orosi» y «Puesto
+ * Orosi-Norte» en la misma lista, el orden de la lista decidiría quién gana y
+ * la mitad de las claves del segundo se leerían como del primero.
+ */
+function separarPuestoYFuncionario(medio, puestosConocidos) {
+  const candidatos = (Array.isArray(puestosConocidos) ? puestosConocidos : [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => String(b).length - String(a).length);
+  for (const puesto of candidatos) {
+    if (medio.startsWith(`${puesto}-`)) {
+      return { puesto, funcionario: medio.slice(puesto.length + 1) };
+    }
+  }
+  const corte = medio.indexOf("-");
+  if (corte <= 0) return null;
+  return { puesto: medio.slice(0, corte), funcionario: medio.slice(corte + 1) };
+}
+
+/**
+ * Descompone una clave de día de `roleData`.
+ *
+ * El formato es `"{anio}-{mes}-{puesto}-{funcionario}-{dia}"`: se ancla por los
+ * extremos (dos números al principio, uno al final) y el medio se separa con
+ * `separarPuestoYFuncionario`. Devuelve `null` si la clave no tiene esa forma.
+ *
+ * Vive aquí, junto a `rolKey`, y no en el módulo de exportación: el formato de
+ * la clave es uno solo y quien lo arma tiene que ser también quien lo lee.
+ */
+export function partirClaveRol(clave, puestosConocidos) {
+  const m = String(clave).match(/^(\d{4})-(\d{1,2})-(.+)-(\d{1,2})$/);
+  if (!m) return null;
+  const partes = separarPuestoYFuncionario(m[3], puestosConocidos);
+  if (!partes) return null;
+  return { anio: Number(m[1]), mes: Number(m[2]), ...partes, dia: Number(m[4]) };
+}
+
+/** Descompone una clave `CFG-{anio}-{mes}-{puesto}-{funcionario}`. */
+export function partirClaveModalidad(clave, puestosConocidos) {
+  const m = String(clave).match(/^CFG-(\d{4})-(\d{1,2})-(.+)$/);
+  if (!m) return null;
+  const partes = separarPuestoYFuncionario(m[3], puestosConocidos);
+  if (!partes) return null;
+  return { anio: Number(m[1]), mes: Number(m[2]), ...partes };
+}
+
+/**
+ * Reescribe las claves de `roleData` al renombrar un puesto o una persona.
+ *
+ * Las claves llevan DENTRO el nombre del puesto y el de la persona
+ * (`2026-9-Puesto Orosi-Errol Salazar-15`). Renombrar cualquiera de los dos sin
+ * arrastrar las claves deja el rol archivado bajo el nombre viejo: la
+ * cuadrícula lo busca por el nuevo, no lo encuentra, y las celdas salen en
+ * blanco. No hay error ni aviso — el rol simplemente se vacía, que es la peor
+ * forma de perder datos.
+ *
+ * `tipo` es `"puesto"` o `"persona"`. Se reescriben las dos familias de claves:
+ * el día (`rolKey`) y la modalidad del mes (`rolCfgKey`).
+ *
+ * `puestosConocidos` es la lista de puestos ANTES del renombre —tiene que
+ * contener a `antes` cuando se renombra un puesto—. Sin ella, un nombre de
+ * puesto con guiones se parte por el sitio equivocado.
+ *
+ * La comparación con `antes` es distinta según el tipo, y no por capricho:
+ *
+ *  - **Puesto: sin distinguir mayúsculas.** `validarPuesto` ya impide que
+ *    existan dos puestos que solo se diferencien en eso, así que la
+ *    coincidencia no puede ser ambigua; y cambiar «Puesto Orosi» por «PUESTO
+ *    OROSI» es un renombre real que también tiene que arrastrar el rol.
+ *  - **Persona: exacta.** Los nombres de funcionario NO son únicos ni se
+ *    validan como tales. Aflojar aquí movería el rol de otra persona que se
+ *    llame casi igual, y eso sí sería pérdida de datos.
+ *
+ * Devuelve `{ roleData, movidas, colisiones }`. Una colisión es una clave de
+ * destino que YA tenía valor: en ese caso gana el destino y la de origen se
+ * descarta, porque el destino es el nombre que la persona usuaria acaba de
+ * elegir. No debería ocurrir —el nombre nuevo no tiene rol todavía— pero si
+ * ocurre hay que poder contarlo en vez de perderlo en silencio.
+ */
+export function reescribirClavesRol(
+  roleData,
+  { tipo, antes, despues, puestosConocidos = [] } = {},
+) {
+  const origen = roleData && typeof roleData === "object" ? roleData : {};
+  const viejo = String(antes ?? "").trim();
+  const nuevo = String(despues ?? "").trim();
+  if (!viejo || !nuevo || viejo === nuevo || (tipo !== "puesto" && tipo !== "persona")) {
+    return { roleData: origen, movidas: 0, colisiones: 0 };
+  }
+
+  const conocidos = [...new Set([...(puestosConocidos || []), viejo].filter(Boolean))];
+  const coincide =
+    tipo === "puesto"
+      ? (valor) => String(valor).toLowerCase() === viejo.toLowerCase()
+      : (valor) => String(valor) === viejo;
+
+  const salida = {};
+  const renombradas = new Map();
+  for (const [clave, valor] of Object.entries(origen)) {
+    const esCfg = clave.startsWith("CFG-");
+    const partes = esCfg
+      ? partirClaveModalidad(clave, conocidos)
+      : partirClaveRol(clave, conocidos);
+    const objetivo = partes && (tipo === "puesto" ? partes.puesto : partes.funcionario);
+    if (!partes || !coincide(objetivo)) {
+      salida[clave] = valor;
+      continue;
+    }
+    const puesto = tipo === "puesto" ? nuevo : partes.puesto;
+    const persona = tipo === "persona" ? nuevo : partes.funcionario;
+    // `rolKey`/`rolCfgKey` esperan el mes 0-indexado y la clave lo guarda
+    // 1-indexado; se resta aquí para que la clave se arme con la MISMA función
+    // que la escribió y no con una plantilla copiada.
+    const destino = esCfg
+      ? rolCfgKey(partes.anio, partes.mes - 1, puesto, persona)
+      : rolKey(partes.anio, partes.mes - 1, puesto, persona, partes.dia);
+    if (destino === clave) {
+      salida[clave] = valor;
+      continue;
+    }
+    renombradas.set(destino, valor);
+  }
+
+  let colisiones = 0;
+  for (const [destino, valor] of renombradas) {
+    if (salida[destino] !== undefined && salida[destino] !== "") {
+      colisiones += 1;
+      continue;
+    }
+    salida[destino] = valor;
+  }
+
+  return { roleData: salida, movidas: renombradas.size, colisiones };
+}

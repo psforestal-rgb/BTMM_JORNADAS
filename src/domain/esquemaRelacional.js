@@ -26,7 +26,7 @@
  * archivo. Quien quiera CSV, JSON o SQL parte de aquí.
  */
 
-import { categoriaDe } from "./roles.js";
+import { categoriaDe, partirClaveModalidad, partirClaveRol } from "./roles.js";
 import { normalizarHistorial } from "./historialPuestos.js";
 
 /** Tipos admitidos en `columnas`. `booleano` se serializa como 0/1. */
@@ -270,48 +270,15 @@ export function codigoOriginalDeRol(valor) {
   return v;
 }
 
-/**
- * Separa «puesto» de «funcionario» dentro de una clave de `roleData`.
- *
- * La clave los pega con un guion y NINGUNO de los dos tiene prohibido llevar
- * guiones, así que partir por el primero es una apuesta. Cuando se conoce la
- * lista de puestos se usa el que encaje como prefijo —eso es exacto— y el
- * primer guion queda solo como último recurso.
+/*
+ * `partirClaveRol` y `partirClaveModalidad` viven en `roles.js`, junto a
+ * `rolKey`/`rolCfgKey`: el formato de la clave es uno solo y quien lo arma
+ * tiene que ser también quien lo lee. Se reexportan porque esta es la puerta
+ * por la que entraron —los llamadores y sus tests las piden aquí— y porque el
+ * volcado relacional es justamente el sitio donde una clave mal partida se
+ * convierte en una fila mal atribuida.
  */
-function separarPuestoYFuncionario(medio, puestosConocidos) {
-  for (const puesto of puestosConocidos || []) {
-    if (puesto && medio.startsWith(`${puesto}-`)) {
-      return { puesto, funcionario: medio.slice(puesto.length + 1) };
-    }
-  }
-  const corte = medio.indexOf("-");
-  if (corte <= 0) return null;
-  return { puesto: medio.slice(0, corte), funcionario: medio.slice(corte + 1) };
-}
-
-/**
- * Descompone una clave de `roleData`.
- *
- * El formato es `"{anio}-{mes}-{puesto}-{funcionario}-{dia}"`: se ancla por los
- * extremos (dos números al principio, uno al final) y el medio se separa con
- * `separarPuestoYFuncionario`. Devuelve `null` si la clave no tiene esa forma.
- */
-export function partirClaveRol(clave, puestosConocidos) {
-  const m = String(clave).match(/^(\d{4})-(\d{1,2})-(.+)-(\d{1,2})$/);
-  if (!m) return null;
-  const partes = separarPuestoYFuncionario(m[3], puestosConocidos);
-  if (!partes) return null;
-  return { anio: Number(m[1]), mes: Number(m[2]), ...partes, dia: Number(m[4]) };
-}
-
-/** Descompone una clave `CFG-{anio}-{mes}-{puesto}-{funcionario}`. */
-export function partirClaveModalidad(clave, puestosConocidos) {
-  const m = String(clave).match(/^CFG-(\d{4})-(\d{1,2})-(.+)$/);
-  if (!m) return null;
-  const partes = separarPuestoYFuncionario(m[3], puestosConocidos);
-  if (!partes) return null;
-  return { anio: Number(m[1]), mes: Number(m[2]), ...partes };
-}
+export { partirClaveModalidad, partirClaveRol };
 
 const dosDigitos = (n) => String(n).padStart(2, "0");
 
@@ -328,11 +295,17 @@ function filasDePuestos(puestos) {
 /**
  * Puestos a los que apuntan los datos pero que ya no están en la lista activa.
  *
- * Renombrar un puesto desde «Configuración» arrastra `funcionario.puestoOperativo`
- * y las reglas (`renombrarPuesto`), pero NO reescribe las claves de `roleData`:
- * el rol de los meses anteriores sigue archivado bajo el nombre viejo. Ese rol es
- * un hecho y se exporta, así que el puesto viejo tiene que existir en la tabla
- * padre o el volcado SQL revienta en la primera fila histórica con un
+ * `renombrarPuesto` ya reescribe también las claves de `roleData`, así que un
+ * renombre hecho desde «Configuración» no deja referencias colgando. Quedan
+ * otras dos fuentes, las dos legítimas:
+ *
+ *  - Un puesto **retirado** —Villa Mills se entregó a otra Área de
+ *    Conservación— sigue teniendo rol trabajado bajo su nombre.
+ *  - Un estado guardado **antes** de que el renombre arrastrara las claves, o
+ *    llegado en un respaldo antiguo.
+ *
+ * Ese rol es un hecho y se exporta, así que el puesto tiene que existir en la
+ * tabla padre o el volcado SQL revienta en la primera fila histórica con un
  * «FOREIGN KEY constraint failed».
  *
  * Se añaden con `vigente` en 0 y sin orden: están para que la referencia se

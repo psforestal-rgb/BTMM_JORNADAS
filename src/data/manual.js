@@ -237,6 +237,18 @@ export const MANUAL = Object.freeze({
             "Un puesto que ya no opera se conserva marcado como histórico: no se puede asignar a nadie, pero el rol de cuando sí operaba se sigue viendo.",
           ],
         },
+        {
+          tipo: "aviso",
+          tono: "cuidado",
+          texto:
+            "Corregir el NOMBRE de una ficha arrastra su rol, sus actividades y sus reposiciones al nombre nuevo, y el aviso dice cuántos registros se movieron. Lo mismo vale cuando el nombre viene corregido dentro de un CSV que se importa. El rastro de cambios NO se reescribe: cada entrada conserva el nombre que la ficha tenía ese día, y la entrada del propio cambio es la que enlaza los dos nombres.",
+        },
+        {
+          tipo: "aviso",
+          tono: "nota",
+          texto:
+            "El rol se archiva POR NOMBRE, así que dos fichas que se llamen igual comparten las mismas celdas. Por eso la aplicación se niega a RENOMBRAR una ficha al nombre de otra: sería volcar el rol de una encima del de la otra, y siempre se puede evitar con el segundo apellido. Dar de alta a alguien que se llama igual que un compañero sí se puede —pasa de verdad—, pero avisa de que compartirán rol.",
+        },
       ],
     },
     {
@@ -269,7 +281,7 @@ export const MANUAL = Object.freeze({
           tipo: "aviso",
           tono: "cuidado",
           texto:
-            "Renombrar un puesto arrastra las fichas y las reglas que lo mencionan, pero el rol ya archivado se queda con el nombre viejo. No se pierde: la aplicación lo sigue encontrando y la exportación lo conserva.",
+            "Renombrar un puesto arrastra TODO lo que lo menciona: las fichas, su historial de traslados, las reglas y el rol ya archivado. El aviso dice cuántas fichas y cuántas celdas de rol se movieron; si esa cuenta le extraña, revísela antes de seguir.",
         },
       ],
     },

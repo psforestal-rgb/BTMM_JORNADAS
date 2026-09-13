@@ -23,6 +23,7 @@ import { toLocalFileTimestamp } from "../../domain/fechas.js";
 import { reinsertarEn } from "../../lib/undo.js";
 import Modal from "../../ui/Modal.jsx";
 import { planificarImportacion } from "./importarFuncionarios.js";
+import { renombresDelPlan, renombrarVariosFuncionarios } from "../../domain/funcionarios.js";
 import ModalFuncionario from "./ModalFuncionario.jsx";
 import { useGuardarFuncionario } from "./useGuardarFuncionario.js";
 import FuncionarioCard from "./FuncionarioCard.jsx";
@@ -34,7 +35,18 @@ const MAX_CSV_BYTES = 5 * 1024 * 1024;
 export default function Funcionarios({ personas, setPersonas, setView }) {
   const t = useT();
   const ctx = useApp();
-  const { registrarCambio } = ctx;
+  const {
+    registrarCambio,
+    // El import empareja por cédula, así que una fila puede CAMBIAR el nombre
+    // de alguien. El nombre es la referencia del rol, las actividades y las
+    // reposiciones: hay que arrastrarlo o las tres se vacían en silencio.
+    roleData,
+    setRoleData,
+    actividadesPlan,
+    setActividadesPlan,
+    reposiciones,
+    setReposiciones,
+  } = ctx;
   const { conDeshacer, exito, aviso, error } = useToast();
   const archivoRef = useRef(null);
   const [previa, setPrevia] = useState(null);
@@ -255,6 +267,27 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
     }
     const { plan } = previa;
     setPersonas(plan.resultado);
+
+    /* RF4 + arrastre de nombre: las filas cuyo `nombre` cambió son renombres
+       aunque el archivo no los llame así. Se aplican todos juntos para que un
+       intercambio o una cadena de nombres dentro del mismo archivo no se pisen
+       entre sí. */
+    const renombres = renombresDelPlan(plan.actualizados);
+    let cascada = null;
+    if (renombres.length > 0) {
+      cascada = renombrarVariosFuncionarios({
+        // La lista de ANTES: es la que sabe por qué puestos pasó cada quien y
+        // permite partir bien las claves del rol.
+        personas,
+        roleData,
+        actividadesPlan,
+        reposiciones,
+        renombres,
+      });
+      setRoleData(cascada.roleData);
+      setActividadesPlan(cascada.actividadesPlan);
+      setReposiciones(cascada.reposiciones);
+    }
     setPrevia(null);
     // Una entrada resumen y no una por fila: importar 200 fichas llenaría el
     // rastro entero y expulsaría todo lo anterior.
@@ -272,6 +305,21 @@ export default function Funcionarios({ personas, setPersonas, setView }) {
       altas: plan.nuevos.length,
       cambios: plan.actualizados.length,
     }));
+    if (cascada) {
+      aviso(
+        t("funcionarios.importa.renombres", {
+          n: cascada.renombres,
+          celdas: cascada.celdas,
+          actividades: cascada.actividades,
+          reposiciones: cascada.reposicionesTocadas,
+        }),
+      );
+      // Una colisión significa que el nombre nuevo YA tenía rol guardado y ese
+      // rol gana. Callarlo sería perder días de trabajo sin decirlo.
+      if (cascada.colisiones > 0) {
+        error(t("funcionarios.renombradoColision", { n: cascada.colisiones }));
+      }
+    }
   };
 
   const filtros = [

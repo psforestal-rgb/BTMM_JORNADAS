@@ -99,11 +99,21 @@ describe("puestos.renombrarPuesto — cascada", () => {
     expect(r.personas[1].puestoOperativo).toBe("Puesto Quetzales");
   });
 
-  it("renombrar al mismo nombre no cambia nada", () => {
-    const r = renombrarPuesto({ puestos: lista, personas, reglas, antes: "Puesto Orosi", despues: "puesto orosi" });
+  it("renombrar al mismo nombre exacto no cambia nada", () => {
+    const r = renombrarPuesto({ puestos: lista, personas, reglas, antes: "Puesto Orosi", despues: "Puesto Orosi" });
     expect(r.puestos).toBe(lista);
     expect(r.personas).toBe(personas);
     expect(r.afectados).toBe(0);
+  });
+
+  it("cambiar solo las mayúsculas SÍ es un renombre y arrastra las fichas", () => {
+    /* Antes se salía por la guarda comparando en minúsculas, así que la lista
+       de puestos se quedaba con «puesto orosi» y las fichas con «Puesto
+       Orosi»: nadie caía en el grupo y el puesto se vaciaba en la cuadrícula. */
+    const r = renombrarPuesto({ puestos: lista, personas, reglas, antes: "Puesto Orosi", despues: "PUESTO OROSI" });
+    expect(r.puestos[0].nombre).toBe("PUESTO OROSI");
+    expect(r.personas[0].puestoOperativo).toBe("PUESTO OROSI");
+    expect(r.afectados).toBe(1);
   });
 
   it("un nombre vacío no aplica nada", () => {
