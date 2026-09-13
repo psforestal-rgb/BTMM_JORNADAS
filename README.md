@@ -40,8 +40,7 @@ npm run test:watch  # Vitest en watch mode
 
 ## Estructura del proyecto
 
-Tras el refactor de la Fase 2, el código está organizado por
-responsabilidad:
+El código está organizado por responsabilidad:
 
 ```
 src/
@@ -49,64 +48,75 @@ src/
 ├── main.jsx                    # Entry point, log de versión
 ├── PWAWrapper.jsx              # Banners install/offline/update + heartbeat
 ├── index.css                   # Tailwind base
-├── lib/                        # Utilidades transversales
-│   ├── appVersion.js           # APP_VERSION / BUILD_TIME / COMMIT
-│   ├── versionCheck.js         # Heartbeat anti-cache (/version.json)
-│   └── a11y.js                 # useModalA11y, useEscapeClose
+├── config/                     # Reglas de negocio configurables
+│   └── reglas.js
+├── context/                    # Estado global
+│   ├── AppContext.jsx          # useReducer + Context, setters compatibles
+│   ├── ThemeContext.jsx        # light / dark / hc, persistido en localStorage
+│   └── ToastContext.jsx        # Sistema de avisos (toasts / snackbar)
 ├── data/                       # Constantes y datos semilla
 │   ├── calendario.js           # meses, dias, diasLargos
 │   ├── puestos.js              # puestos operativos + opciones
 │   ├── opciones.js             # opciones de cargo/condición/modalidad
+│   ├── feriadosCR.js           # feriados oficiales 2025-2027
 │   ├── seedFuncionarios.js     # baseFuncionarios (mock)
-│   └── seedActividades.js      # baseActividadesPlan (mock)
+│   ├── seedActividades.js      # baseActividadesPlan (mock)
+│   ├── seedRoles.js            # rol institucional 2026 normalizado (xlsm)
+│   ├── seedReposiciones.js     # reposiciones semilla
+│   ├── planificacion2026.js    # planificación institucional 2026
+│   └── manual.js               # fuente del manual (docs/MANUAL.md se genera)
 ├── domain/                     # Funciones puras (testables aisladamente)
-│   ├── fechas.js               # dim, isoFecha, fecha, faltan, primerDiaLaboral
+│   ├── fechas.js, feriados.js
 │   ├── roles.js                # rolKey, parseModalidad, generarValorPatron,
 │   │                           # esRolActivo, renumerarFila, codigoRolFuncionario...
+│   ├── puestos.js, funcionarios.js, fichaFuncionario.js
+│   ├── historial.js, historialPuestos.js
 │   ├── actividades.js          # actividadesEnDia, esAtencionRutinaria
 │   ├── cobertura.js            # puestoRequiereAtencionRutinaria
 │   ├── conflictos.js           # conflictosActividadDia, actividadTieneConflictoMes
 │   ├── alertas.js              # alertas() — alertas administrativas y normativas
-│   └── __tests__/              # 36 tests Vitest sobre las funciones de dominio
-├── ui/                         # Componentes presentacionales reutilizables
-│   ├── Badge.jsx
-│   ├── Avatar.jsx
-│   ├── Card.jsx
-│   ├── AlertItem.jsx
-│   ├── AlertStrip.jsx
-│   ├── Icon.jsx                # wrapper de lucide-react con mapping de emojis
-│   ├── EmptyState.jsx          # estado vacío con icono + CTA
-│   ├── Modal.jsx               # modal accesible (ARIA + focus trap + Esc)
-│   ├── ThemeToggle.jsx         # toggle claro / oscuro / alto contraste
-│   └── styles.js               # codigoCls, estadoCls, avatar, iniciales
+│   ├── esquemaRelacional.js    # esquema y migraciones de datos
+│   ├── validaciones.js
+│   └── __tests__/
+├── i18n/                       # Diccionario es-CR + hook
+│   ├── es-CR.js
+│   └── useT.js
 ├── layout/                     # Chrome global
 │   ├── Sidebar.jsx             # Navegación lateral + footer con versión
 │   ├── Topbar.jsx              # Cabecera sticky + navegación mes/año
 │   └── BottomNav.jsx           # Navegación inferior (móvil)
-├── context/
-│   ├── AppContext.jsx          # useReducer + Context, setters compatibles
-│   └── ThemeContext.jsx        # light / dark / hc, persistido en localStorage
-└── features/                   # Vistas (una por pantalla del sistema)
-    ├── dia/Dia.jsx
-    ├── funcionarios/
-    │   ├── Funcionarios.jsx
-    │   └── ModalFuncionario.jsx
-    ├── roles/
-    │   ├── Roles.jsx
-    │   ├── PuestoRolCard.jsx
-    │   ├── RoleCell.jsx
-    │   ├── MenuCelda.jsx
-    │   ├── ConflictoModal.jsx
-    │   └── ActividadesDiaModal.jsx
-    ├── planificacion/Planificacion.jsx
-    ├── planFuncionario/
-    │   ├── PlanificacionFuncionario.jsx
-    │   ├── ModificarRolModal.jsx
-    │   └── AsignarActividadModal.jsx
-    ├── viaticos/AdelantoViaticos.jsx
-    ├── disponibilidad/Disponibilidad.jsx
-    ├── alertas/Alertas.jsx
-    └── actividades/ModalActividad.jsx     # compartido entre features
+├── lib/                        # Utilidades transversales
+│   ├── db.js                   # IndexedDB con Dexie (carga dinámica)
+│   ├── storage.js              # localStorage versionado + debounce
+│   ├── sanitize.js, schemaVersion.js
+│   ├── exportaciones.js, exportacionBaseDatos.js, descargas.js, csv.js, sql.js
+│   ├── respaldo.js, undo.js
+│   ├── appVersion.js, versionCheck.js   # anti-cache
+│   ├── a11y.js                 # useModalA11y, useEscapeClose
+│   ├── responsive.js, mobilePreview.js, navigation.js
+│   └── hooks: useMobile, useSwipe, useSessionState, useAppNavigation,
+│       useAtajoBusqueda, useFeriadosDelAno, useFiltrosDeVista,
+│       useVirtualKeyboard
+├── ui/                         # Componentes presentacionales reutilizables
+│   ├── Badge.jsx, Avatar.jsx, Card.jsx, Icon.jsx
+│   ├── AlertItem.jsx, AlertStrip.jsx, EmptyState.jsx
+│   ├── Modal.jsx, BottomSheet.jsx, HelpSheet.jsx
+│   ├── Toast.jsx, ErrorBoundary.jsx, SyncStatus.jsx
+│   ├── ThemeToggle.jsx, Ayuda.jsx, styles.js
+└── features/                   # Vistas (una carpeta por pantalla)
+    ├── dia/                    # Centro operativo del día (DiaLayout + Dia + DiaResumenMovil)
+    ├── funcionarios/           # CRUD, ficha individual, importación CSV
+    ├── roles/                  # Tabla mensual T/L/V/I/O (grid, modales, impresión)
+    ├── planificacion/          # Calendario mensual de actividades + importador 2026
+    ├── planFuncionario/        # Vista por persona con sus días/actividades
+    ├── viaticos/               # Adelanto de viáticos
+    ├── reposicion/             # Control de reposiciones
+    ├── disponibilidad/         # Contratos y vencimientos
+    ├── alertas/                # Listado completo + semáforo normativo
+    ├── actividades/            # ModalActividad (compartido entre features)
+    ├── datos/                  # Respaldo, exportación, historial de cambios
+    ├── configuracion/          # Reglas de negocio + apariencia
+    └── manual/                 # Manual de uso embebido
 ```
 
 ---
@@ -116,13 +126,18 @@ src/
 | Vista | Ruta interna | Responsabilidad |
 |-------|---|---|
 | Día | `#/dia/AAAA-MM-DD` | Centro operativo: cobertura, actividades, turnos y acciones de una fecha. |
-| Funcionarios | `funcionarios` | CRUD del personal con filtros y búsqueda. |
-| Roles | `roles` | Tabla mensual T/L/V/I/O por funcionario. |
+| Funcionarios | `funcionarios` | CRUD del personal con filtros, búsqueda e importación CSV. |
+| Ficha del funcionario | `funcionario` | Vista individual: rol, actividades, alertas e historial de una persona. |
+| Roles | `roles` | Tabla mensual T/L/V/I/O por funcionario, con impresión a PDF. |
 | Planificación general | `planificacion` | Calendario mensual de actividades (cuadrícula o agenda). |
 | Planificación/Funcionario | `planFuncionario` | Vista por persona con sus días/actividades. |
-| Adelanto de viáticos | `adelantos` | Listado del mes siguiente con corte día 15. |
+| Adelanto de viáticos | `adelantos` | Listado del mes siguiente con corte administrativo. |
+| Reposición | `reposicion` | Registro y seguimiento de reposiciones. |
 | Disponibilidad | `disponibilidad` | Control de contratos y vencimientos. |
 | Alertas | `alertas` | Listado completo + semáforo normativo. |
+| Datos · respaldo | `datos` | Estado de la copia local, exportar/importar JSON, respaldos. |
+| Configuración | `configuracion` | Reglas de negocio editables y apariencia (tema). |
+| Manual | `manual` | Manual de uso dentro de la app (legible sin señal). |
 
 ---
 
@@ -178,8 +193,8 @@ clave `pnlq:theme`:
 | `dark` | Uso nocturno / pantalla con poca luz | WCAG AA |
 | `hc` | Campo bajo sol / accesibilidad reforzada | WCAG AAA, bordes de 2 px |
 
-El toggle vive en la barra superior (Topbar) y cicla entre los tres
-modos. Los tokens semánticos (`critical`, `warning`, `ok`, `info`,
+El toggle vive en la vista **Configuración** (tarjeta «Apariencia») y cicla
+entre los tres modos. Los tokens semánticos (`critical`, `warning`, `ok`, `info`,
 `viatico`, `surface`, `ink`, `line`, ...) se exponen como utilidades
 Tailwind (`bg-critical`, `text-warning-fg`, etc.).
 
@@ -197,7 +212,7 @@ Workflows en `.github/workflows/`:
 
 | Workflow | Disparador | Qué hace |
 |---|---|---|
-| **`ci.yml`** · CI · tests + build | `pull_request` a `main`, `push` a `main`, manual | Corre `npm test` (143 tests). Si pasa, ejecuta `npm run build` con `GIT_SHA` real. Sube `dist/` como artefacto por 3 días. |
+| **`ci.yml`** · CI · tests + build | `pull_request` a `main`, `push` a `main`, manual | Corre `npm test` (~950 tests). Si pasa, ejecuta `npm run build` con `GIT_SHA` real. Sube `dist/` como artefacto por 3 días. |
 | **`deploy.yml`** · GitHub Pages | `workflow_run` de CI exitoso sobre `main`, manual | Solo despliega si CI terminó OK. Genera build con `GIT_SHA` real para `version.json` (mecanismo anti-cache Fase 1). |
 | **`lighthouse.yml`** · Auditoría | `pull_request` cuando cambian `src/`, `index.html`, `vite.config.js`, etc., manual | Corre Lighthouse CI sobre el build de producción. Asserts mínimos: a11y ≥ 90 (error), perf/SEO/best-practices ≥ 85 (warn). Resumen del puntaje en el summary del PR + reporte completo subido a almacenamiento temporal. |
 
@@ -220,11 +235,13 @@ despliegue a producción sucede si el build falla.
 ## Tests, i18n y documentación (Fase 8)
 
 ### Pruebas automatizadas
-**126/126 verde** en ~3 s, organizados en 15 archivos:
-- 97 tests sobre dominio puro (`src/domain/*`, `src/config/*`).
-- 26 tests sobre infraestructura (storage, a11y stack de Esc, i18n).
-- 12 tests de integración UI con React Testing Library
-  (`EmptyState`, `Funcionarios`).
+**950 tests en 78 archivos, todos en verde**, organizados por área:
+- Dominio puro (`src/domain/*`, `src/config/*`) — roles, fechas,
+  cobertura, conflictos, alertas, validaciones, reglas.
+- Infraestructura (`src/lib/*`) — storage (localStorage + Dexie),
+  sanitización, a11y, i18n, respaldo, navegación, exportaciones.
+- Integración UI con React Testing Library — vistas y componentes
+  (`EmptyState`, `Funcionarios`, `Topbar`, layouts, montaje de vistas).
 
 Scripts:
 ```bash
@@ -245,12 +262,12 @@ release oficial).
 - Helper `plural(n)` para concordancia simple (s / sin sufijo).
 - **Migración 100 %** de cadenas visibles: layout (Sidebar,
   BottomNav, Topbar, ThemeToggle), banners PWA (Install, Offline,
-  Update), AlertStrip + AlertItem, Modal wrapper, las 10 vistas
+  Update), AlertStrip + AlertItem, Modal wrapper, las vistas
   (Día, Funcionarios, Roles, Planificación,
-  Plan/Funcionario, Viáticos, Disponibilidad, Alertas, Datos,
-  Configuración) y los 8 modales (ModalActividad, ModalFuncionario,
-  MenuCelda, ConflictoModal, ActividadesDiaModal,
-  ModificarRolModal y AsignarActividadModal).
+  Plan/Funcionario, Viáticos, Reposición, Disponibilidad, Alertas,
+  Datos, Configuración, Manual) y los modales (ModalActividad,
+  ModalFuncionario, MenuCelda, ConflictoModal, ActividadesDiaModal,
+  AplicarPatronModal, ModificarRolModal y AsignarActividadModal).
 - Si una clave falta, se renderiza la propia clave (`view.xxx`)
   como sentinela visible en QA. Tests automatizados de cobertura
   mínima del diccionario en `src/i18n/__tests__/es-CR.test.js`.
@@ -261,8 +278,12 @@ release oficial).
   Marco normativo).
 - `docs/MANUAL.md` — manual breve por perfil (guardaparques,
   administración, jefatura). Apto para impresión a una cara.
+  **Se genera** desde `src/data/manual.js` con `npm run manual`;
+  un test verifica que no se desincronice.
 - `docs/TESTING.md` — estructura de tests, cobertura por
   indicador, plan E2E.
+- `docs/ARQUITECTURA.md` — mapa de capas, decisiones de diseño,
+  flujos de datos, reglas responsive y convenciones de código.
 
 ## Rendimiento (Fase 7)
 
@@ -495,8 +516,8 @@ desactualizadas tras un deploy, mediante defensa en profundidad:
 La condición rectora del proyecto es que ningún indicador, alerta,
 registro o funcionalidad existente se pierda. La lista de 30
 indicadores que el sistema garantiza se documenta en
-`PROMPT_REVISION.md` (sección 7). Cualquier refactor o rediseño
-debe acompañarse de un checklist explícito de los 30.
+`docs/historico/PROMPT_REVISION.md` (sección 7). Cualquier refactor o
+rediseño debe acompañarse de un checklist explícito de los 30.
 
 ---
 
@@ -517,15 +538,18 @@ información real.
 
 ## Documentación complementaria
 
-- `PROMPT_REVISION.md` — prompt de revisión integral con los 30
-  indicadores obligatorios.
-- `PLAN_IMPLEMENTACION.md` — plan por fases (8 fases, 10 semanas
-  estimadas).
 - `docs/ARQUITECTURA.md` — mapa de capas, decisiones de diseño,
   flujos de datos, reglas responsive y convenciones de código.
 - `docs/GLOSARIO.md` — terminología institucional.
-- `docs/MANUAL.md` — manual por perfil de usuario.
+- `docs/MANUAL.md` — manual por perfil de usuario (generado, no editar a mano).
 - `docs/TESTING.md` — estructura de pruebas y plan E2E.
+- `docs/historico/` — documentos históricos de planes, auditorías y
+  handoffs ya ejecutados (`PROMPT_REVISION.md`, `PLAN_IMPLEMENTACION.md`,
+  `HANDOFF.md`, `RESTAURACION.md`). Se conservan como referencia; su
+  contenido puede no reflejar el estado actual del código.
+- `_relevo/` — protocolo activo de relevo entre IAs (`PROTOCOLO.md`,
+  `SEGUIMIENTO.md`, `PROMPT_NUEVA_IA.md`). Es la fuente de verdad del
+  estado del trabajo para el pipeline de desarrollo.
 
 ---
 
