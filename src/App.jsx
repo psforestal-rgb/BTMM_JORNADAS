@@ -25,6 +25,7 @@ const Disponibilidad = lazy(() => import("./features/disponibilidad/Disponibilid
 const Alertas = lazy(() => import("./features/alertas/Alertas.jsx"));
 const Datos = lazy(() => import("./features/datos/Datos.jsx"));
 const Configuracion = lazy(() => import("./features/configuracion/Configuracion.jsx"));
+const Manual = lazy(() => import("./features/manual/Manual.jsx"));
 
 function FallbackVista() {
   const t = useT();
@@ -194,6 +195,7 @@ function AppShell() {
               {view === "alertas" && <Alertas alerts={alerts} setView={navigate} />}
               {view === "datos" && <Datos />}
               {view === "configuracion" && <Configuracion />}
+              {view === "manual" && <Manual />}
             </Suspense>
           </div>
         </main>

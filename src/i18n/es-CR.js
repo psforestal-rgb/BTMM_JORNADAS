@@ -22,6 +22,12 @@ const dict = {
     perfilCargo: "Guardaparques · ACC",
     titulo: "Gestión de jornadas laborales",
   },
+  manual: {
+    todos: "Todo",
+    buscar: "Buscar en el manual",
+    buscarPlaceholder: "por ejemplo: respaldo, traslado, teletrabajo",
+    sinResultados: "El manual no dice nada sobre «{texto}».",
+  },
   sidebar: {
     grupoPrincipal: "Principal",
     grupoJornadas: "Jornadas",
@@ -39,6 +45,7 @@ const dict = {
     alertas: "Alertas",
     datos: "Datos · respaldo",
     configuracion: "Configuración",
+    manual: "Manual",
   },
   topbar: {
     periodo: "Periodo",
@@ -73,6 +80,7 @@ const dict = {
     disponib: "Disponib.",
     datos: "Datos",
     config: "Config.",
+    manual: "Manual",
     mas: "Más",
     masTitulo: "Más módulos",
     masSub: "Herramientas y módulos secundarios",
