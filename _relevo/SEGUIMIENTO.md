@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-13 02:10 por Claude Code
+> Última actualización: 2026-09-13 02:50 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -35,28 +35,36 @@ GitHub Pages se dispara con cada push a `main`.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**El PR #95 está fusionado** (`main` en `a83570e`, v1.39.1, desplegado y
-verificado). Encima hay **cinco commits sin PR**, todos con la misma raíz: la
-administración respondió las cinco preguntas que bloqueaban la carga de datos.
+**Los PR #95, #96 y #97 están fusionados.** `main` quedó en `48bb756` (v1.44.0)
+con el manual dentro de la aplicación. Encima hay **un commit sin PR**: el
+arrastre completo del renombrado, que tapa una regresión que yo mismo introduje
+en el #96.
 
-| Commit | Qué lleva |
-|---|---|
-| `23ba46a` | `[FUNC][HIST]` el puesto de un funcionario deja de ser un dato fijo |
-| `ea03786` | `[DATOS]` las respuestas de la administración, aplicadas al rol y a las fichas |
-| `23caf22` | `[ROL][DUDA]` la celda advierte cuando el propio libro se contradice |
-| `68771ec` | `[FUNC][UI]` el historial de puestos se ve y se edita desde el registro |
+### La regresión, y por qué importa
 
-### Lo que respondió la administración, y cómo quedó
+Al pasar el puesto de un funcionario de dato fijo a **historial de traslados**
+(PR #96), la cuadrícula de Roles pasó a agrupar por `puestoEnMes(...)` en vez de
+por `puestoOperativo`. `renombrarPuesto` seguía tocando solo `puestoOperativo`.
+Resultado: **renombrar un puesto hacía desaparecer a toda su gente de la
+cuadrícula**, sin error ninguno. Al buscarle el fondo salieron dos huecos más de
+la misma familia, y los tres están cerrados:
 
-| Pregunta | Respuesta | Qué se hizo |
+| Dónde | Qué pasaba | Qué se hizo |
 |---|---|---|
-| Villa Mills y su gente | Pasó a otra AC; Mauricio y Mariali ya no son del ACC | Villa Mills se conserva `vigente: false` (su rol de dic–mar es real); ellos dos NO entran |
-| Enzo Martini | Es voluntario, no funcionario | Sigue tratado como participante externo |
-| Diego Salazar | Funcionario nuevo, destacado en Los Quetzales | Ficha y rol en Quetzales, desde el 1 de setiembre |
-| Los códigos F, FA, G, LA, LI, IN, L, CM | «Ni idea, agrégalos tal cual» | Se guardan enteros dentro del valor; los que no encajan viajan como `O-{código}` |
-| Las contradicciones del libro | «Agrégalos manteniendo las advertencias» | 19 celdas con aro ámbar y marca «?» que dicen qué decía la otra fila |
-| Kenneth Mena | Salió hacia otra AC | Historial cerrado el 31/08/2026, ficha Inactiva, su rol hasta agosto intacto |
-| El puesto cambia con el tiempo | «Que no sea estático, que haya historial» | `domain/historialPuestos.js` + tramos en cada ficha + tabla `funcionario_puestos` en la exportación |
+| Renombrar un puesto | El historial y las claves de `roleData` se quedaban con el nombre viejo | `renombrarPuesto` arrastra también `historialPuestos` y reescribe las claves |
+| Renombrar a una persona | Nadie arrastraba nada: rol, actividades y reposiciones se vaciaban | `renombrarFuncionario` en `src/domain/funcionarios.js`, cableado en `useGuardarFuncionario` |
+| Importar funcionarios (CSV) | Empareja por CÉDULA, así que corregir el nombre renombraba en silencio | `renombresDelPlan` + `renombrarVariosFuncionarios`, cableados en `aplicarImportacion` |
+
+Y uno más, que estaba ahí desde el principio: cambiar **solo las mayúsculas** de
+un puesto («Puesto Orosi» → «PUESTO OROSI») salía por la guarda de
+`renombrarPuesto` comparando en minúsculas, así que la lista se quedaba con el
+nombre nuevo y todo lo demás con el viejo. La guarda ahora compara exacto.
+
+Verificado en Chromium sobre el build: renombrar «Puesto Orosi» mueve **3203
+celdas de rol y 12 fichas**, y la cuadrícula de setiembre sigue enseñando las
+mismas **1098 celdas en 18 filas** antes y después. Renombrar a Laura Valverde
+mueve **396 celdas y 150 actividades**, la ficha sigue abriéndose y sus 61
+celdas del mes siguen con su código.
 
 ### 🔴 Lo que sigue esperando respuesta
 
@@ -78,12 +86,61 @@ que las dos fuentes digan lo mismo.
 
 ### Lo que queda de la lista de mejoras
 
-- **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe (185 líneas)
-  pero vive en el repositorio, no dentro de la aplicación.
+- **C3 · Guías de usuario integradas: HECHO** (PR #97). El manual vive en
+  `src/data/manual.js`, se lee dentro de la aplicación y sin señal, y
+  `docs/MANUAL.md` se GENERA con `npm run manual`. Si cambia el manual y no se
+  regenera, la suite lo reclama.
 - **Probar la aplicación con las personas del parque.** Sigue siendo lo más
   valioso y no es código.
 - **Decidir si habrá servidor.** Hasta entonces quedan fuera A3, RF10, C4 e
   i18n multi-idioma.
+
+⚠️ **EL NOMBRE ES LA CLAVE. Todo renombre tiene que arrastrar.**
+
+Ni los puestos ni las personas tienen `id` dentro del rol: `roleData` se indexa
+con el NOMBRE de los dos (`2026-9-Puesto Orosi-Errol Salazar-15`), y lo mismo
+hacen `actividadesPlan[].funcionarios[]`, `reposiciones[].funcionario`,
+`historialPuestos[].puesto`, `puestoOperativo` y
+`reglas.puestosRequierenVisitantesDiario`. Cambiar un nombre sin arrastrar todo
+eso **no da ningún error**: el rol se vacía, las actividades desaparecen y el
+banco de tiempo cae a cero. Es la peor forma de perder datos que tiene este
+proyecto y ya ha mordido dos veces.
+
+- Los dos únicos sitios que pueden renombrar son `renombrarPuesto`
+  (`src/domain/puestos.js`) y `renombrarFuncionario` (`src/domain/funcionarios.js`).
+  **Si añades un tercero, pasa por ellos.** Ojo con los caminos que renombran
+  sin llamarlo renombre: la importación CSV de funcionarios empareja por cédula,
+  así que corregir el nombre en una fila es un renombre.
+- Quien renombre desde la interfaz tiene que pasarle `roleData` y aplicar el
+  resultado con `setRoleData`. Sin eso la función es correcta y no hace nada.
+- Las claves se reescriben con `reescribirClavesRol` (`src/domain/roles.js`),
+  que descompone la clave con `partirClaveRol`/`partirClaveModalidad` y la
+  vuelve a armar con `rolKey`/`rolCfgKey`. **No la reescribas con expresiones
+  regulares sobre el texto**: el nombre de un puesto puede llevar guiones y se
+  parte por el sitio equivocado. `partirClaveRol` vive en `roles.js`, junto a
+  `rolKey`; `esquemaRelacional.js` solo la reexporta.
+- La comparación es **laxa para puestos** (sin mayúsculas: `validarPuesto` ya
+  impide dos que se diferencien solo en eso) y **exacta para personas** (los
+  nombres de funcionario NO son únicos; aflojarla movería el rol de otra).
+- Varios renombres a la vez van por `renombrarVariosFuncionarios`, que pasa por
+  un nombre provisional. Encadenarlos de uno en uno corrompe un intercambio
+  (A→B y B→A) y una cadena (A→B y B→C), y un CSV produce las dos cosas sin
+  esfuerzo.
+- **El rastro de cambios (RF9) NO se reescribe nunca.** Cada entrada guarda el
+  nombre que la ficha tenía ese día; reescribirlo convertiría una auditoría en
+  una mentira retroactiva. La entrada de la propia edición es la que enlaza los
+  dos nombres.
+
+⚠️ **Excepción registrada a «las validaciones guían, nunca bloquean».**
+
+Desde 2026-09-13 hay una segunda cosa que la aplicación se niega a guardar,
+además del nombre vacío: **renombrar una ficha al nombre de otra**. No es una
+validación de formulario, es que sería volcar el rol de una persona encima del
+de otra, y siempre se puede evitar con el segundo apellido. **Dar de alta** a
+alguien que se llama igual que un compañero sí se puede —pasa de verdad en el
+parque—: ahí solo se avisa de que compartirán las celdas de rol. La solución
+de fondo es indexar `roleData` por `id`, y el plan está escrito en
+`src/domain/roles.js`.
 
 ⚠️ **Si tocas el rol o las fichas, ten presentes estas tres reglas:**
 
@@ -116,14 +173,14 @@ que las dos fuentes digan lo mismo.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.43.0** en la rama; `main` en **1.39.1** (`a83570e`), desplegado
-- Rama: **`claude/festive-allen-hl6igv`**, cuatro commits por delante de `main`,
-  sin PR abierto
-- Tests: ✅ **877/877** (73 archivos) — Build: ✅ limpio
-- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (con la 1.39.1)
-- Verificado en Chromium sobre el build: diciembre de 2025 pinta el grupo de
-  Villa Mills con Carlos Cordero; abril marca las cuatro celdas contradictorias
-  de Guillermo Pérez; setiembre ya no trae a Kenneth Mena y sí a Diego Salazar
+- Versión: **1.45.0** en la rama; `main` en **1.44.0** (`48bb756`), desplegado
+- Rama: **`claude/festive-allen-hl6igv`**, un commit por delante de `main`, sin
+  PR abierto
+- Tests: ✅ **950/950** (78 archivos) — Build: ✅ limpio
+- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (con la 1.44.0)
+- Verificado en Chromium sobre el build: renombrar un puesto no pierde ni una
+  celda de la cuadrícula (1098 antes y después); renombrar a una persona le
+  mantiene la ficha, el rol y las actividades
 
 ### Fuentes de datos y de dónde salen
 
@@ -221,7 +278,30 @@ que las dos fuentes digan lo mismo.
   detecta. Tailwind no avisa de esto: genera la clase vacía y el elemento hereda
   el color del padre.
 
-Tests: de 290 a 724 (+434). Ninguna función existente se eliminó.
+- **PR [#95](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/95)** (`a83570e`,
+  v1.39.1) — respaldo automático antes de migrar el esquema (A2 de verdad, en
+  Dexie y no solo en `localStorage`), fuentes sincronizadas desde el Google Doc
+  y el libro institucional, y exportación a base de datos relacional (13 tablas,
+  JSON + SQL). Por el camino se destapó que **restaurar un respaldo borraba los
+  puestos y el historial**: `REPLACE_STATE` fusiona con la SEMILLA, así que lo
+  que no viaja en el respaldo no vuelve al estado anterior, vuelve al de fábrica.
+- **PR [#96](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/96)** (`6686f1b`,
+  v1.42.0) — el puesto de un funcionario deja de ser un dato fijo: historial de
+  traslados por tramos, resolución del puesto **día a día** para la clave del rol
+  (el traslado de Yolanda Elizondo cae el 18 de marzo) y aviso ámbar en las 19
+  celdas donde el propio libro se contradice.
+- **PR [#97](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/97)** (`48bb756`,
+  v1.44.0) — el manual, dentro de la aplicación (C3). Y la guarda
+  `src/__tests__/vistasMontadas.test.js`, que nació porque la vista del manual
+  pasó sus ocho pruebas mientras la aplicación no la pintaba: nadie la
+  renderizaba. Es la segunda vez que pasa lo mismo.
+- `[FIX][RENOMBRE]` — arrastre completo del renombrado y la regresión que lo
+  motivó, descritos arriba en «SIGUIENTE ACCIÓN». Nuevo módulo
+  `src/domain/funcionarios.js`; `partirClaveRol`/`partirClaveModalidad` se mudan
+  a `roles.js` (junto a `rolKey`, que es quien arma la clave) y aprenden a
+  probar primero el nombre de puesto más largo.
+
+Tests: de 290 a 950 (+660). Ninguna función existente se eliminó.
 
 ### 🔎 Auditoría de puntos de dolor (2026-09-11, revisada el 2026-09-12)
 
@@ -654,6 +734,8 @@ A-P17.
   históricos. `docs/DOCUMENTO_FINAL_MEJORAS.md` dice «126/126 pruebas»: obsoleto.
 
 ## 📜 Historial de sesiones (nuevo arriba)
+
+### 2026-09-13 — Claude Code — **Renombrar arrastra, o no renombra.** Se cerró una regresión que yo mismo introduje en el PR #96: al agrupar la cuadrícula por `puestoEnMes(...)`, `renombrarPuesto` seguía tocando solo `puestoOperativo`, así que **renombrar un puesto hacía desaparecer a toda su gente**, sin error. Buscándole el fondo salieron tres huecos más de la misma familia —renombrar a una persona no arrastraba nada; la importación CSV renombra sin llamarlo renombre porque empareja por cédula; y cambiar solo las mayúsculas de un puesto salía por una guarda que comparaba en minúsculas—, y los cuatro quedan cerrados. Nuevo `src/domain/funcionarios.js` (`renombrarFuncionario`, `renombrarVariosFuncionarios` con paso intermedio para intercambios y cadenas, `nombreOcupado`); `reescribirClavesRol` reescrito sobre `partirClaveRol`, que se muda a `roles.js` y aprende a probar primero el nombre de puesto más largo. El rastro RF9 NO se reescribe: es auditoría. Verificado en Chromium sobre el build (3203 celdas y 12 fichas movidas al renombrar un puesto, 1098 celdas en la cuadrícula antes y después). 950 tests en 78 archivos, v1.45.0.
 
 ### 2026-09-11 — Claude Code — **FASE 1 CERRADA.** Fase 0 (baseline 290/290 + auditoría de los 18 puntos de dolor) y los 5 quick wins de Fase 1 entregados: avisos con «Deshacer» en los 5 puntos de borrado, filtros visibles, objetivos táctiles de 48 px con test que los protege, ayuda contextual y el formulario de funcionario en 3 pasos (que además cubre RF7 de Fase 2). De 290 a 364 tests. Commits `5a4c83f`…`a4af5aa` en la rama `claude/festive-allen-hl6igv`, abiertos en el PR [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) y pendientes de fusionar en `main`. Al cerrar se fusionó `origin/main` (infra toast/undo de Grok, v1.15.0) dentro de la rama, resolviendo a mano los 7 archivos en conflicto, y se avanzó Fase 2 con RF3 (validación en tiempo real), RF5 (exportación CSV) RF4+RF8 (importación con vista previa y respaldo) y RF9 (historial de cambios). Después, RP1–RP8 completo: los puestos operativos pasan a ser editables, con cascada al renombrar, orden personalizable e import/export. **Los bloques RF1–RF9 y RP1–RP8 quedan cerrados enteros.** Y el rol `E` de teletrabajo completo (RT1–RT8). **LA FASE 2 QUEDA CERRADA ENTERA.** Ya en Fase 3, se entregó el bloque **VF1–VF8** completo: la ficha individual del funcionario como ruta propia `#/funcionario/<nombre>`, con banco de tiempo que reutiliza `reposicion.js`, teletrabajo contado día a día, alertas por persona y filtro próximas/pasadas/todas; más la guarda estática de tokens de color, que destapó tres clases inventadas que no pintaban nada. 704 tests en 63 archivos, v1.34.0. **Con eso la FASE 3 queda cerrada entera** (VF1–VF8, virtualización de Roles, filtros en la URL y exportación CSV), más la cobertura crítica cableada y los dos sueltos auditados. Commits `12dec07` … `18acc0a`.
 

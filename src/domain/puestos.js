@@ -5,12 +5,15 @@
  *
  * **Un puesto se identifica por su nombre, no por un id.** Las fichas guardan
  * `puestoOperativo: "Puesto Orosi"` y las reglas de cobertura guardan una lista
- * de nombres. Introducir ids obligaría a migrar datos ya persistidos y a subir
- * `SCHEMA_VERSION`; mantener el nombre como clave evita esa migración a cambio
- * de que renombrar tenga que arrastrar las referencias. De eso se encarga
- * `renombrarPuesto`, que devuelve los tres cambios a la vez para que no puedan
- * aplicarse a medias.
+ * de nombres, el historial de traslados guarda nombres y las claves de
+ * `roleData` llevan el nombre dentro. Introducir ids obligaría a migrar datos ya
+ * persistidos y a subir `SCHEMA_VERSION`; mantener el nombre como clave evita
+ * esa migración a cambio de que renombrar tenga que arrastrar TODAS las
+ * referencias. De eso se encarga `renombrarPuesto`, que devuelve el cambio
+ * completo de una sola vez para que no pueda aplicarse a medias.
  */
+
+import { reescribirClavesRol } from "./roles.js";
 
 /** Compara nombres como los compararía una persona: sin bordes ni mayúsculas. */
 function normalizar(texto) {
@@ -70,38 +73,94 @@ export function quitarPuesto(lista, nombre) {
 }
 
 /**
- * Renombrar en cascada: el puesto, las fichas que lo referencian y la regla de
- * cobertura diaria. Devuelve las tres listas nuevas.
+ * Renombrar en cascada: el puesto, las fichas que lo referencian —incluido su
+ * historial de traslados—, la regla de cobertura diaria y las claves del rol.
  *
- * Si no se arrastraran las referencias, las fichas quedarían apuntando a un
- * puesto inexistente y la cobertura crítica de la vista Día dejaría de
- * evaluarse **en silencio**, que es el peor fallo posible aquí.
+ * Cada referencia que no se arrastre rompe algo distinto, y ninguna avisa:
+ *
+ *  - `puestoOperativo`: la ficha queda apuntando a un puesto inexistente y la
+ *    cobertura crítica de la vista Día deja de evaluarse.
+ *  - `historialPuestos`: desde que la cuadrícula de Roles agrupa por
+ *    `puestoEnMes`, una persona cuyo historial siga diciendo el nombre viejo
+ *    **desaparece entera de la cuadrícula**. El grupo se llama como el nombre
+ *    nuevo y su historial dice el viejo, así que no cae en ningún grupo.
+ *  - `roleData`: las claves llevan dentro el nombre del puesto. Sin
+ *    reescribirlas, el rol ya trabajado queda archivado bajo el nombre viejo y
+ *    las celdas salen en blanco.
+ *
+ * `roleData` es opcional para no obligar a los llamadores que solo mueven
+ * listas; cuando no se pasa, se devuelve tal cual y `celdas` vale 0. Quien
+ * renombra desde la interfaz SÍ tiene que pasarlo.
+ *
+ * Devuelve `{ puestos, personas, reglas, roleData, afectados, celdas,
+ * colisiones }`. `afectados` cuenta fichas tocadas (por puesto actual o por
+ * historial) y `celdas` claves de rol movidas.
  */
-export function renombrarPuesto({ puestos, personas, reglas, antes, despues }) {
+export function renombrarPuesto({ puestos, personas, reglas, roleData = null, antes, despues }) {
   const nuevo = String(despues ?? "").trim();
+  const viejo = String(antes ?? "").trim();
   const listaPuestos = Array.isArray(puestos) ? puestos : [];
   const listaPersonas = Array.isArray(personas) ? personas : [];
-  const coincide = (v) => normalizar(v) === normalizar(antes);
+  const coincide = (v) => normalizar(v) === normalizar(viejo);
 
-  if (!nuevo || normalizar(antes) === normalizar(nuevo)) {
-    return { puestos: listaPuestos, personas: listaPersonas, reglas, afectados: 0 };
+  /* La guarda compara los nombres TAL CUAL, no normalizados. Cambiar solo las
+     mayúsculas («Puesto Orosi» → «PUESTO OROSI») es un renombre de verdad: el
+     editor ya escribió el nombre nuevo en la lista, y salir aquí sin arrastrar
+     nada dejaría las fichas y el rol apuntando al nombre viejo. */
+  if (!viejo || !nuevo || viejo === nuevo) {
+    return {
+      puestos: listaPuestos,
+      personas: listaPersonas,
+      reglas,
+      roleData: roleData ?? null,
+      afectados: 0,
+      celdas: 0,
+      colisiones: 0,
+    };
   }
 
-  const afectados = listaPersonas.filter((p) => coincide(p.puestoOperativo)).length;
   const visitDiario = Array.isArray(reglas?.puestosRequierenVisitantesDiario)
     ? reglas.puestosRequierenVisitantesDiario
     : [];
 
+  let afectados = 0;
+  const personasNuevas = listaPersonas.map((p) => {
+    const cambiaActual = coincide(p?.puestoOperativo);
+    const historial = Array.isArray(p?.historialPuestos) ? p.historialPuestos : null;
+    const cambiaHistorial = historial ? historial.some((t) => coincide(t?.puesto)) : false;
+    if (!cambiaActual && !cambiaHistorial) return p;
+    afectados += 1;
+    return {
+      ...p,
+      ...(cambiaActual ? { puestoOperativo: nuevo } : {}),
+      ...(cambiaHistorial
+        ? { historialPuestos: historial.map((t) => (coincide(t?.puesto) ? { ...t, puesto: nuevo } : t)) }
+        : {}),
+    };
+  });
+
+  const rol = roleData
+    ? reescribirClavesRol(roleData, {
+        tipo: "puesto",
+        antes: viejo,
+        despues: nuevo,
+        // La lista de ANTES del renombre: es la que permite partir bien una
+        // clave cuyo nombre de puesto lleve guiones.
+        puestosConocidos: listaPuestos.map((p) => p?.nombre).filter(Boolean),
+      })
+    : { roleData: roleData ?? null, movidas: 0, colisiones: 0 };
+
   return {
     puestos: listaPuestos.map((p) => (coincide(p.nombre) ? { ...p, nombre: nuevo } : p)),
-    personas: listaPersonas.map((p) =>
-      coincide(p.puestoOperativo) ? { ...p, puestoOperativo: nuevo } : p,
-    ),
+    personas: personasNuevas,
     reglas: {
       ...reglas,
       puestosRequierenVisitantesDiario: visitDiario.map((n) => (coincide(n) ? nuevo : n)),
     },
+    roleData: rol.roleData,
     afectados,
+    celdas: rol.movidas,
+    colisiones: rol.colisiones,
   };
 }
 

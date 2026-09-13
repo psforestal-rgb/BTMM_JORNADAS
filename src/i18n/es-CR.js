@@ -237,6 +237,14 @@ const dict = {
     restaurado: "Se restauró a {nombre}",
     creado: "Se agregó a {nombre}",
     guardado: "Se guardaron los cambios de {nombre}",
+    renombrado:
+      "{antes} pasa a llamarse {despues}. Se trasladaron {celdas} celda(s) de rol, {actividades} actividad(es) y {reposiciones} reposición(es).",
+    renombradoColision:
+      "{n} celda(s) de rol ya existían con el nombre nuevo y se conservaron esas. Revise el rol de esa persona.",
+    nombreRepetido:
+      "Ya hay una ficha llamada «{nombre}». Renombrar a ese nombre volcaría el rol de esta persona encima del de la otra. Use un nombre que las distinga.",
+    nombreRepetidoAlta:
+      "Ojo: ya hay otra ficha llamada «{nombre}». El rol se guarda por nombre, así que las dos compartirán las mismas celdas. Si son personas distintas, añada el segundo apellido.",
     ordenar: "Ordenar",
     filtrosAria: "Filtrar funcionarios",
     exportar: "Exportar CSV",
@@ -249,6 +257,8 @@ const dict = {
     importarCorto: "Importar",
     importarAria: "Importar funcionarios desde un archivo CSV",
     importa: {
+      renombres:
+        "{n} ficha(s) cambiaron de nombre. Se trasladaron {celdas} celda(s) de rol, {actividades} actividad(es) y {reposiciones} reposición(es).",
       titulo: "Revisar antes de importar",
       sub: "Nada se ha guardado todavía. Así quedaría la lista:",
       altas: "Se agregan",
@@ -1124,7 +1134,10 @@ const dict = {
     restaurado: "Se restauró el puesto «{nombre}»",
     creado: "Se agregó el puesto «{nombre}»",
     guardado: "Se guardaron los cambios de «{nombre}»",
-    renombrado: "«{antes}» pasa a llamarse «{despues}». Se actualizaron {n} ficha(s).",
+    renombrado:
+      "«{antes}» pasa a llamarse «{despues}». Se actualizaron {n} ficha(s) y {celdas} celda(s) de rol.",
+    renombradoColision:
+      "{n} celda(s) de rol ya existían con el nombre nuevo y se conservaron esas. Revise el rol de ese puesto.",
     ultimoPuesto: "Debe quedar al menos un puesto operativo.",
     subir: "Subir «{nombre}»",
     bajar: "Bajar «{nombre}»",

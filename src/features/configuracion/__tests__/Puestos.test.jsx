@@ -10,6 +10,7 @@ import { ToastProvider } from "../../../context/ToastContext.jsx";
 import ToastViewport from "../../../ui/Toast.jsx";
 import { __INTERNALS__, getDb } from "../../../lib/db.js";
 import Configuracion from "../Configuracion.jsx";
+import { puestoEnMes } from "../../../domain/historialPuestos.js";
 
 async function resetAll() {
   __INTERNALS__.resetSingleton();
@@ -118,6 +119,58 @@ describe("Configuración — CRUD de puestos (RP1–RP8)", () => {
     expect(ctx().reglas.puestosRequierenVisitantesDiario).toContain("Orosi Alto");
     expect(ctx().reglas.puestosRequierenVisitantesDiario).not.toContain("Puesto Orosi");
     expect(screen.getByText(/pasa a llamarse «Orosi Alto»/)).toBeDefined();
+  });
+
+  it("renombrar arrastra también el historial de traslados y las claves del rol", async () => {
+    /* Esta es la regresión que motivó el arreglo: desde que la cuadrícula
+       agrupa por `puestoEnMes(...)`, una ficha cuyo historial siga diciendo el
+       nombre viejo NO cae en ningún grupo y su gente desaparece de la vista
+       entera, sin error ninguno. Y el rol, cuyas claves llevan el nombre del
+       puesto dentro, se queda archivado bajo un nombre que ya no existe. */
+    const { ctx, panel } = await montar();
+
+    const conHistorialAntes = ctx().personas.filter((p) =>
+      (p.historialPuestos || []).some((t) => t.puesto === "Puesto Orosi"),
+    ).length;
+    const clavesAntes = Object.keys(ctx().roleData).filter((k) =>
+      k.includes("-Puesto Orosi-"),
+    );
+    expect(conHistorialAntes).toBeGreaterThan(0);
+    expect(clavesAntes.length).toBeGreaterThan(0);
+
+    const fila = within(panel()).getByText("Puesto Orosi").closest("li");
+    fireEvent.click(within(fila).getByRole("button", { name: "Editar" }));
+    fireEvent.change(screen.getByLabelText("Nombre del puesto"), { target: { value: "Orosi Alto" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    // Ningún tramo del historial puede quedarse con el nombre viejo.
+    expect(
+      ctx().personas.some((p) => (p.historialPuestos || []).some((t) => t.puesto === "Puesto Orosi")),
+    ).toBe(false);
+    expect(
+      ctx().personas.filter((p) => (p.historialPuestos || []).some((t) => t.puesto === "Orosi Alto")),
+    ).toHaveLength(conHistorialAntes);
+
+    // Ni una sola clave de rol.
+    for (const vieja of clavesAntes) {
+      expect(ctx().roleData[vieja]).toBeUndefined();
+      expect(ctx().roleData[vieja.replace("-Puesto Orosi-", "-Orosi Alto-")]).toBeDefined();
+    }
+  });
+
+  it("renombrar deja a la gente del puesto en su grupo de la cuadrícula", async () => {
+    const { ctx, panel } = await montar();
+    const antes = ctx().personas.filter((p) => puestoEnMes(p, 2026, 9) === "Puesto Orosi").length;
+    expect(antes).toBeGreaterThan(0);
+
+    const fila = within(panel()).getByText("Puesto Orosi").closest("li");
+    fireEvent.click(within(fila).getByRole("button", { name: "Editar" }));
+    fireEvent.change(screen.getByLabelText("Nombre del puesto"), { target: { value: "Orosi Alto" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    // `gruposRoles` compara exactamente así. Antes del arreglo esto daba 0.
+    expect(ctx().personas.filter((p) => puestoEnMes(p, 2026, 9) === "Orosi Alto")).toHaveLength(antes);
+    expect(ctx().personas.some((p) => puestoEnMes(p, 2026, 9) === "Puesto Orosi")).toBe(false);
   });
 
   it("editar sin cambiar el nombre no toca las fichas", async () => {
