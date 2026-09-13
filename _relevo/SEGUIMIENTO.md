@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 13:35 por Claude Code
+> Última actualización: 2026-09-13 00:20 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -35,40 +35,70 @@ GitHub Pages se dispara con cada push a `main`.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**El roadmap acordado de `PROTOCOLO.md` §7 está agotado y TODO está fusionado
-en `main`.** Fases 1, 2 y 3 entregadas, más los sueltos auditados y la
-cobertura crítica. **No queda ninguna tarea de código que el protocolo pida.**
+**Hay cinco commits en la rama sin PR abierto todavía.** `main` sigue en
+`f2a2c4e` (v1.35.0); la rama va por v1.39.0.
 
-Lo que queda, en orden:
+| Commit | Qué lleva |
+|---|---|
+| `56219e1` | `[A2][FIX]` restaurar un respaldo ya no borra los puestos ni el rastro |
+| `1b2837d` | `[A2]` respaldo automático antes de cualquier migración de esquema |
+| `f072230` | `[PLAN]` planificación sincronizada con el documento del 11 de setiembre |
+| `70481f6` | `[ROL]` rol institucional de diciembre 2025 a diciembre 2026 |
+| `e4326a6` | `[BD]` exportación relacional (12 tablas, JSON y SQL) |
 
-**1. Probar la aplicación con las personas del parque.** Es lo más valioso que
-puede hacerse ahora, y no es código. Tres fases de mejoras se han construido
-sobre un diagnóstico de hace meses; antes de añadir nada más conviene ver qué
-pasa cuando alguien la usa en el puesto, con guantes y bajo sol, y volver con lo
-que salga. **No inventes funciones nuevas sin ese contraste.**
+### 🔴 Lo que está esperando una respuesta de la administración
 
-**2. Dos mejoras de `docs/DOCUMENTO_FINAL_MEJORAS.md` siguen sin hacer, y
-ninguna depende de la decisión del servidor:**
+Son decisiones que NO puede tomar una IA: adivinar corrompería los datos.
 
-- **A2 · Respaldo automático en migraciones.** `crearRespaldo` solo se dispara
-  hoy desde Configuración (restaurar predeterminados) y desde la importación CSV
-  de Funcionarios. Un cambio de esquema de Dexie NO crea respaldo: hoy no ha
-  hecho falta porque el esquema sigue en la versión 1 y
-  `migrateFromLocalStorageIfNeeded` rechaza los payloads incompatibles en vez de
-  tocarlos, pero **el primer cambio de versión real correría sin red**. Y esta
-  sesión descubrió que `crearRespaldo` llevaba tiempo guardando de menos sin que
-  nadie lo notara, que es justo el fallo que un respaldo previo a la migración
-  debería cubrir.
-- **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe y está escrito
-  (185 líneas, una parte para guardaparques y otra para administración), pero
-  vive en el repositorio y **no dentro de la aplicación**. Quien está en el
-  puesto sin señal no puede leerlo. La ayuda en pantalla hoy es solo la
-  contextual del formulario de funcionario (`src/ui/Ayuda.jsx`) y la hoja de
-  ayuda de la vista Día.
+**1. Cuatro personas y un puesto que el rol tiene y la app no.**
+El libro institucional trae 23 personas y CUATRO puestos; la app tiene 18 y
+tres. Faltan **Diego Salazar, Enzo Martini, Mauricio Hernandez y Mariali
+Salazar**, y el **Puesto Villa Mills**. Ojo con Enzo Martini: la migración
+`limpiezaEnzoYSetDic2026` lo quitó a propósito («una persona que salió del
+puesto») y el libro del 11/09 vuelve a traerlo con rol en julio, agosto y
+media setiembre. Mauricio Hernandez hoy vive en `otrosAlias` de
+`planificacion2026.js` como si fuera alguien externo (`MH: "MH"`), y no lo es.
 
-**3. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
-fuera de alcance A3 (sincronización), RF10 (autenticación), C4 (API externa) e
-i18n multi-idioma.
+**2. Qué significan F, FA, G, LA, LI, IN, la L sola y CM.**
+No bloquea nada —se guardan como `O-F`, `O-FA`, `O-G`, `O-CM` y el código
+original se recupera entero— pero mientras no se aclaren, esos días salen como
+«Otro» en vez de su categoría real.
+
+**3. Dos contradicciones dentro del propio libro.**
+  - **Errol Salazar** aparece en dos puestos a la vez (Orosi y Quetzales) de
+    diciembre de 2025 a abril de 2026, y en **15 días de diciembre las dos
+    filas dicen cosas distintas**. Se tomó la fila de Orosi, que es su puesto
+    en la app.
+  - **Guillermo Pérez**, del 27 al 30 de abril: la fila de La Esperanza dice
+    `IN` (incapacidad) y la de Orosi dice `T1`–`T4` (turno). Se tomó La
+    Esperanza. Hay además una fila suelta «Guillermo Pérez» (con tilde) con
+    solo 5 días en marzo, que parece un duplicado del mismo Guillermo Perez.
+
+**4. Kenneth Mena desaparece del libro de setiembre en adelante.**
+Tenía rol hasta agosto y el libro del 11/09 ya no lo trae en setiembre,
+octubre, noviembre ni diciembre. La app conserva lo que tuviera guardado (la
+re-imposición nunca vacía una celda), pero **la semilla de una instalación
+nueva lo deja en blanco**, que es lo que dice la fuente.
+
+**5. El libro mueve gente de puesto durante el año; la app no.**
+31 persona-mes en que el puesto del libro no coincide con el
+`puestoOperativo` de la ficha. Laura Valverde y Jetzelly Villalobos están en
+Orosi desde julio; Carlos Cordero en Villa Mills de diciembre a marzo. La
+cuadrícula agrupa por el puesto de la ficha, así que se usó ese. **El puesto
+de una persona es hoy un solo valor y en la realidad cambia con el mes.**
+
+### Lo que queda de la lista de mejoras
+
+- **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe (185 líneas)
+  pero vive en el repositorio, no dentro de la aplicación. Quien está en el
+  puesto sin señal no puede leerlo.
+- **Probar la aplicación con las personas del parque.** Sigue siendo lo más
+  valioso y no es código.
+- **Decidir si habrá servidor.** Hasta entonces quedan fuera A3
+  (sincronización), RF10 (autenticación), C4 (API externa) e i18n.
+
+**A2 ya está hecho** (respaldo automático en migraciones), así que de las dos
+mejoras que quedaban abiertas solo sigue C3.
 
 ⚠️ **Si tocas la cuadrícula de Roles, estas tres invariantes no se rompen:**
 
@@ -91,12 +121,19 @@ i18n multi-idioma.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.35.0**, ya en `main` (`f2a2c4e`) y desplegada
-- Rama: **`claude/festive-allen-hl6igv`**, reiniciada desde `main`. Sin trabajo
-  pendiente y sin PR abierto.
-- Tests: ✅ **741/741** (65 archivos) — Build: ✅ `npm run build` limpio, PWA
-  generada (36 entradas precacheadas)
-- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/
+- Versión: **1.39.0** en la rama; `main` sigue en **1.35.0** (`f2a2c4e`)
+- Rama: **`claude/festive-allen-hl6igv`**, cinco commits por delante de `main`,
+  sin PR abierto
+- Tests: ✅ **822/822** (70 archivos) — Build: ✅ limpio, PWA con 39 entradas
+- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (todavía con
+  la 1.35.0: el despliegue se dispara al fusionar en `main`)
+
+### Fuentes de datos y de dónde salen
+
+| Fuente | Versión aplicada | Cómo se actualiza |
+|---|---|---|
+| Planificación | `2026-09-11-doc-completo` | Exportar el Google Doc como **text/plain** y regenerar `src/data/planificacion2026Fuente/texto1..9.js`. Ese formato conserva los saltos de línea que `convertirPlanificacion2026()` necesita; la exportación «natural» del conector los pierde y pega las actividades unas con otras. |
+| Rol institucional | `2026-09-11-rol-bloque-dic25-dic26` | Regenerar `src/data/seedRoles.js` desde «Rol Bloque 2026.xlsx». Siete pestañas de dos meses; los días empiezan en la **columna E**, el mes se detecta porque el número de día vuelve a 1, y la etiqueta de la fila 1 está combinada en medio del tramo, no al principio. |
 
 ## ✅ Hecho en esta sesión
 
