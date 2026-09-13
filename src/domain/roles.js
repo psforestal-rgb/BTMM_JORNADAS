@@ -1,4 +1,5 @@
 import { dim, primerDiaLaboral } from "./fechas.js";
+import { puestoEnMes } from "./historialPuestos.js";
 
 /**
  * Dominio de roles mensuales (códigos T/L/V/I/O por funcionario y día).
@@ -168,16 +169,33 @@ export function funcionarioPorNombre(personas, nombre) {
   return personas.find((f) => f.nombre === nombre);
 }
 
+/**
+ * Puesto bajo el que está archivado el rol de esa persona en ese mes.
+ *
+ * El puesto de alguien NO es fijo: un traslado lo cambia y el rol de los meses
+ * anteriores sigue perteneciendo al puesto donde estuvo entonces (ver
+ * `domain/historialPuestos.js`). Toda clave de `roleData` tiene que resolverse
+ * con ESTE valor y no con `f.puestoOperativo`, o al trasladar a alguien su rol
+ * pasado se leería bajo el puesto equivocado y saldría en blanco.
+ *
+ * `month` es 0-indexado, igual que en `rolKey`. Si el historial no cubre ese
+ * mes se cae al puesto de la ficha, que es como se comportaba antes.
+ */
+export function puestoDelRol(funcionario, year, month) {
+  if (!funcionario) return "";
+  return puestoEnMes(funcionario, year, month + 1) || funcionario.puestoOperativo || "Puesto Quetzales";
+}
+
 export function modalidadFuncionario(personas, roleData, year, month, nombre) {
   const f = funcionarioPorNombre(personas, nombre);
   if (!f) return "10x5";
-  return roleData[rolCfgKey(year, month, f.puestoOperativo || "Puesto Quetzales", nombre)] || f.modalidad || "10x5";
+  return roleData[rolCfgKey(year, month, puestoDelRol(f, year, month), nombre)] || f.modalidad || "10x5";
 }
 
 export function codigoRolFuncionario(personas, roleData, year, month, nombre, dia, feriados = null) {
   const f = funcionarioPorNombre(personas, nombre);
   if (!f) return "";
-  const puesto = f.puestoOperativo || "Puesto Quetzales";
+  const puesto = puestoDelRol(f, year, month);
   const inicio = primerDiaLaboral(year, month, feriados);
   return (
     roleData[rolKey(year, month, puesto, nombre, dia)] ??
@@ -303,7 +321,13 @@ function escapeRegExp(texto) {
  */
 export function ultimoDiaProgramado(roleData, puesto, persona) {
   if (!roleData) return null;
-  const re = new RegExp(`^(\\d+)-(\\d+)-${escapeRegExp(puesto)}-${escapeRegExp(persona)}-(\\d+)$`);
+  // `puesto` admite una lista: una persona trasladada tiene rol archivado bajo
+  // cada puesto por el que pasó, y el último día programado es el más reciente
+  // de todos ellos, no solo el del puesto donde está hoy.
+  const puestos = (Array.isArray(puesto) ? puesto : [puesto]).filter(Boolean);
+  if (!puestos.length) return null;
+  const alternativa = puestos.map(escapeRegExp).join("|");
+  const re = new RegExp(`^(\\d+)-(\\d+)-(?:${alternativa})-${escapeRegExp(persona)}-(\\d+)$`);
   let best = null;
   let bestRank = -1;
   for (const key of Object.keys(roleData)) {
