@@ -222,6 +222,52 @@ describe("tablasDesdeEstado", () => {
     }
   });
 
+  it("incluye el puesto renombrado al que todavía apunta el rol archivado", () => {
+    // Renombrar un puesto arrastra las fichas y las reglas, pero NO reescribe
+    // las claves de `roleData`: el rol de los meses anteriores sigue archivado
+    // bajo el nombre viejo. Sin su fila padre, el volcado SQL revienta en la
+    // primera fila histórica con «FOREIGN KEY constraint failed».
+    const renombrado = tablasDesdeEstado({
+      puestos: [{ nombre: "Puesto Orosi Centro", tag: "OR", color: "bg-orange-100 text-orange-950" }],
+      personas: [{ id: "f1", nombre: "Ana Mora", puestoOperativo: "Puesto Orosi Centro" }],
+      roleData: { "2026-9-Puesto Orosi-Ana Mora-1": "T1" },
+    });
+
+    expect(renombrado.rol_dias[0].puesto).toBe("Puesto Orosi");
+    expect(renombrado.puestos).toEqual([
+      {
+        nombre: "Puesto Orosi Centro",
+        codigo: "OR",
+        color: "bg-orange-100 text-orange-950",
+        orden: 1,
+        vigente: true,
+      },
+      { nombre: "Puesto Orosi", codigo: "", color: "", orden: null, vigente: false },
+    ]);
+  });
+
+  it("también recupera el puesto que solo aparece en una ficha o en una modalidad", () => {
+    const suelto = tablasDesdeEstado({
+      puestos: [{ nombre: "Puesto Orosi", tag: "OR" }],
+      personas: [{ id: "f1", nombre: "Ana Mora", puestoOperativo: "Puesto Retirado" }],
+      roleData: { "CFG-2026-9-Puesto Antiguo-Ana Mora": "12x6" },
+    });
+    const nombres = suelto.puestos.map((p) => p.nombre);
+    expect(nombres).toContain("Puesto Retirado");
+    expect(nombres).toContain("Puesto Antiguo");
+    expect(suelto.puestos.filter((p) => !p.vigente)).toHaveLength(2);
+  });
+
+  it("no duplica un puesto vigente al recoger las referencias", () => {
+    const normal = tablasDesdeEstado({
+      puestos: [{ nombre: "Puesto Orosi", tag: "OR" }],
+      personas: [{ id: "f1", nombre: "Ana Mora", puestoOperativo: "Puesto Orosi" }],
+      roleData: { "2026-9-Puesto Orosi-Ana Mora-1": "T1" },
+    });
+    expect(normal.puestos).toHaveLength(1);
+    expect(normal.puestos[0].vigente).toBe(true);
+  });
+
   it("cuenta las filas de todas las tablas, incluidas las vacías", () => {
     const conteo = conteoDeTablas(tablas);
     expect(Object.keys(conteo)).toHaveLength(TABLAS.length);

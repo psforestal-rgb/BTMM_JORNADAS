@@ -7,6 +7,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { useEffect } from "react";
 import { AppProvider, useApp } from "../../../context/AppContext.jsx";
 import { ToastProvider } from "../../../context/ToastContext.jsx";
+import ToastViewport from "../../../ui/Toast.jsx";
 import { crearEntrada, TIPO } from "../../../domain/historial.js";
 import Datos from "../Datos.jsx";
 
@@ -181,5 +182,50 @@ describe("Datos — respaldo/restauración round-trip", () => {
       expect(ctxRef.historial).toHaveLength(1);
       expect(ctxRef.historial[0].funcionario.nombre).toBe("Persona De Prueba");
     });
+  });
+
+  // La copia preventiva es la única vuelta atrás de una restauración, y el
+  // modal la promete por escrito. Si el navegador bloquea la descarga,
+  // restaurar igual dejaría los datos actuales sin salvaguarda.
+  it("si la copia preventiva no se puede descargar, NO restaura nada", async () => {
+    let ctxRef = null;
+    function Probe() {
+      ctxRef = useApp();
+      return null;
+    }
+
+    render(
+      <AppProvider>
+        <ToastProvider>
+          <Probe />
+          <Datos />
+          <ToastViewport />
+        </ToastProvider>
+      </AppProvider>,
+    );
+
+    await waitFor(() => expect(ctxRef).not.toBeNull());
+    const reglasAntes = { ...ctxRef.reglas };
+
+    const snapshot = JSON.stringify({
+      schemaVersion: ctxRef.schemaVersion,
+      state: { reglas: { ...reglasAntes, diaCorteViaticos: 28 } },
+    });
+    const archivo = new File([snapshot], "respaldo.json", { type: "application/json" });
+    const input = document.querySelector('input[type="file"]');
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [archivo] } });
+    });
+    await screen.findByText("Confirmar restauración");
+
+    // A partir de aquí el navegador no deja descargar nada.
+    URL.createObjectURL = () => {
+      throw new Error("descargas bloqueadas");
+    };
+    fireEvent.click(screen.getByText("Crear respaldo y restaurar"));
+
+    await screen.findByText(/NO se restauró nada/);
+    expect(ctxRef.reglas.diaCorteViaticos).toBe(reglasAntes.diaCorteViaticos);
+    expect(screen.queryByText("Confirmar restauración")).toBeNull();
   });
 });

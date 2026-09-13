@@ -3,6 +3,7 @@ import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { useApp } from "../../context/AppContext.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
 import { parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo as crearRespaldoDe } from "../../lib/respaldo.js";
@@ -24,6 +25,7 @@ const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
 export default function Datos() {
   const t = useT();
   const ctx = useApp();
+  const toast = useToast();
   const fileInputRef = useRef(null);
   const [importError, setImportError] = useState(null);
   const [importOk, setImportOk] = useState(null);
@@ -36,15 +38,25 @@ export default function Datos() {
   const totalReposiciones = (ctx.reposiciones || []).length;
 
   const crearRespaldo = () => crearRespaldoDe(ctx);
-  const onExport = () => { const backup = crearRespaldo(); descargarArchivo(backup.name, backup.text); };
+  // Ningún botón de descarga de esta vista da por buena una descarga que el
+  // navegador rechazó: `descargarArchivo` devuelve false en vez de lanzar.
+  const onExport = () => {
+    const backup = crearRespaldo();
+    if (descargarArchivo(backup.name, backup.text)) {
+      toast.exito(t("datos.respaldoDescargado", { archivo: backup.name }));
+    } else {
+      toast.error(t("datos.descargaFallo"));
+    }
+  };
   const onShare = async () => {
     const backup = crearRespaldo();
     const file = new File([backup.text], backup.name, { type: "application/json" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
       await navigator.share({ title: "Respaldo BTMM Jornadas", files: [file] });
-    } else {
-      descargarArchivo(backup.name, backup.text);
+    } else if (descargarArchivo(backup.name, backup.text)) {
       setImportOk({ archivo: backup.name, mensaje: "El navegador no permite compartir archivos; se descargó el respaldo." });
+    } else {
+      toast.error(t("datos.descargaFallo"));
     }
   };
 
@@ -78,7 +90,13 @@ export default function Datos() {
   const aplicarImport = () => {
     if (!pendingImport) return;
     const backup = crearRespaldo();
-    descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text);
+    // La copia preventiva es la única vuelta atrás de una restauración: si no
+    // se pudo descargar, NO se restaura. El modal acaba de prometerla.
+    if (!descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text)) {
+      toast.error(t("datos.respaldoPrevioFallo"));
+      setPendingImport(null);
+      return;
+    }
     const { parsed, archivo } = pendingImport;
     // Cada clave que `crearRespaldo()` guarda tiene que restaurarse aquí.
     // `REPLACE_STATE` parte de `seedState`, así que una clave omitida no

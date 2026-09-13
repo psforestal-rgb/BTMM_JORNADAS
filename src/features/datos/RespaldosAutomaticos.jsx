@@ -59,7 +59,9 @@ export default function RespaldosAutomaticos() {
       toast.error(t("datos.respaldosAuto.noDisponible"));
       return;
     }
-    descargarArchivo(archivo.name, archivo.text);
+    if (!descargarArchivo(archivo.name, archivo.text)) {
+      toast.error(t("datos.descargaFallo"));
+    }
   };
 
   const onEliminar = async (id) => {

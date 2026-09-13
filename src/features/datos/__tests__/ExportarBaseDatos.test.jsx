@@ -112,6 +112,19 @@ describe("Datos — exportación a base de datos", () => {
     expect(ultimoNombre).toMatch(/^btmm-jornadas-.*\.postgresql\.sql$/);
   });
 
+  it("si el navegador bloquea la descarga, avisa del fallo en vez de dar por buena la exportación", async () => {
+    // `descargarArchivo` devuelve false en vez de lanzar; sin comprobarlo, la
+    // pantalla anunciaba un archivo que no existe.
+    URL.createObjectURL = () => {
+      throw new Error("descargas bloqueadas");
+    };
+    montar();
+    fireEvent.click(await screen.findByText("JSON relacional"));
+
+    await screen.findByText(/El navegador no permitió descargar el archivo/);
+    expect(screen.queryByText(/Se descargó/)).toBeNull();
+  });
+
   it("avisa con el nombre del archivo descargado", async () => {
     montar();
     fireEvent.click(await screen.findByText("JSON relacional"));

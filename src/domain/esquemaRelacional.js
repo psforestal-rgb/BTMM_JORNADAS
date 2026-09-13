@@ -47,13 +47,15 @@ const T = TIPOS;
 export const TABLAS = Object.freeze([
   {
     nombre: "puestos",
-    descripcion: "Puestos operativos del bloque. Se identifican por nombre, no por un id.",
+    descripcion:
+      "Puestos operativos del bloque. Se identifican por nombre, no por un id. `vigente` en 0 marca un puesto que ya no está en la lista activa pero al que todavía apuntan datos históricos.",
     clavePrimaria: ["nombre"],
     columnas: [
       { nombre: "nombre", tipo: T.TEXTO },
       { nombre: "codigo", tipo: T.TEXTO },
       { nombre: "color", tipo: T.TEXTO },
       { nombre: "orden", tipo: T.ENTERO },
+      { nombre: "vigente", tipo: T.BOOLEANO },
     ],
   },
   {
@@ -299,6 +301,33 @@ function filasDePuestos(puestos) {
     codigo: texto(p?.tag),
     color: texto(p?.color),
     orden: i + 1,
+    vigente: true,
+  }));
+}
+
+/**
+ * Puestos a los que apuntan los datos pero que ya no están en la lista activa.
+ *
+ * Renombrar un puesto desde «Configuración» arrastra `funcionario.puestoOperativo`
+ * y las reglas (`renombrarPuesto`), pero NO reescribe las claves de `roleData`:
+ * el rol de los meses anteriores sigue archivado bajo el nombre viejo. Ese rol es
+ * un hecho y se exporta, así que el puesto viejo tiene que existir en la tabla
+ * padre o el volcado SQL revienta en la primera fila histórica con un
+ * «FOREIGN KEY constraint failed».
+ *
+ * Se añaden con `vigente` en 0 y sin orden: están para que la referencia se
+ * resuelva y para que se vea que existieron, no para usarse como puesto activo.
+ */
+function filasDePuestosHistoricos(filasVigentes, referencias) {
+  const vigentes = new Set(filasVigentes.map((p) => p.nombre));
+  const historicos = [...new Set(referencias.filter((n) => n && !vigentes.has(n)))];
+  historicos.sort((a, b) => a.localeCompare(b, "es-CR"));
+  return historicos.map((nombre) => ({
+    nombre,
+    codigo: "",
+    color: "",
+    orden: null,
+    vigente: false,
   }));
 }
 
@@ -497,9 +526,19 @@ export function tablasDesdeEstado(estado, { esActividadOficial } = {}) {
   const act = filasDeActividades(estado?.actividadesPlan, esActividadOficial);
   const rep = filasDeReposiciones(estado?.reposiciones);
   const hist = filasDeHistorial(estado?.historial);
+  const funcionarios = filasDeFuncionarios(estado?.personas);
+
+  // Toda columna que apunte a `puestos.nombre` tiene que encontrar su fila.
+  const puestosVigentes = filasDePuestos(estado?.puestos);
+  const referencias = [
+    ...dias.map((d) => d.puesto),
+    ...modalidades.map((m) => m.puesto),
+    ...funcionarios.map((f) => f.puesto_operativo),
+  ];
+
   return {
-    puestos: filasDePuestos(estado?.puestos),
-    funcionarios: filasDeFuncionarios(estado?.personas),
+    puestos: [...puestosVigentes, ...filasDePuestosHistoricos(puestosVigentes, referencias)],
+    funcionarios,
     rol_dias: dias,
     rol_modalidades: modalidades,
     actividades: act.actividades,

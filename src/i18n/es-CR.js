@@ -973,6 +973,9 @@ const dict = {
     pendientesSub: "No existe sincronización con un servidor remoto.",
     pendientesCero: "Datos guardados únicamente en este dispositivo.",
     pendientesN: "{n} cambios locales pendientes de guardar.",
+    descargaFallo: "El navegador no permitió descargar el archivo. Revise si tiene bloqueadas las descargas de este sitio e inténtelo otra vez.",
+    respaldoDescargado: "Se descargó {archivo}.",
+    respaldoPrevioFallo: "NO se restauró nada: el navegador no permitió descargar la copia preventiva, y restaurar sin ella dejaría los datos actuales sin salvaguarda.",
     baseDatos: {
       titulo: "Exportar a base de datos",
       sub: "El respaldo de arriba guarda el estado tal como lo usa esta herramienta y sirve para volver a cargarlo aquí. Esto es lo otro: el mismo contenido descompuesto en tablas con clave primaria, para que otro sistema pueda consultarlo.",

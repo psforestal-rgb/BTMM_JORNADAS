@@ -52,7 +52,13 @@ export default function ExportarBaseDatos() {
     setOcupado(true);
     try {
       const archivo = construir();
-      descargarArchivo(archivo.name, archivo.text, archivo.tipo);
+      // `descargarArchivo` devuelve false en vez de lanzar cuando el navegador
+      // bloquea la descarga. Dar por buena una exportación que no existe es
+      // peor que no ofrecerla: se descubre el día que hace falta el archivo.
+      if (!descargarArchivo(archivo.name, archivo.text, archivo.tipo)) {
+        toast.error(t("datos.descargaFallo"));
+        return;
+      }
       toast.exito(t("datos.baseDatos.listo", { archivo: archivo.name }));
     } finally {
       setOcupado(false);
