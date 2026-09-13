@@ -20,6 +20,7 @@ import {
   tieneVisitEse,
 } from "../../domain/actividades.js";
 import { puestoDelRol } from "../../domain/roles.js";
+import { dudaDeFuente } from "../../data/conflictosRol2026.js";
 import { puestosDeFuncionario } from "../../domain/historialPuestos.js";
 import { conflictoDePersonaDia } from "../../domain/conflictos.js";
 import { destinoDeTecla, filasDeGrupos, TECLAS } from "./navegacionCuadricula.js";
@@ -1190,6 +1191,7 @@ function RowsGrupo({
                   finde={finde}
                   esInicio={esInicio}
                   conflicto={conflicto}
+                  dudaFuente={dudaDeFuente(iso, nombre)}
                   repoTrabajada={trabajadas[`${nombre}|${iso}`]}
                   repoReposicion={reposicionesDia[`${nombre}|${iso}`]}
                   esHoy={esHoy}

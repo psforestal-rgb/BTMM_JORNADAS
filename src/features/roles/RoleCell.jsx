@@ -7,19 +7,39 @@ import MarcaReposicionCelda from "../reposicion/MarcaReposicionCelda.jsx";
 function RoleCell({
   value, onOpen, onConflicto, finde, compact, editable, esInicio, conflicto,
   repoTrabajada, repoReposicion, esHoy, fila, iso, fechaLegible, nombre, colIndex,
+  dudaFuente,
 }) {
   const v = String(value || "").toUpperCase();
   const handleClick = conflicto ? onConflicto : editable ? onOpen : undefined;
   const clickable = conflicto || editable;
+  /* Aviso de que la FUENTE se contradice en este día: el libro institucional
+     trae dos filas de la misma persona con valores distintos. Se carga la del
+     puesto donde el historial la sitúa y se avisa de la otra, en vez de elegir
+     en silencio. Es distinto del conflicto rojo, que compara el rol con las
+     actividades asignadas; por eso lleva su propia marca y su propio color. */
+  const avisoDuda = dudaFuente
+    ? t("roles.dudaFuente", {
+        puesto: dudaFuente.puestoAlterno,
+        valor: dudaFuente.valorAlterno,
+      })
+    : "";
   const title = conflicto
     ? t("roles.titleConflicto")
+    : avisoDuda
+    ? avisoDuda
     : editable
     ? t("roles.titleEditar")
     : t("roles.titleSinEdicion");
   /* Nombre accesible de la celda. Sin él, quien navega con lector de pantalla
      oye «T1» sin saber de quién ni de qué día, que es tanto como no oír nada en
      una cuadrícula de 18 filas por 31 columnas. */
-  const etiqueta = [nombre, fechaLegible, etiquetaRol(v) + (v ? ` ${v}` : ""), conflicto ? t("roles.conflictoAria") : ""]
+  const etiqueta = [
+    nombre,
+    fechaLegible,
+    etiquetaRol(v) + (v ? ` ${v}` : ""),
+    conflicto ? t("roles.conflictoAria") : "",
+    dudaFuente ? t("roles.dudaFuenteAria", { valor: dudaFuente.valorAlterno }) : "",
+  ]
     .filter(Boolean)
     .join(", ");
   return (
@@ -30,7 +50,9 @@ function RoleCell({
       aria-colindex={colIndex}
       className={`border-b border-b-line p-0 text-center font-semibold ${codigoCls(v, finde)} ${
         esHoy ? "border-l-4 border-r-4 border-l-amber-400 border-r-amber-400" : "border-r border-r-line"
-      } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""}`}
+      } ${esInicio ? "ring-2 ring-inset ring-emerald-700" : ""} ${conflicto ? "ring-4 ring-inset ring-red-600" : ""} ${
+        dudaFuente && !conflicto ? "ring-2 ring-inset ring-amber-500" : ""
+      }`}
     >
       {/* `aria-disabled` y NO `disabled`: una celda no editable se sigue
           pudiendo recorrer con el teclado, que es justo lo que permite leer el
@@ -64,6 +86,14 @@ function RoleCell({
             !
           </span>
         )}
+        {dudaFuente && (
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center rounded-br-md bg-amber-500 text-[10px] font-bold text-amber-950"
+          >
+            ?
+          </span>
+        )}
         {esInicio && (
           <span className="absolute bottom-0 left-1 right-1 rounded-t bg-emerald-900 px-1 text-[8px] font-bold tracking-wider text-white">
             {t("roles.initRing")}
@@ -92,6 +122,7 @@ function areEqual(prev, next) {
     prev.editable === next.editable &&
     prev.esInicio === next.esInicio &&
     prev.conflicto === next.conflicto &&
+    prev.dudaFuente === next.dudaFuente &&
     prev.esHoy === next.esHoy &&
     marcaKey(prev.repoTrabajada) === marcaKey(next.repoTrabajada) &&
     marcaKey(prev.repoReposicion) === marcaKey(next.repoReposicion)

@@ -534,6 +534,8 @@ const dict = {
     editarTipoRol: "Tipo de rol desde 1er día laboral",
     aplicar: "Aplicar",
     aplicarPatronAbrir: "Aplicar…",
+    dudaFuente: "El rol institucional se contradice aquí: la fila de {puesto} dice «{valor}». Confirme con la administración cuál vale.",
+    dudaFuenteAria: "el rol institucional se contradice: otra fila dice {valor}",
     titleConflicto: "Clic para resolver: rol vs actividad planificada",
     conflictoAria: "en conflicto",
     cuadriculaAria: "Rol por funcionario y día. Use las flechas para moverse entre celdas.",

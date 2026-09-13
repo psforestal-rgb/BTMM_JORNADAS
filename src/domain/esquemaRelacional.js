@@ -27,6 +27,7 @@
  */
 
 import { categoriaDe } from "./roles.js";
+import { normalizarHistorial } from "./historialPuestos.js";
 
 /** Tipos admitidos en `columnas`. `booleano` se serializa como 0/1. */
 export const TIPOS = Object.freeze({
@@ -84,6 +85,25 @@ export const TABLAS = Object.freeze([
       { nombre: "brigada", tipo: T.BOOLEANO },
       { nombre: "ong", tipo: T.BOOLEANO },
       { nombre: "observaciones", tipo: T.TEXTO },
+    ],
+  },
+  {
+    nombre: "funcionario_puestos",
+    descripcion:
+      "Por qué puestos pasó cada persona y cuándo. Un `desde` vacío es «desde antes de lo que cubre el registro»; un `hasta` vacío, «sigue ahí».",
+    clavePrimaria: ["funcionario_id", "orden"],
+    foraneas: [
+      { columnas: ["funcionario_id"], tabla: "funcionarios", referencia: ["id"] },
+      { columnas: ["puesto"], tabla: "puestos", referencia: ["nombre"] },
+    ],
+    columnas: [
+      { nombre: "funcionario_id", tipo: T.TEXTO },
+      { nombre: "orden", tipo: T.ENTERO },
+      { nombre: "funcionario", tipo: T.TEXTO },
+      { nombre: "puesto", tipo: T.TEXTO },
+      { nombre: "desde", tipo: T.FECHA },
+      { nombre: "hasta", tipo: T.FECHA },
+      { nombre: "motivo", tipo: T.TEXTO },
     ],
   },
   {
@@ -356,6 +376,31 @@ function filasDeFuncionarios(personas) {
   }));
 }
 
+/**
+ * Historial de puestos, una fila por tramo. Se normaliza con el dominio, así que
+ * una ficha antigua —sin historial— produce el único tramo abierto de su puesto
+ * actual y la tabla nunca queda vacía por eso.
+ */
+function filasDeHistorialPuestos(personas) {
+  const filas = [];
+  for (const f of lista(personas)) {
+    const id = texto(f?.id);
+    if (!id) continue;
+    normalizarHistorial(f).forEach((tramo, i) => {
+      filas.push({
+        funcionario_id: id,
+        orden: i + 1,
+        funcionario: texto(f?.nombre),
+        puesto: texto(tramo.puesto),
+        desde: texto(tramo.desde),
+        hasta: texto(tramo.hasta),
+        motivo: texto(tramo.motivo),
+      });
+    });
+  }
+  return filas;
+}
+
 function filasDeRol(roleData, puestosConocidos) {
   const dias = [];
   const modalidades = [];
@@ -527,6 +572,7 @@ export function tablasDesdeEstado(estado, { esActividadOficial } = {}) {
   const rep = filasDeReposiciones(estado?.reposiciones);
   const hist = filasDeHistorial(estado?.historial);
   const funcionarios = filasDeFuncionarios(estado?.personas);
+  const historialPuestos = filasDeHistorialPuestos(estado?.personas);
 
   // Toda columna que apunte a `puestos.nombre` tiene que encontrar su fila.
   const puestosVigentes = filasDePuestos(estado?.puestos);
@@ -534,11 +580,13 @@ export function tablasDesdeEstado(estado, { esActividadOficial } = {}) {
     ...dias.map((d) => d.puesto),
     ...modalidades.map((m) => m.puesto),
     ...funcionarios.map((f) => f.puesto_operativo),
+    ...historialPuestos.map((h) => h.puesto),
   ];
 
   return {
     puestos: [...puestosVigentes, ...filasDePuestosHistoricos(puestosVigentes, referencias)],
     funcionarios,
+    funcionario_puestos: historialPuestos,
     rol_dias: dias,
     rol_modalidades: modalidades,
     actividades: act.actividades,
