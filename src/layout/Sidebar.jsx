@@ -22,6 +22,7 @@ export default function Sidebar({ view, setView, nAlertas }) {
       ["alertas", t("view.alertas"), "bell"],
       ["datos", t("view.datos"), "shieldAlert"],
       ["configuracion", t("view.configuracion"), "traffic"],
+      ["manual", t("view.manual"), "clipboard"],
     ]],
   ];
   return (

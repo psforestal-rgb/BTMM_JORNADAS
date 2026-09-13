@@ -26,6 +26,7 @@ export default function BottomNav({ view, setView, nAlertas, hidden = false }) {
     ["planFuncionario", t("bottomNav.planFunc"), "clipboard"],
     ["datos", t("bottomNav.datos"), "shieldAlert"],
     ["configuracion", t("bottomNav.config"), "traffic"],
+    ["manual", t("bottomNav.manual"), "clipboard"],
   ];
   const moreActive = more.some(([id]) => id === view);
   const go = (id) => {

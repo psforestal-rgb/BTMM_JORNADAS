@@ -3,7 +3,7 @@ import { pad2 } from "../domain/fechas.js";
 export const VISTAS_VALIDAS = new Set([
   "dia", "roles", "planificacion", "funcionarios", "alertas", "adelantos",
   "reposicion", "disponibilidad", "planFuncionario", "datos", "configuracion",
-  "funcionario",
+  "funcionario", "manual",
 ]);
 
 const CON_PERIODO = new Set(["roles", "planificacion", "planFuncionario"]);
