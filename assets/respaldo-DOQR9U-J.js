@@ -1,1 +1,0 @@
-import{Q as e,aH as i}from"./index-CfNUFHvn.js";function n(s,o="pnlq-snapshot"){const a=e({personas:s.personas,actividadesPlan:s.actividadesPlan,reposiciones:s.reposiciones,roleData:s.roleData,reglas:s.reglas,migraciones:s.migraciones,puestos:s.puestos,historial:s.historial});return{snapshot:a,name:`${o}-${i()}.json`,text:JSON.stringify(a,null,2)}}export{n as c};
