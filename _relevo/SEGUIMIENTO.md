@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-12 03:55 por Claude Code
+> Última actualización: 2026-09-13 00:20 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -11,7 +11,7 @@ paralelo con otra IA (Grok) que tocaba `main` directamente, contra
 comparando las dos implementaciones función por función. El historial de Grok se
 conserva íntegro más abajo.
 
-**Estado actual.** Se fusionaron TRES PR de esta rama, los tres con aplastado
+**Estado actual.** Se fusionaron CUATRO PR de esta rama, los cuatro con aplastado
 (squash):
 
 | PR | Deja `main` en | Qué llevaba |
@@ -19,8 +19,9 @@ conserva íntegro más abajo.
 | [#91](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/91) | v1.22.0 | Fase 1 y hasta RF9 |
 | [#92](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/92) | v1.25.0 | Puestos operativos |
 | [#93](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/93) | **v1.34.1** | Cierre de la Fase 2 y la Fase 3 entera |
+| [#94](https://github.com/psforestal-rgb/BTMM_JORNADAS/pull/94) | **v1.35.0** | Navegación por teclado en Roles (cierra A-P12) |
 
-`main` está en el commit `7d1e689` y **la rama `claude/festive-allen-hl6igv` se
+`main` está en el commit `f2a2c4e` y **la rama `claude/festive-allen-hl6igv` se
 reinició desde ahí**: no arrastra nada pendiente. El despliegue automático a
 GitHub Pages se dispara con cada push a `main`.
 
@@ -29,25 +30,75 @@ GitHub Pages se dispara con cada push a `main`.
 1. `git fetch origin main` ANTES de nada. Si la rama tiene commits que `main` no
    tiene, **rebásalos sobre `main`, no fusiones al revés**: el aplastado deja el
    historial divergente aunque el contenido sea idéntico.
-2. **Un PR fusionado no se reutiliza.** El #93 está cerrado. El trabajo nuevo va
+2. **Un PR fusionado no se reutiliza.** El #94 está cerrado. El trabajo nuevo va
    en un PR nuevo sobre esta misma rama.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**El roadmap acordado de `PROTOCOLO.md` §7 está agotado.** Fases 1, 2 y 3
-entregadas y fusionadas. No hay ninguna tarea pendiente que el protocolo pida.
+**Hay cinco commits en la rama sin PR abierto todavía.** `main` sigue en
+`f2a2c4e` (v1.35.0); la rama va por v1.39.0.
 
-Lo que queda, en orden:
+| Commit | Qué lleva |
+|---|---|
+| `56219e1` | `[A2][FIX]` restaurar un respaldo ya no borra los puestos ni el rastro |
+| `1b2837d` | `[A2]` respaldo automático antes de cualquier migración de esquema |
+| `f072230` | `[PLAN]` planificación sincronizada con el documento del 11 de setiembre |
+| `70481f6` | `[ROL]` rol institucional de diciembre 2025 a diciembre 2026 |
+| `e4326a6` | `[BD]` exportación relacional (12 tablas, JSON y SQL) |
 
-**1. Probar la aplicación con las personas del parque.** Es lo más valioso que
-puede hacerse ahora, y no es código. Tres fases de mejoras se han construido
-sobre un diagnóstico de hace meses; antes de añadir nada más conviene ver qué
-pasa cuando alguien la usa en el puesto, con guantes y bajo sol, y volver con lo
-que salga. **No inventes funciones nuevas sin ese contraste.**
+### 🔴 Lo que está esperando una respuesta de la administración
 
-**2. Decidir si habrá servidor.** Hasta esa decisión, `PROTOCOLO.md` §7 deja
-fuera de alcance A3 (sincronización), RF10 (autenticación), C4 (API externa) e
-i18n multi-idioma.
+Son decisiones que NO puede tomar una IA: adivinar corrompería los datos.
+
+**1. Cuatro personas y un puesto que el rol tiene y la app no.**
+El libro institucional trae 23 personas y CUATRO puestos; la app tiene 18 y
+tres. Faltan **Diego Salazar, Enzo Martini, Mauricio Hernandez y Mariali
+Salazar**, y el **Puesto Villa Mills**. Ojo con Enzo Martini: la migración
+`limpiezaEnzoYSetDic2026` lo quitó a propósito («una persona que salió del
+puesto») y el libro del 11/09 vuelve a traerlo con rol en julio, agosto y
+media setiembre. Mauricio Hernandez hoy vive en `otrosAlias` de
+`planificacion2026.js` como si fuera alguien externo (`MH: "MH"`), y no lo es.
+
+**2. Qué significan F, FA, G, LA, LI, IN, la L sola y CM.**
+No bloquea nada —se guardan como `O-F`, `O-FA`, `O-G`, `O-CM` y el código
+original se recupera entero— pero mientras no se aclaren, esos días salen como
+«Otro» en vez de su categoría real.
+
+**3. Dos contradicciones dentro del propio libro.**
+  - **Errol Salazar** aparece en dos puestos a la vez (Orosi y Quetzales) de
+    diciembre de 2025 a abril de 2026, y en **15 días de diciembre las dos
+    filas dicen cosas distintas**. Se tomó la fila de Orosi, que es su puesto
+    en la app.
+  - **Guillermo Pérez**, del 27 al 30 de abril: la fila de La Esperanza dice
+    `IN` (incapacidad) y la de Orosi dice `T1`–`T4` (turno). Se tomó La
+    Esperanza. Hay además una fila suelta «Guillermo Pérez» (con tilde) con
+    solo 5 días en marzo, que parece un duplicado del mismo Guillermo Perez.
+
+**4. Kenneth Mena desaparece del libro de setiembre en adelante.**
+Tenía rol hasta agosto y el libro del 11/09 ya no lo trae en setiembre,
+octubre, noviembre ni diciembre. La app conserva lo que tuviera guardado (la
+re-imposición nunca vacía una celda), pero **la semilla de una instalación
+nueva lo deja en blanco**, que es lo que dice la fuente.
+
+**5. El libro mueve gente de puesto durante el año; la app no.**
+31 persona-mes en que el puesto del libro no coincide con el
+`puestoOperativo` de la ficha. Laura Valverde y Jetzelly Villalobos están en
+Orosi desde julio; Carlos Cordero en Villa Mills de diciembre a marzo. La
+cuadrícula agrupa por el puesto de la ficha, así que se usó ese. **El puesto
+de una persona es hoy un solo valor y en la realidad cambia con el mes.**
+
+### Lo que queda de la lista de mejoras
+
+- **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe (185 líneas)
+  pero vive en el repositorio, no dentro de la aplicación. Quien está en el
+  puesto sin señal no puede leerlo.
+- **Probar la aplicación con las personas del parque.** Sigue siendo lo más
+  valioso y no es código.
+- **Decidir si habrá servidor.** Hasta entonces quedan fuera A3
+  (sincronización), RF10 (autenticación), C4 (API externa) e i18n.
+
+**A2 ya está hecho** (respaldo automático en migraciones), así que de las dos
+mejoras que quedaban abiertas solo sigue C3.
 
 ⚠️ **Si tocas la cuadrícula de Roles, estas tres invariantes no se rompen:**
 
@@ -70,11 +121,19 @@ i18n multi-idioma.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.35.0** en la rama; `main` va en 1.34.1 (`7d1e689`, desplegada)
-- Rama: **`claude/festive-allen-hl6igv`**, con A-P12 cerrado y pendiente de PR
-- Tests: ✅ **741/741** (65 archivos) — Build: ✅ `npm run build` limpio, PWA
-  generada (36 entradas precacheadas)
-- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/
+- Versión: **1.39.0** en la rama; `main` sigue en **1.35.0** (`f2a2c4e`)
+- Rama: **`claude/festive-allen-hl6igv`**, cinco commits por delante de `main`,
+  sin PR abierto
+- Tests: ✅ **822/822** (70 archivos) — Build: ✅ limpio, PWA con 39 entradas
+- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (todavía con
+  la 1.35.0: el despliegue se dispara al fusionar en `main`)
+
+### Fuentes de datos y de dónde salen
+
+| Fuente | Versión aplicada | Cómo se actualiza |
+|---|---|---|
+| Planificación | `2026-09-11-doc-completo` | Exportar el Google Doc como **text/plain** y regenerar `src/data/planificacion2026Fuente/texto1..9.js`. Ese formato conserva los saltos de línea que `convertirPlanificacion2026()` necesita; la exportación «natural» del conector los pierde y pega las actividades unas con otras. |
+| Rol institucional | `2026-09-11-rol-bloque-dic25-dic26` | Regenerar `src/data/seedRoles.js` desde «Rol Bloque 2026.xlsx». Siete pestañas de dos meses; los días empiezan en la **columna E**, el mes se detecta porque el número de día vuelve a 1, y la etiqueta de la fila 1 está combinada en medio del tramo, no al principio. |
 
 ## ✅ Hecho en esta sesión
 
@@ -167,7 +226,7 @@ i18n multi-idioma.
 
 Tests: de 290 a 724 (+434). Ninguna función existente se eliminó.
 
-### 🔎 Auditoría de puntos de dolor (2026-09-11, actualizada al cierre)
+### 🔎 Auditoría de puntos de dolor (2026-09-11, revisada el 2026-09-12)
 
 ⚠️ **Los dos documentos usan numeraciones `P` distintas e incompatibles.**
 `PROTOCOLO.md` §7 usa la de `docs/DOCUMENTO_FINAL_MEJORAS.md` (18 puntos);
@@ -184,16 +243,18 @@ DOCUMENTO_FINAL_MEJORAS.md (la de PROTOCOLO §7, canónica).
 | A-P6 | F-P9 | Controles inconsistentes / demasiado pequeños | ✅ **RESUELTO** | 41 botones a 48 px + `src/lib/__tests__/objetivosTactiles.test.js` |
 | A-P3 | F-P2 / F-P10 | Modal de Funcionario demasiado largo, sin pasos | ✅ **RESUELTO** | `ModalFuncionario.jsx`: 3 pasos con indicador y pestañas |
 | A-P1 | — | Sobrecarga cognitiva en Funcionarios | ✅ **RESUELTO** | filtros visibles + formulario en 3 pasos |
-| A-P14 | F-P13 / F-P14 | Validación solo al guardar, errores poco descriptivos | 🟡 **VIGENTE** | `ModalFuncionario.jsx` no valida nada salvo nombre vacío |
-| A-P8 | F-P5 | Tabla de Roles muy densa | 🟡 **VIGENTE** | `RolesMensualGrid.jsx` (873 líneas) → A1, Fase 3 |
-| A-P12 | F-P14 / F-P17 | Sin atajos de teclado | 🟡 **VIGENTE** | no hay `Ctrl+F` ni navegación por celdas |
-| A-P17 | — | Sin estado «cargando» al guardar | 🟢 **MENOR** | todo es síncrono en memoria; solo aplicaría a import/export |
+| A-P14 | F-P13 / F-P14 | Validación solo al guardar, errores poco descriptivos | ✅ **RESUELTO** (RF3) | `ModalFuncionario.jsx`: `FieldValidado` valida al salir del foco y el último paso resume `validarFuncionario` |
+| A-P8 | F-P5 | Tabla de Roles muy densa | ✅ **RESUELTO** (A1) | virtualizada por meses; la densidad visual se mantiene a propósito (ver decisiones) |
+| A-P12 | F-P14 / F-P17 | Sin atajos de teclado | ✅ **RESUELTO** | atajo «/» al buscador y navegación por celdas con flechas en Roles |
+| A-P17 | — | Sin estado «cargando» al guardar | ✅ **RESUELTO** | aviso de proceso al importar CSV; el resto es síncrono en memoria |
 | A-P4 | — | Navegación no intuitiva en Roles | ✅ RESUELTO antes de esta sesión | `Roles.jsx:156-265` |
 | A-P10 | — | «Restaurar mes» poco descubrible | ✅ RESUELTO / no aplica | vive en `Datos.jsx` y `Configuracion.jsx` |
 | — | F-P3 / F-P11 | Navegación difícil de recorrer | ✅ RESUELTO antes de esta sesión | `Sidebar.jsx`, `BottomNav.jsx` |
 | — | F-P6 | Información saturada en la vista Día | ✅ RESUELTO en móvil | `DiaLayout.jsx`, `DiaResumenMovil.jsx` |
 | A-P13 | F-P16 | Contraste bajo / colores poco intuitivos | ✅ RESUELTO antes de esta sesión | `ui/styles.js`, tema `hc` |
 | A-P18 | F-P18 | Texto pequeño en móvil | ✅ RESUELTO antes de esta sesión | sprint móvil, commit `f951d3e` |
+
+**No queda ningún punto de dolor de las dos auditorías sin resolver.**
 
 ## 🔜 Pendiente (en orden)
 

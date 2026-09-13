@@ -1,540 +1,329 @@
-export default String.raw`KV programar actividades de EA tomar en cuenta escuelas del humo de peji y el liceo de peji/atención de turismo
-ES patrullaje orosi/recoge a LV
-JV apoyar a diana tema excel de prevenciones administrativas/turismo
-
-
-
-
-PLE
-MS trabaja en excel de prevenciones administrativas 
-
-
-
-
-PVM
-MH capacitación ACLAP
-CC mantenimiento 
-Mariali pendientes con YC
-	13
-PNTMM
-Asominae
-YC pendientes 
-FC entra
-
-
-PNLQ
-Asominae
-DT asominae
-LV asominae
-KV asominae
-ES mantenimiento barajas
-JV atención turismo/excell temas prevenciones
-
-
-PLE
-Asominae
-MS asominae
-
-
-PVM
-Asominae
-CC patrullaje con MH
-MH patrullaje con CC 
-Patrullar lugares potenciales donde sacan palmito/Macho gaff/la Damita/guayabiyos/la Esperanza/empalme 
-	14
-PNTMM
-Visita TEC 34 estudiantes charla
-FC
-
-
-PNLQ
-MH turismo
-ES patrulljae con MS a sabanas del indio/supervisión labores del ice/ demas problematicas del sitio
-JV patrullar con CC reserva CV (laguna y esferas)/cerro asunción por la tarde
-JV asiste a reunión con montañistas 4 pm ADI la esperanza
-
-
-PLE
-MS patrulljae con ES a sabanas del indio/supervisión labores del ice/ demas problematicas del sitio 
-
-
-
-
-PVM
-MH apoya turismo PNLQ 8:00 am
-PPC
-CC patrullar con JV reserva CV (laguna y esferas)/cerro asunción posteriormente
-
-
-	15
-PNTMM
-FC turismo otros
+// Generado desde la exportación «text/plain» de PLANIFICACION BTMM 2026
+// (Google Docs). NO editar a mano: se regenera entero al sincronizar.
+// Parte 4 de 9.
+export default String.raw`Covirena apoya PNTMM
 
 
 
 
 PNLQ
-CC atiende turismo 
-JV patrulla con MH al sendero Villa Mills y al sitio VM
-
-
-
-
-PLE
-MS patrullaje en orosio Jaular con ES
-
-
-
-
-
-
-PVM
-CC apoya turismo PNLQ 8:00 am
-MH patrullaje con JV 
-Pernocta Alejandro 
-	16
-PNTMM
-FC Reunión con ACLAP caso VM 8am en San José
-ME PGAI 9 a 3pm Parque Ecológico
-ES atiende turismo
-
-
-
-
-PNLQ
-KV PGAI 9 a 3pm Parque Ecológico
-DT gira diplomado
+Voluntariado para barajas, atiende ES/JV/YC/DT
+LV estudios
 JV atiende turismo
 
 
 PLE
-MS mantenimiento informes
+CC y YE patrullaje RBCV, La Damita, Cerros
 
 
 
 
-PVM
-Reunión ACLAP
-MH capacitación ACOPAC
-Pernocta Alex
- 
-	17
-PNTMM
-ME atiende turismo
-ES mantenimiento
-FC reunion con la dirección y administradores asunto reestructuración ACC 
-
-
-PNLQ
-DT gira diplomado
-JB atención turismo
-JV atiende periodistas
-JB pernocta en LE
-MS apoya PNLQ
-
-
-PLE
-Pernocta JB
-MS apoya PNLQ
 
 
 
 
-PVM
-MH capacitación ACOPAC
-Pernocta Alex
-
-
-	18
-PNTMM
-FC presentación RLCVS en la UNA 2pm
-FC atención de turismo
-ME y ES van a la parte alta
-
-
-
-
-PNLQ
-DT gira diplomado
-JB gira IRT
-JV atención turismo,
-
-
-
-
-PLE
-Pernocta ES
-
-
-
-
-PVM
-MH capacitación ACOPAC
-Pernocta ME
  
 	19
 PNTMM
-YC atención de turismo
-FC gestiones varias
-
+Covirena y JV atienden turismo 
 
 
 
 
 PNLQ
-KV Conversatorio virtual y atención de turismo
-DT gira diplomado
-JB gira IRT
-JV reunion con CATIE en VM
+LV atiende turismo
+ES voluntariado en Barajas
+
+
+
+
 
 
 PLE
+CC y YE patrullaje Cerros, salen
+ 
 
 
 
 
 
 
-PVM
-Visita ICADS charla sobre relación con la comunidad
-MH capacitación ACOPAC
-Dayanna revisa inventarios con Mariali 
-ME atiende inventarios con la DAF
-JV reunion con ICADS CATIE
-Pernocta ME
+
+
  
 	20
 PNTMM
-FC atención de turismo, ingresa Gustavo Jimenez con profesores de la UCR para ver el tema de capacidad de carga
-Ingresa LuisDa covirena por la noche
-YC informes y sale para el PNLQ
+JV atiende turismo
 
 
 
 
 PNLQ
-KV Proyecto NBSAP y atiende a investigador 
-DT gira diplomado
-JB gira IRT
-MSa atiende turismo
-YC pernocta en PNLQ 
-JB retiran computadora en secretaria llevar compu vieja 
-JV retira computadora en secretaria llevar compu viej
+DT Mantenimiento e informes
+ES voluntariado en Barajas
+LV atiende turismo
+
+
 
 
 PLE
-2 personas de cedarena pasan la noche
+YE mantenimiento
 
 
 
 
-PVM
-Reunión ACLAP
-Pernocta ME
+
+
+
+
  
 	21
 PNTMM
-FC atención de turismo,
-LuisDa covirena apoyo PNTMM
+ME:Reunión PGAI Villa Mills
+JV turismo 
+YC listas conciliaciones y otros 
+Ver tema de p&g con JV 
 
 
 
 
 PNLQ
-Voluntariado ASVO/davivienda 40 pax 
-JB atiende con YC 
-MSa atiende turismo
+Pernocta el chofer Willy del ACC
+KV reunión de EA en VM
+LV turismo/inspección/barajas 
+DT informe voluntariado/adelanto de viáticos/informe ventas/ pegar flechas en barajas/turismo
+
+
 
 
 PLE
-ME capacitacion en la ADI Esperanza
-Pernocta JB
+YE mantenimiento barajas sube con MS 
+MS barajas/inspección/ informe 
+
+
+	
+
+	22
+PNTMM
+Conferencia Gestión del tiempo 10 a 12
+ME: apoyó incendios guanacaste 
+YC listas conciliaciones/respuesta a terceros/apoya Gira de EA a Tapanti escuela La Esperanza
 
 
 
 
-PVM
-Pernocta ES
+PNLQ
+DT Gira de EA a Tapanti  escuela La Esperanza
+Pernocta el chofer Willy del ACC
+KV reunión de EA en VM
+LV turismo
+ES entra/turismo/rótulos
+
+
+PLE
+YE mantenimiento toma 
+MS informes pendientes 
+	23
+PNTMM
+YC envía rol de mayo a Redy
+Varios administrativos
+
+
+PNLQ
+KV turismo por la mañana/charla restauración CBLS 2 a 4pm
+DT pegar rotulos/informes pendientes/ventas
+JB ingresa/presentacion del sabado 
+ES pegar rótulos con DT en barajas/baja apoyo tapanti 
+
+
+
+
+PLE
+YE mantenimiento sale 
+MS mantenimiento 
+
+
+
+
+
+
 
 
  
-	22
-PNTMM
-YC turismo/ varios 
-ME mantenimiento vehículos/turismo
-Apoyo Covirena Luis David 
-
-
-
-
-PNLQ
-JB pendientes PpC 
-LV turismo 
-
-
-PLE
-
-
-MS ingresa apoya tema PpC hablado BC in YC 
-
-
-PVM
-
-
- Pernocta ES
-	23
-PNTMM
-Presentación puente MOPT salon comunal Palomo 5pm
-FC retira compu llevar compu vieja 1pm
-JB
-YC
-
-
-
-
-PNLQ
-DT gira diplomado
-LV retira compu secretaria llevar compu vieja 
-KV retira compu secretaria llevar compu vieja 8am
-JB atiende turismo
-
-
-
-
-
-
-PLE
-
-
-MS traslada a compañeras a secretaria/retira computadora
-
-
-PVM
-
-
- Pernocta ES
 	24
 PNTMM
-ES retira compu de secretaria llevar compu vieja 8am/se traslada en 904 a pnlq y posterior en el 16
-YC 1:00 pm retira compu secretaria 
-ME Actividad del día del Agua
-JB turismo/saca excel con lo de PPC solicitado por YC
+FC Comite Tecnico
+YC envia rol de mayo a Redy
+YC comite tecnico
 
 
 PNLQ
-KV- Actividad del día del Agua
-DT gira diplomado
-LV informe de ventas PNLQ/informe de zahíno 
+JB Audiencia con MS/denuncia calle sánchez/cuechazo/otros
+DT  atención de turismo/organizan toldos y demás pra sabado
 
 
+KV atención de turismo/organizan toldos y demás pra sabado
 
 
 PLE
-MS retirar compu en secretaria llevar compu vieja
+MS audiencia 
 
 
 
 
-PVM
-CC entra 
+
+
+
+
  
 	25
 PNTMM
-Capacitación clima organizacional
-JB y YC visados y PNE
-Kryonics
-Investigadoras de la UNED
-ME atiende Kryonics y turismo/pendientes 
+Inauguración sendero Barajas y aniversario PNLQ
+Todos en organización 
+
+
 
 
 PNLQ
-KV-Capacitación clima organizacional
-DT gira diplomado
-LV patraullaje con Mariano coordinan
-CC valida entradas 
+JV, KV Inauguración sendero Barajas y aniversario PNLQ
+Todos en organizacón
 
 
 PLE
+Inauguración sendero Barajas y aniversario PNLQ
+Todos en organización 
 
 
-MS patrullaje con LV 
 
 
-PVM
-CC valida entradas 
+
+
+
+
  
 	26
 PNTMM
-FC Comite Tecnico
-YC varios y turismo/acompaña a Aguas a inspección  
-ES baja/revisa agua
+
+Es atención turismo 
 
 
 PNLQ
-DT gira diplomado
-JB gira apoyo OSLS
-LV turismo 
-JV entra ve temas de programas de investigación y monitoreo 
-KV vacaciones
-
-
+JB y MS atención turismo y pendientes 
 
 
 PLE
-MS pendientes/mantenimiento
 
 
 
 
-PVM
-CC mantenimiento/mediciones de armario para traslado
+
+
+
+
  
 	27
 PNTMM
-YC turismo/ varios 
-ES mantenimiento/ otros 
+ES turismo/chapea/otros
+Luis Da rótulos/turismo
+YC cita/ reunión 1:30
+Reunión con Juan Abarca, Edward Astua del ICE sobre obras de mantenimiento y anfibios 1,30pm
+ME informes ventas/pntmm/pnlq 
 
 
 
 
 PNLQ
-KV Reunión CBLS
-DT gira diplomado
-Kryonics
-LV asiste con KV 
-JV PPC con MS 
+
+
+JB turismo/ pendientes/desarma toldo 
+DT libre 
+KV turismo/ informe EA del 25 de abril/ desarmar toldo
+JV reunión 1:30 
 
 
 PLE
-Kryonics
 
 
-MS PPC con JV 
-PVM
+MS sube a quitar toldo de mini y traslada a muni coordina con KV 
 
 
- CC apoya pnlq 8:00 am 
+
+
+
+
+ 
 	28
 PNTMM
-OESS
-YC patrullaje humo
-ES patrullaje humo 
-COVIRENA Luis Da
-Apoyo 4 ASVOS atención turismo y demás en senderos 
-
-
-________________
-
+ME dia de la secretaria
+YC pendientes 
+ES mantenimiento 
 PNLQ
-OESS
-JV patrullaje con MS coordinan
-LV clases/atención turismo
-apoyo atención turismo chicos TCU
-________________
+DT dia de la secretaria baja en el 1100 a recoger a Mayra coordinan hora 
+JB turismo/pendientes 
+LV entra/turismo 
 
 
 PLE
-OESS
-MS patrullaje Rancho lalo
-ASVOS apoyan
-________________
 
 
-PVM
-OESS
-CC atención de turismo PNLQ/consult a MS si necesita traslado para patrullaje 
+MS mantenimiento/inspección con JB coordina 
+
+
+CC retira computadora en SINAC 
+
+
+ 
+	
+
 	29
 PNTMM
-OESS
-YC patrullaje Jaular
-ES patrullaje Jaular
-COVIRENA
-Apoyo 4 ASVOS
-________________
+YC lista 
+ME pendientes 
+ES cede varios 
 
 
 PNLQ
-OESS
-LV Operativo Cerros
-JV Cerros/operativo con FP 
-________________
+KV reunión CBLS virtual 9 a 12m.
+JV atención turismo/pendientes
+DT tema firma pz 
+LV lleva armas a cede con Errol 
+
+
+
+
 PLE
-OESS
-MS Cerros/operativo 
-GP atención turismo pnlq
+MS y CC iIngreso de montañistas al mirador
 
 
-________________
 
 
-PVM
-OESS
- CC atención turismo pnlq
+
+
+
+
+ 
 	30
 PNTMM
-OESS
-YC patrullaje Calle Sanchez
-ES patrullaje Calle Sanchez
-
-
-________________
-
-
+ES:Llevar vehículo 347-166 al taller san jose
+LV lleva 904 a taller en sj 
+YC pendientes/chespis 
 PNLQ
-OESS
-KV atención turimo
-JV patrullaje con GP y MS 
-LV patrullaje con GP y MS 
-DT baja a PNTMM 
-________________
-
-
+KVbarajas/ tema p&g
+LV: Llevar vehículo 347-166 al taller San José
+dt: barajas y tema p&g
+JV turismo/informe aniversario 
 PLE
-OESS
-MS Patrullaje Providencia
-GP Patrullaje Providencia
+CC: Traer Compañeros de san José, Taller
+YE mantenimiento 
 
 
-________________
 
 
-PVM
-OESS
-CC mantenimiento 
-	31
-PNTMM
-OESS
-YC patrullaje Alto Araya/Jaular
-ES patrullaje Alto Araya/Jaular
-ME VM 
-FC VM 
-________________
 
 
-PNLQ
-OESS
-LV patrullaje RB-Providencia
-KV patrullaje RB-Providencia
-JV VM 
-DT atiende turismo 
-________________
 
 
-PLE
-OESS
-MS patrullaje RB-Providencia
-AApatrullaje RB-Providencia
-________________
-
-
-PVM
-OESS
-MH entrega de armas y el puesto de VM
-CC traslado a LE
-	
-
-	
-
+ 
 	
 
 	
@@ -547,12 +336,10 @@ CC traslado a LE
 
 
 
-ABRIL 2026
+MAYO 2026
 	DOMINGO
 	LUNES
 	MARTES
-	
-
 	MIÉRCOLES
 	JUEVES
 	VIERNES
@@ -565,135 +352,136 @@ ABRIL 2026
 
 	
 
+	
+
 	1
 PNTMM
-OESS
-YC patrullaje El sitio
-JV patrullaje El sitio
-KV patrullaje El sitio
-JB patrullaje El sitio
-________________
+YC VB limpieza del BTMM
+Es turismo/rotulos 
 
 
 PNLQ
-OESS
-ES patrullaje Estaqueros
-Covirenas patrullaje Estaqueros
-________________
+LV turismo
+JV trabajo de rotulacion con YE y CC/turismo
+KV feriado
+DT feriado
 
 
 PLE
-OESS
-MS patrullaje Estaqueros
-________________
+CC rótulos con JV en PNLQ/apoyo en senderos y parqueos/atencion turismo
+YE rótulos con JV en PNLQ/apoyo en senderos y parqueos/atencion turismo
 
 
-PVM
-OESS
+
+
+
+
+
+
 
 
  
 	2
 PNTMM
-OESS
-________________
+
+ES turismo/rotulos 
 
 
 PNLQ
-OESS
-JB Patrullaje Cerros
-JV Patrullaje Cerros
-YE Patrullaje Cerros
-ES informes/visticos/turismo
- 
-LV informes/viáticos/turismo
 
 
-________________
+JV turismo/inducción a JPG 
+LV turismo 
+JG turismo/svomodo 
 
 
 PLE
-OESS
-YE Patrullaje Cerros
-CC inform pendiente/visticos 
 
 
-________________
+CC y YE 
+Atención denuncia PPC 
 
 
-PVM
-OESS
 
 
+
+
+ 
 	3
 PNTMM
-OESS
-________________
+
+ES turismo sale 
+LV turismo 
 
 
 PNLQ
-OESS
-ES Patrullaje Reserva Forestal
-JB Patrullaje Reserva Forestal  
-YE patrullaje reserva forestal i
-JV informes/viaticos/  turismo 
-________________
+
+
+LV baja temprano a Tapanti a apoyar hasta martes, baja en carro gris 
+
+
+JG turismo 
+
+
 
 
 PLE
-OESS
-________________
+
+
+CC y YE apoyan turismo en pnlq hasta cierre 
 
 
 PVM
-OESS
 
 
+ 
 	4
 PNTMM
-OESS
-________________
+YC VB limpieza del BTMM
+LV turismo 
 
 
 PNLQ
-OESS
-YE patrullaje copeybreserva 
-JB Patrullaje Copey- Reserva
-________________
+visita investigadores y estudiantes RBCV y Paramos PNTMM
+JG recorrido de senderos/cerros con CC y YE 
+KV turismo/explica dinámica del parque a compañeros nuevos y acompaña a recorrer senderos 
+PS recorrido de senderos/sicorre con KV/cerros con CC y YE
 
 
 PLE
-OESS
-________________
-
-
-PVM
-OESS
+CC tarjeta yola/ llevan a compañeros nuevos a los cerros explica problemática 
+YE retira  tarjeta/ acompaña a CC a llevar a compañeros a cerros a conocer problemática 
 
 
 
 
+
+
+
+
+ 
 	5
 PNTMM
-OESS
-JB Patrullaje Represa Cachí
-Policia Turistica Patrullaje Represa Cachí
-Covirenas Patrullaje Represa Cachí
-________________
+PRESENTACION PASANTE PACAYAS 10 am 
+LV turismo/atención pasante pacayas 
 
 
 PNLQ
-OESS
-________________
+visita investigadores y estudiantes RBCV y Paramos PNTMM
+Presentación pasante pacayas 10 AM 
+KV turismo/resive pasante de pacayas y profesor 
+
+
+Dt mantenimiento barajas con JG y PS 
 
 
 PLE
-OESS
-________________
 
 
-PVM
-OESS
+
+
+CC informes de mantenimiento 
+YE /lavado de 1100 
 
 
 
@@ -701,37 +489,25 @@ OESS
  
 	6
 PNTMM
-ME pendientes/informes voluntariado pendientes de mes pasado/turismo/sale a cita
-COVIRENAS apoyan
+ME: Entra,pendientes y turismo
+LV turismo
+YC pendientes admisnistrativos
 
 
 
 
 PNLQ
-JB denuncia calle sanchez 
-KV atención turismo 
-DT revisa trabajos para barajas/sube informes que envía YC al drive de PNLQ
+JB gira IRT
+KV-Reunión CME
+JG rotulación/turismo
+PS rotulación/turismo
+DTturismo/rotulaciin con PS y JG 
 
 
 PLE
-MS pendientes/viaticos/informes
- 
-	7
-PNTMM
-
-ME pendientes 
 
 
-PNLQ
-KV reunión con UCR
-DT informes/turismo
-
-
-
-
-PLE
-MS mantenimiento 
-
+YE CC la suba a pnlq apoyar rotulación con compañeros 
 
 
 
@@ -739,54 +515,693 @@ MS mantenimiento
 
 
  
-	
+	7
+PNTMM
+FUNDECOR con 78 estudiantes tarifa estudiante 
+ME: Cita médica/recoge 166 retiran materiales de funcorco
+YC turismo/pendientes 
 
+
+
+
+PNLQ
+FUNDECOR con 78 estudiantes tarifa estudiante 
+CTP pacayas estudiantes con exoneración
+DT:Cita firma digital moravia
+JV entra/cita diana/recogen zanate/recogen materiales funcorco/cede a dejar microfonos y recoger uniformes con Dayana
+LV pendientes sale
+JG turismo/rotulación
+PS temas de tenencia con JB/turismo/rotulos
+JB pendientes con YC
+KV: reciclaje a PZ con MS
+
+
+PLE:
+MS: reciclaje con KV en PZ
+YE pendientes sale 
+
+
+
+
+
+
+
+
+
+
+ 
 	8
 PNTMM
-Reunión CME
-ME turismo/corte de viáticos al 8 de abril 
-YC pendientes 
+ME:turismo/Reunion FB
+YC temas con JB 
+
+
+
+
 
 
 PNLQ
-Dt turismo 
-Sube informes a drive/inicia semec visitación de ambos parques 
-KV turismo/ inicia semec 
-JB apoyo ACC 
+JB baja a pntmm ver temas d este encía con YC 
+JV atención queja con MS 
+JG turismo/rotulos
+
+
 
 
 PLE
-MS semec de PPC de LA/apoya PNLQ de 11 en adelante.
+MS baja 1100 a taller se lleva a Josué a tapanti se devuelve en 904 se lleva rótulos de tapanti/atención queja con JV coordina 
+
+
+
+
+
+
 
 
  
 	9
 PNTMM
-ME: Reunion Bienes, de 1 a 3 pm
-YC inspección con JB
-JB baja inspección con YC bajan en un solo carro
-FC varios 
+YC trabajos con JB
+JB inspección calle sanchez y otros 
+JG inspección calle sanchez/recorrido senderos/
+
+
+ME turismo 
 
 
 PNLQ
-DT atención de turismo/actualización del drive de PNLQ/SEMEC visitación de ambos parques 
-KV SEMEC correspondiente 
+
+
+JV  turismo
+
+
+KV actividad CEDARENA en VM
+
+
+PLE
+
+
+MS atiende ASADA
+
+
+
+
+
+
+ 
+	10
+PNTMM
+
+Me turismo
+YC turismo/senderos
+
+
+
+
+PNLQ
+JV control asunción/rotulo 
+JB control asuncion/pegan rótulo
+JP control asunción 
 
 
 
 
 PLE
-CC apoyo información de vehículos ver correo de Fabricio/ reunión bienes de 1 a 3 coordinar con Mayra
 
 
-MS Baja con josué a inspección 
+MS control asunción/pegar rótulo/coordina con JV 
+
+
+PVM
+
+
  
-	10
+	11
 PNTMM
-Curso Primeros auxilios CUC
-YC Lorne Ross y cede
-FC turismo y otros 
+ME turismo/otros
+YC chespiritos 
 
 
 PNLQ
+JV terminar rotulo y poner en entrada sabanas del indio/informe voluntario ASVO 
+JB cherpiritos/denuncia sanchez
+JG terminar rótulo y poner en entrada sabanas del indio
+PS mantenimiento senderos con DT
+DT informes de ventas e informes pendientes psa a YC a las 4:00 pm 
+KV Turismo/ coordina actividades de junio pasa correo a Yeison 
+
+
+
+
+PLE
+
+
+MS recoge Materiales en Colono la Chinchilla con PS
+
+
+
+
+
+
+ 
+	12
+PNTMM
+ME:Atencion turismo/otros
+
+YC recoge materiales en EPA
+
+
+
+
+PNLQ
+
+
+
+
+
+
+PLE
+
+
+
+
+
+
+
+
+
+
+ 
+	MS
+	14
+PNTMM
+FC Reunión Vias amigables con el MOPT 9am
+YC pendientes  
+ME temas bienes
+ES entra/mantenimiento 
+
+
+PNLQ
+JB valoracion envía para firma/viaticos/turismo/sale
+DT rotulos barajas/mantenimiento/en la tarde comienzan protocolos
+KV rótulos barajas/mantenimiento/en la tarde comienzan protocolos
+JV baja a PNTMM/informe pendiente 
+PS rótulos barajas/monta perfil de sendero para rotulo/mantenimiento/en la tarde comienzan protocolos
+JV baja a PNTMM/informe pendiente 
+LV rótulos barajas/mantenimiento/en la tarde comienzan protocolos
+
+
+
+
+PLE
+MS 
+CC inventario de bienes
+
+
+	15
+PNTMM
+YC Comite Tecnico
+ME varios pendientes 
+JV temas conteo 
+ES temas conteo 
+
+
+PNLQ
+DT protocolos
+KV protocolos 
+PS protocolos 
+LV protocolos 
+
+
+
+
+PLE
+MS pendientes sale
+YE viáticos pendientes 
+CC inventario bienes 
+
+
+
+
+
+
+
+
+ 
+	16
+PNTMM
+Práctica Bombero Forestal
+2 estudiantes horas comunal 
+ME:Monitoreo de aves 
+
+
+PNLQ
+LV permiso de estudio clases y turismo 
+
+
+
+
+PLE
+
+
+CC apoyo turismo en pnlq
+YE apoyo turismo y senderos en pnlq
+
+
+
+
+
+
+ 
+	17
+PNTMM
+2 estudiantes horas comunal 
+ME pendientes/sale 
+JV turismo/base de datos de aves 
+ES mantenimiento 
+
+
+PNLQ
+LV turismo 
+
+
+
+
+PLE
+CC apoyo turismo en la mañana LV 
+YE apoyo turismo/senderos 
+GP apoyo pnlq 
+
+
+ 
+	18
+PNTMM
+2 estudiantes horas comunal 
+Es mantenimiento 
+JV sube a pnlq 
+PNLQ
+LV turismo 
+Dt informes ventas 
+
+
+
+
+PLE
+
+
+YE mantenimiento 
+
+
+
+
+ 
+	19
+PNTMM
+KV actividad PGAI
+ES mantenimiento/turismo
+
+
+
+
+PNLQ
+KV actividad PGAI
+LV turismo 
+JG mantenimiento 
+PLE
+YE mantenimiento
+GP mantenimiento 
+
+
+
+
+
+
+
+
+ De 
+	20
+PNTMM
+ES  mantenimiento/turismo
+
+
+
+
+PNLQ
+KV trabajan en protocolos 
+DT trabajan en protocolos 
+JG PPC con YE y LV 
+LV PPC con YE y JG cerros/revisan si están los rótulos
+
+
+PLE
+
+
+GP traslada a YE a PNLQ y se queda apoyando turismo
+YE PPC con JG y LV
+
+
+
+
+ 
+	21
+PNTMM
+
+ES materiales/lleva hidro a epa y demás, sube parte alta 
+YC:Atención Turismo,Denuncias, coordinar voluntariado
+PNLQ
+KV presentación con DT/turismo
+DT presentación con KV/turismo
+IV informe PPC el 19/turismo
+JG informe PPC de ayer/turismo
+JB termina VDA pasa a YC 
+
+
+
+
+PLE
+YE mantenimiento 
+GP mantenimiento 
+
+
+
+
+
+
+
+
+ 
+	22
+PNTMM
+FC Comite Tecnico
+YC pendientes,
+ES mantenimiento ZUP
+
+
+PNLQ
+VOluntariado UCR 20 personas/profesores 
+JPG atiende voluntariado 
+LV atiende voluntariado hasta medio día
+KV actividad EA en lankester
+Dt actividad EA Lankester
+JB denuncia sanchez, VDA y turismo
+
+
+PLE
+MS PPC por la mañana/villa mills tema de dantas, consulta a YE/en la tarde mantenimiento ronda
+GP PPC con MS/mantenimiento Ronda 
+YE PPC con Mariano/en la tarde realiza el informe correspondiente 
+
+
+	23
+PNTMM
+4 ASVOS
+ES mantenimiento ZUP 
+Luis David actividad de EA
+YC:Actividad EA. Pendientes
+PNLQ
+3 ASVOS
+JB PPC
+JPG PPC
+
+
+PLE
+MS PPC
+YE pendientes sale 
+
+
+
+
+
+
+
+
+ 
+	24
+PNTMM
+ME: Entra,Seguimiento actividades administrativas varias
+YC:,Seguimiento actividades administrativas varias e informe valoración de daño
+
+
+
+
+
+
+PNLQ
+JB: Boletería informe Valoración de daño
+PG:Mantenimiento Asvo Voluntariado
+
+
+PLE
+
+
+	25
+PNTMM
+ME: Atencion Turismo,Seguimiento actividades administrativas varias
+YC envía rol de junio a Redy
+
+
+PNLQ
+PG.Informes voluntariado UCR-ASVO S/D
+JB:Liquidacion Viaticos, Sale
+KV protocolos con PS
+Dt baja con MS a recorre 16 
+PLE
+MS reciben 16 en Guadalupe/llevan corcel a tapanti 
+
+
+	26
+PNTMM
+YC envía rol de junio a Redy/revisa SANES
+ME pendientes con YC
+
+
+PNLQ
+KV Mantenimiento con DT y PG/protocolos/turismo
+DT Mantenimiento Zeledonia con PG 
+PG terminan mantenimiento de Zeledonia 
+PS visado si ingresa/protocolos/turismo
+
+
+PLE
+
+
+MS visado si llega coordinar con PS/mantenimiento en puesto/informes fin de semana 
+	27
+PNTMM
+YC sanes/informes
+ME pendientes m/turismo
+
+
+
+
+PNLQ
+JB gira IRT
+KV turismo informes pendientes/viáticos
+Dt mantenimiento zeledonia 
+PS mantenimiento zeledonia 
+JG mantenimiento zeledonia 
+
+
+PLE
+
+
+MS mantenimiento zeledonia/compra 10 mil de gasolina y lleva a pnlq 
+
+
+	28
+PNTMM
+FC:Entra va a PNLQ
+ME:Cita médica
+YC turismo/otros
+
+
+PNLQ
+JB gira IRT
+DT mantenimiento zeledonia 
+PS mantenimiento/recogen equipo zeledonia/turismo/recogen equipo
+KV mantenimiento zeledonia/recogen equipo 
+LV turismo/recogen equipo
+
+
+PLE
+MS y GP apoyan mantenimiento de zeledonia y recoger equipos
+	29
+PNTMM
+4 VOLUNTARIOS
+LV inspección INCOPESCA con FC
+ME atencion turismo
+FC reunión en Purisil
+
+
+PNLQ
+JB gira IRT
+KV cita/exámenes hospital 
+DT turismo/protocolos
+LV turismo/protocolos inspección INCOPESCA con FC
+PS curso primeros auxilios
+
+
+
+
+PLE
+MS: curso primeros auxilios
+YE:Entra
+GP mantenimiento
+	30
+PNTMM
+4 VOLUNTARIOS
+ME y FC:Atencion Grupo CEDARENA
+ES mantenimiento con voluntarios
+
+
+
+
+PNLQ
+DT y KV reunión con Cedarena
+LV: Turismo
+
+
+PLE
+YE y GP: Apoyo PNLQ, patrullaje Cerros por ingresos ilegales
+
+
+
+
+	31
+PNTMM
+ME;atencion turismo
+FC gestion administrativa y ES mantenimiento con 
+4 VOLUNTARIOS
+
+
+PNLQ
+LV: atencion de Turismo
+
+
+PLE
+YE y GP: Apoyo PNLQ, patrullaje Cerros por ingresos ilegales
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+JUNIO 2026
+	DOMINGO
+	LUNES
+	MARTES
+	MIÉRCOLES
+	JUEVES
+	VIERNES
+	SÁBADO
+	
+
+	1
+PNTMM
+ FC VB limpieza del BTMM
+2 PASANTES CTP PACAYAS
+ME y ES apoyo PNPL incendio
+
+
+
+
+PNLQ
+1 PASANTES CTP PACAYAS
+
+
+
+
+PLE
+YE mantenimiento
+
+
+
+
+ 
+	2
+PNTMM
+VB limpieza del BTMM
+KM : Audiencia Juzgado Contravencional Paraíso
+realiza expediente caso de Efrain/organiza donde instalar rótulos de límites que quedan
+ME y ES apoyo PNPL incendio.
+FC labores administrativas
+
+
+PNLQ
+KV:Charla EA, Humo
+LV:Charla EA, Humo
+
+
+PLE
+YE mantenimiento
+
+
+
+
+	3
+PNTMM
+ME y ES apoyo PNPL incendio
+KM:FC, DT  JB y JC reunión con Redy y Nancy
+FC y DT se regresan la PNLQ, JB permanece en el puesto
+
+
+PNLQ
+KV- Taller CBLS con Agathos
+PS y JS 
+
+
+
+
+
+
+PLE
+YE mantenimiento
+
+
+
+
+ 
+	4
+PNTMM
+ME y ES apoyo PNPL incendio, regresan por la noche con GG
+115 estudiantes exonerados Lic San Nicolás Tolentino
+YC gestiones administrativa
+KM mantenimiento y gesiones PPC.
+practicantes del liceo colaboran con el mantenimiento
+Ingresa el covirena Luis David
+
+
+
+
+PNLQ
+KV:Charla EA,Dota
+PS:Charla EA,Dota
+PG:Charla EA,Dota
+YE mantenimiento y apoya PNLQ
+
+
+
+
+PLE
+YE mantenimiento y apoya PNLQ
+
+
+
+
+
+
 `;

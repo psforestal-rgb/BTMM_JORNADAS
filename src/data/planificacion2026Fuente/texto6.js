@@ -1,281 +1,38 @@
-export default String.raw`JB cherpiritos/denuncia sanchez
-JG terminar rótulo y poner en entrada sabanas del indio
-PS mantenimiento senderos con DT
-DT informes de ventas e informes pendientes psa a YC a las 4:00 pm 
-KV Turismo/ coordina actividades de junio pasa correo a Yeison 
-
-
-
+// Generado desde la exportación «text/plain» de PLANIFICACION BTMM 2026
+// (Google Docs). NO editar a mano: se regenera entero al sincronizar.
+// Parte 6 de 9.
+export default String.raw`
 
 PLE
+MS baja 1100 a taller para avaluo de choque, en caballo blanco/sube a YE a PNLQ
 
 
-MS recoge Materiales en Colono la Chinchilla con PS
-
-
-
-
+YE apoyo mantenimiento con PG 
 
 
  
-	12
-PNTMM
-ME:Atencion turismo/otros
-
-YC recoge materiales en EPA
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-
-
-
- 
-	MS
-	14
-PNTMM
-FC Reunión Vias amigables con el MOPT 9am
-YC pendientes  
-ME temas bienes
-ES entra/mantenimiento 
-
-
-PNLQ
-JB valoracion envía para firma/viaticos/turismo/sale
-DT rotulos barajas/mantenimiento/en la tarde comienzan protocolos
-KV rótulos barajas/mantenimiento/en la tarde comienzan protocolos
-JV baja a PNTMM/informe pendiente 
-PS rótulos barajas/monta perfil de sendero para rotulo/mantenimiento/en la tarde comienzan protocolos
-JV baja a PNTMM/informe pendiente 
-LV rótulos barajas/mantenimiento/en la tarde comienzan protocolos
-
-
-
-
-PLE
-MS 
-CC inventario de bienes
-
-
-	15
-PNTMM
-YC Comite Tecnico
-ME varios pendientes 
-JV temas conteo 
-ES temas conteo 
-
-
-PNLQ
-DT protocolos
-KV protocolos 
-PS protocolos 
-LV protocolos 
-
-
-
-
-PLE
-MS pendientes sale
-YE viáticos pendientes 
-CC inventario bienes 
-
-
-
-
-
-
-
- 
-	16
-PNTMM
-Práctica Bombero Forestal
-2 estudiantes horas comunal 
-ME:Monitoreo de aves 
-
-
-PNLQ
-LV permiso de estudio clases y turismo 
-
-
-
-
-PLE
-
-
-CC apoyo turismo en pnlq
-YE apoyo turismo y senderos en pnlq
-
-
-
-
-
- 
-	17
-PNTMM
-2 estudiantes horas comunal 
-ME pendientes/sale 
-JV turismo/base de datos de aves 
-ES mantenimiento 
-
-
-PNLQ
-LV turismo 
-
-
-
-
-PLE
-CC apoyo turismo en la mañana LV 
-YE apoyo turismo/senderos 
-GP apoyo pnlq 
-
-
- 
-	18
-PNTMM
-2 estudiantes horas comunal 
-Es mantenimiento 
-JV sube a pnlq 
-PNLQ
-LV turismo 
-Dt informes ventas 
-
-
-
-
-PLE
-
-
-YE mantenimiento 
-
-
-
-
- 
-	19
-PNTMM
-KV actividad PGAI
-ES mantenimiento/turismo
-
-
-
-
-PNLQ
-KV actividad PGAI
-LV turismo 
-JG mantenimiento 
-PLE
-YE mantenimiento
-GP mantenimiento 
-
-
-
-
-
-
-
- De 
-	20
-PNTMM
-ES  mantenimiento/turismo
-
-
-
-
-PNLQ
-KV trabajan en protocolos 
-DT trabajan en protocolos 
-JG PPC con YE y LV 
-LV PPC con YE y JG cerros/revisan si están los rótulos
-
-
-PLE
-
-
-GP traslada a YE a PNLQ y se queda apoyando turismo
-YE PPC con JG y LV
-
-
-
-
- 
-	21
-PNTMM
-
-ES materiales/lleva hidro a epa y demás, sube parte alta 
-YC:Atención Turismo,Denuncias, coordinar voluntariado
-PNLQ
-KV presentación con DT/turismo
-DT presentación con KV/turismo
-IV informe PPC el 19/turismo
-JG informe PPC de ayer/turismo
-JB termina VDA pasa a YC 
-
-
-
-
-PLE
-YE mantenimiento 
-GP mantenimiento 
-
-
-
-
-
-
-
- 
-	22
-PNTMM
-FC Comite Tecnico
-YC pendientes,
-ES mantenimiento ZUP
-
-
-PNLQ
-VOluntariado UCR 20 personas/profesores 
-JPG atiende voluntariado 
-LV atiende voluntariado hasta medio día
-KV actividad EA en lankester
-Dt actividad EA Lankester
-JB denuncia sanchez, VDA y turismo
-
-
-PLE
-MS PPC por la mañana/villa mills tema de dantas, consulta a YE/en la tarde mantenimiento ronda
-GP PPC con MS/mantenimiento Ronda 
-YE PPC con Mariano/en la tarde realiza el informe correspondiente 
-
-
 	23
 PNTMM
-4 ASVOS
-ES mantenimiento ZUP 
-Luis David actividad de EA
-YC:Actividad EA. Pendientes
+2 voluntarios UCR y 4 TEC
+ES curso CI-IF
+KM y YC citadas pendientes 
+ME turismo/voluntarios 
+
+
 PNLQ
-3 ASVOS
-JB PPC
-JPG PPC
+todos conferencia de 10-12
+Tarde 
+PS y PG levantan información necesaria pra gira de viernes 
+DT y KV planeamiento actividad del viernes 
+
+
 
 
 PLE
-MS PPC
-YE pendientes sale 
+MS y YE mantenimiento de toma luego conferencia de 10-12/tarde mantenimiento de equipo 
+
+
+
 
 
 
@@ -286,148 +43,206 @@ YE pendientes sale
  
 	24
 PNTMM
-ME: Entra,Seguimiento actividades administrativas varias
-YC:,Seguimiento actividades administrativas varias e informe valoración de daño
-
-
-
-
+2 voluntarios UCR y 4 TEC
+ME:Charla EA Orosi
+ES curso CI-IF
+YC atiende grupo P&G Reunión con ASVO 
 
 
 PNLQ
-JB: Boletería informe Valoración de daño
-PG:Mantenimiento Asvo Voluntariado
+PS y JP inspección 
+LV turismo PNLQ y traslado de compañeros coordinar con PS
+KV Y DT:Charla EA Orosi
+
+
 
 
 PLE
+YE actividad EA con KV y DT/sale
+GP apoyo turismo PNLQ y traslado de compañeros coordinar con PS
+MS apoyo actividad manejo del fuego en Lornne Ross
+
+
+
+
 
 
 	25
 PNTMM
-ME: Atencion Turismo,Seguimiento actividades administrativas varias
-YC envía rol de junio a Redy
+2 voluntarios UCR 1 TEC
+Me pendientes 
+FC 
 
 
 PNLQ
-PG.Informes voluntariado UCR-ASVO S/D
-JB:Liquidacion Viaticos, Sale
-KV protocolos con PS
-Dt baja con MS a recorre 16 
+Jpg patrullaje coordina con MS 
+LV turismo 
+
+
+
+
 PLE
-MS reciben 16 en Guadalupe/llevan corcel a tapanti 
 
 
+MS patrullaje 
+Gp patrullaje 
+
+
+
+
+ 
 	26
 PNTMM
-YC envía rol de junio a Redy/revisa SANES
-ME pendientes con YC
+FC gestiones varias
+2 voluntarios UCR  1 TEC
+
+
 
 
 PNLQ
-KV Mantenimiento con DT y PG/protocolos/turismo
-DT Mantenimiento Zeledonia con PG 
-PG terminan mantenimiento de Zeledonia 
-PS visado si ingresa/protocolos/turismo
+MS Y PG:Patrullaje La Esperanza, Tapanti.RBCV
+LV atiende visitación
+
+
 
 
 PLE
+MS Gp y PG: Patrullaje La Esperanza, Tapanti.RBCV
 
 
-MS visado si llega coordinar con PS/mantenimiento en puesto/informes fin de semana 
+
+
+
+
 	27
 PNTMM
-YC sanes/informes
-ME pendientes m/turismo
-
-
+2 voluntarios UCR  1 TEC
+FC:Patrullaje gira Tsimari
 
 
 PNLQ
-JB gira IRT
-KV turismo informes pendientes/viáticos
-Dt mantenimiento zeledonia 
-PS mantenimiento zeledonia 
-JG mantenimiento zeledonia 
+JV : Patrullaje gira Tsimari
+
+
 
 
 PLE
+MS Patrullaje Tsimari
 
 
-MS mantenimiento zeledonia/compra 10 mil de gasolina y lleva a pnlq 
 
 
+
+
+ 
 	28
 PNTMM
-FC:Entra va a PNLQ
-ME:Cita médica
-YC turismo/otros
+2 voluntarios UCR 
+Pasante frances Enzo
+FC:Patrullaje gira Tsimari
+Km SITADAS 
+YC informes voluntariado
 
 
 PNLQ
-JB gira IRT
-DT mantenimiento zeledonia 
-PS mantenimiento/recogen equipo zeledonia/turismo/recogen equipo
-KV mantenimiento zeledonia/recogen equipo 
-LV turismo/recogen equipo
+JV: Patrullaje gira Tsimari
+LV y KV reunión QERK en San Gerardo de Dota, y luego van a reciclaje en PZ
+DT lleva perros a t zaguastes
+PS informes tecnicos/denuncia/turismo 
+Voluntarios turismo/encuestas
 
 
 PLE
-MS y GP apoyan mantenimiento de zeledonia y recoger equipos
+MS Patrullaje Tsimari
+GP mantenimiento equipo 
+
+
+
+
+
+
+
+
+ 
 	29
 PNTMM
-4 VOLUNTARIOS
-LV inspección INCOPESCA con FC
-ME atencion turismo
-FC reunión en Purisil
+2 voluntarios UCR 
+Pasante frances Enzo
+FC:Patrullaje gira Tsimari
+KM PPC 
+YC retira equipo de vida silvestre 
 
 
 PNLQ
-JB gira IRT
-KV cita/exámenes hospital 
-DT turismo/protocolos
-LV turismo/protocolos inspección INCOPESCA con FC
-PS curso primeros auxilios
-
-
-
-
+JV : Patrullaje gira Tsimari
+KV: Actividad de EA en escuela de Machogaff
+LV y ps inspecciones e informes pendientes 
 PLE
-MS: curso primeros auxilios
-YE:Entra
-GP mantenimiento
+MS Patrullaje Tsimari
+CC chequeo médico 
+GP atención turismo en pnlq 
+
+
+
+
+
+
+ 
 	30
 PNTMM
-4 VOLUNTARIOS
-ME y FC:Atencion Grupo CEDARENA
-ES mantenimiento con voluntarios
-
-
+2 voluntarios UCR 
+Pasante frances Enzo
+FC:Patrullaje gira Tsimari
+YC contestar a Redy 
+KM mantenimiento 
 
 
 PNLQ
-DT y KV reunión con Cedarena
-LV: Turismo
+JV : Patrullaje gira Tsimari
+Dt mantenimiento senderos con voluntarios/pendientes con Y. 
+LV inspecciones 
+KV mantenimiento senderos/ informes 
+PS inspecciones con LV 
+
+
+
+
 
 
 PLE
-YE y GP: Apoyo PNLQ, patrullaje Cerros por ingresos ilegales
+MS Patrullaje Tsimari
+GP mantenimiento equipo en pnlq 
+CC atiende turismo pnlq 
 
 
 
 
+
+
+ 
 	31
 PNTMM
-ME;atencion turismo
-FC gestion administrativa y ES mantenimiento con 
-4 VOLUNTARIOS
+2 voluntarios UCR 
+Pasante frances Enzo
+FC Evaluacion de desempeño 10am
+ES apoya PNLQ
+
+
 
 
 PNLQ
-LV: atencion de Turismo
+KV*Reunión del CBLS
+ES apoya PNLQ
+
+
 
 
 PLE
-YE y GP: Apoyo PNLQ, patrullaje Cerros por ingresos ilegales
+MS cambio de aceite informes
+CC apoyo al PNLQ
+YE y GP Mantenimiento
+
+
 
 
 
@@ -436,20 +251,9 @@ YE y GP: Apoyo PNLQ, patrullaje Cerros por ingresos ilegales
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
 
 
-
-
-JUNIO 2026
+AGOSTO 2026
 	DOMINGO
 	LUNES
 	MARTES
@@ -459,58 +263,75 @@ JUNIO 2026
 	SÁBADO
 	
 
+	
+
+	
+
+	
+
+	
+
+	
+
+ 
 	1
 PNTMM
- FC VB limpieza del BTMM
-2 PASANTES CTP PACAYAS
-ME y ES apoyo PNPL incendio
+2 voluntarios UCR 
+Feria en Villa Mills
+ES apoya PNLQ
 
 
 
 
 PNLQ
-1 PASANTES CTP PACAYAS
+Feria en Villa Mills
+ES apoya PNLQ
 
 
 
 
 PLE
-YE mantenimiento
+Feria en Villa Mills
+
+
+
+
+PVM
+Feria en Villa Mills
+ 
+	2
+PNTMM
+2 voluntarios UCR 
+
+
+
+
+PNLQ
+ES apoya PNLQ y baja a Tapanti
+
+
+
+
+PLE
+
+
+
+
+
+
 
 
 
 
  
-	2
-PNTMM
-VB limpieza del BTMM
-KM : Audiencia Juzgado Contravencional Paraíso
-realiza expediente caso de Efrain/organiza donde instalar rótulos de límites que quedan
-ME y ES apoyo PNPL incendio.
-FC labores administrativas
-
-
-PNLQ
-KV:Charla EA, Humo
-LV:Charla EA, Humo
-
-
-PLE
-YE mantenimiento
-
-
-
-
 	3
 PNTMM
-ME y ES apoyo PNPL incendio
-KM:FC, DT  JB y JC reunión con Redy y Nancy
-FC y DT se regresan la PNLQ, JB permanece en el puesto
+2 voluntarios UCR VB limpieza del BTMM
+
+
 
 
 PNLQ
-KV- Taller CBLS con Agathos
-PS y JS 
 
 
 
@@ -518,7 +339,12 @@ PS y JS
 
 
 PLE
-YE mantenimiento
+
+
+
+
+
+
 
 
 
@@ -526,27 +352,704 @@ YE mantenimiento
  
 	4
 PNTMM
-ME y ES apoyo PNPL incendio, regresan por la noche con GG
-115 estudiantes exonerados Lic San Nicolás Tolentino
-YC gestiones administrativa
-KM mantenimiento y gesiones PPC.
-practicantes del liceo colaboran con el mantenimiento
-Ingresa el covirena Luis David
+VB limpieza del BTMM
+YC tema brigada y otros 
+KM actividades PPC de septiembre incluye actividades de Manejo del fuego 
 
 
 
 
 PNLQ
-KV:Charla EA,Dota
-PS:Charla EA,Dota
-PG:Charla EA,Dota
-YE mantenimiento y apoya PNLQ
+Reunion Comite turismo con GJ
+YE apoya turismo
+DT y JV comite turismo coordinar con Gustavo 
+PS denuncia e informes pendientes/coordina inspecciones del miércoles
+
+
 
 
 
 
 PLE
-YE mantenimiento y apoya PNLQ
+YE mantenimiento en puesto
+CC mantenimiento en puesto 
+
+
+	5
+PNTMM
+Reunión CME
+KM mantenimiento 
+YC varios 
+
+
+
+
+PNLQ
+KV- Reunión CME
+DT temas pendientes de YC 
+YE apoyo con turismo y apoyo a Diana 
+PS inspecciones con ES y CC 
+ES inspecciones con Ps y CC 
+
+
+PLE
+
+
+YE apoyo PNLQ sube con DT en patineta 
+
+
+CC inspección con Pablo y Errol 
+ 
+	6
+PNTMM
+km reunión operativo especial 
+YC documentación para curso CBF y otros
+
+
+PNLQ
+DT tema turismo y otris pendientes 
+KV EA liceo de cañón
+PS informes pendientes
+CC apoyo pnlq turismo
+ES baja a muni guarco a hacer consulta/elabora lista de trabajos para voluntarios y pasa a YC
+
+
+PLE
+CC apoyo pnlq turismo
+YE acompaña a ES/ayuda a errol con lista  
+
+
+
+
+ 
+	7
+PNTMM
+
+KM pendientes/ver equippo del voluntariado pra sabado
+YC denuncia/FAO y otros 
+
+
+PNLQ
+DT lleva a errol a recoger VIR/baja atender voluntariado del sábado/recoge corcel en taller
+ES recoge VIR/informe voluntariado pendiente/viático pendiente/lista de trabajos para voluntarios/salle 
+LV entra baja apoyar PNTMM
+PS continua informes y denuncia/prioriza informe temas chespis
+KV turismo/informes de actividades 
+
+
+PLE
+YE apoya pnlq sube a pernoctar fin de semana
+CC mantenimiento en puesto pernocta hasta sábado 
+
+
+
+
+
+
+ 
+	8
+PNTMM
+DT voluntariado  40 pax
+LV turismo 
+Apoyo Diego Q
+
+
+PNLQ
+
+
+YE turismo 
+
+
+PLE
+
+
+GP apoyo a PNLQ hasta cierre 
+
+
+ 
+	9
+PNTMM
+LV turismo recorridos
+Apoya Nina y Diego
+
+
+PNLQ
+YE turismo 
+
+
+
+
+PLE
+GP apoya turismo a yolanda hasta cierre 
+	10
+PNTMM
+JV, DT, YC reunion de sanes con Gustavo 
+KM recoge suministros de limpieza con Dayanna, rótulos con Steven, toño con ana cecilia, tarjeta de ruedo de vir 
+
+
+PNLQ
+KV turismo
+PS informes
+JV reunión con YC y G
+Dt reunión con YC en tapanti
+
+
+PLE
+GP revisión de toma y otros de mantenimiento 
+	11
+PNTMM
+
+FC reunion Bandera Azul 1.30pm Marriot Belen Heredia
+YC capacitación con la FAO en IICA 
+
+
+
+
+PNLQ
+DT, LV, JV y KV  MIF en escuelas Trinidad
+PS pendientes
+
+
+PLE
+GP apoyo pnlq 
+	12
+PNTMM
+YC capacitación con la FAO en IICA 
+Km turismo/simulacro ver documento 
+
+
+PNLQ
+LV  capacitación manipulación de serpientes
+DT turismo/herramienta de flujo/simulacro ver documento
+KV turismo apoyo herramienta de flujo a DT/simulacro ver documento 
+JV capacitación manipulación de serpientes 
+PS capacitación manipulación de serpientes 
+PLE
+GP atiende turismo en PNLQ 8:00 pm/simulacro ven documento  
+
+
+	13
+PNTMM
+Km turismo
+YC capacitación con la FAO en IICA 
+
+
+PNLQ
+DT y KV, JV MIF en escuela
+LV turismo 
+PS pendientes 
+
+
+PLE
+GP mantenimiento en puesto
+
+
+
+
+
+
+
+
+ 
+	14
+PNTMM
+Comite Tecnico
+KM turismo
+DT, JV y KV MIF en escuelas
+YC CCT/reunión con PS
+PNLQ
+PS y YC resolución la georgina 
+DT, JV y KV, MIF en escuelas
+JV apoyo a PNTMM
+LV lleva 347-16 a taller con GP
+PS turismo 
+PLE
+GP baja con LV al taller llevan 1100 y 347-16
+
+
+
+
+
+
+ 
+	15
+PNTMM
+JV turismo 
+
+
+
+
+PNLQ
+LV turismo
+
+
+PLE
+
+
+CC apoyo pnlq 
+GP apoyo pnlq
+
+
+
+
+
+
+ 
+	16
+PNTMM
+JV turismo 
+
+
+
+
+PNLQ
+LV turismo/sale 
+
+
+
+
+PLE
+
+
+CC apoyo pnlq 
+GP apoyo pnlq pernocta pnlq 
+
+
+
+
+ 
+	17
+PNTMM
+KM turismo/ otros 
+YC pendientes/conciliación JCP 1:30
+JV turismo/sube a pnlq 
+ME corte de viáticos 
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+
+
+Dt 
+KV recibe estudiante del CTP explica funcionamiento y tema de informe 
+DT informe de actividades ES/informe de ventas
+PS tema la Georgina 
+
+
+PLE
+CC patrullaje tajo con Gp/mantenimientk 
+GP patrullaje tajo con CC/mantenimient 
+ 
+	18
+PNTMM
+km informe solicitado 
+ME pendientes 
+YC Georgina/pendientes 
+
+
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+DT EA en la esperanza 
+PS pendientes 
+YE ea en la esperanza coordina con DT
+ES EA en la esperanza coordina con Diana 
+
+
+PLE
+
+
+ CC apoyo pnlq turismo 
+	19
+PNTMM
+YC reunión profesora CTP melioni 9 am
+ME pendientes/corte de viaticos
+Km informe 
+
+
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+ES turismo/mantenimiento 
+PS pendeintes
+KV vacaciones
+DT libre acumulado
+
+
+PLE
+YE mantenimiento 
+CC mantenimiento 
+
+
+	20
+PNTMM
+YC reunión en la ADI esperanza
+KM apoyo inspecciones PNLQ con PS 
+ME turismo/otros
+
+
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+KV Dia de Parques Nacionales
+PS visados con KM 
+DT reunión en la ADI la esperanza 
+ES recoge cuadraciclo en cede y lleva a tapanti/baja a KV
+
+
+PLE
+CC cita medica
+YE apoyo turismo PNLQ
+
+
+ 
+	21
+PNTMM
+kM pendientes/sale 
+ME temas administrativos/organiza tema del sábado en purisil 
+
+
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+KV Dia de Parques Nacionales
+ES PATRULLAJE/ visado
+MN patrullaje/tarde turismo
+PS pendientes y visado en la tarde con ES 
+
+
+PLE
+CC mantenimiento toma con YE 
+
+
+ 
+	22
+PNTMM
+
+ME apoyo actividad purisil con Covirena 
+
+
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+KV Dia de Parques Nacionales
+ES patrullaje cerros y reserva biológica 
+MN patrullaje cerros y reserva biológica 
+JV entra turismo 
+
+
+PLE
+CC apoya turismo pnlq 
+ YE patrullaje con ES y MN 
+	23
+PNTMM
+YC Dia de Parques Nacionales
+ME turismo 
+Apoyoo Covirena y voluntario 
+
+
+PNLQ
+KV, DT, JV, LV, ESDia de Parques Nacionales
+MN turismo 
+Apoyo 3 a vacía 
+CC apoyo turismo 
+2 pasantes Ecoturismo del CTP Umberto Melloni
+
+
+
+
+PLE
+YE Dia de Parques Nacionales
+CC qpoyo pnlq 
+	24
+PNTMM
+YC Dia de Parques Nacionales
+
+
+
+
+PNLQ
+Dia de Parques Nacionales
+KV, JV, LV, DT Dia de Parques Nacionales
+2 pasantes Ecoturismo del CTP Umberto Melloni
+
+
+PLE
+YE Dia de Parques Nacionales
+	25
+PNTMM
+ME pendientes/visita purisil con YC 
+YC pendientes/purisil tema de Santa 
+KM informe pendiente 
+
+
+PNLQ
+2 pasantes Ecoturismo del CTP Umberto Melloni 
+JV trabaja apoyo en temas de sanes/pide encuestas a mariali 
+KV LA
+MN EA cañón con ES y DT 
+DT apoyo organización y mantenimiento de equipo en ea cañón/informes pendientes  
+ES ea cañón/ mantenimiento y rotulación 
+PS termina resolución Georgina pasa a YC para envío a a sería J 
+LV turismo/comienza documento protocolo atención dantas 
+
+
+
+
+PLE
+YE EA cañón coordina con Diana 
+GP apoyo pnlq 
+CC pendientes/sale 
+
+
+
+
+	26
+PNTMM
+YC PPC/purisil
+ES ppc 
+MN informes pendientes/turismo
+ME pendientes/sale 
+FC ingresa informes
+KM informes y sale libres
+
+
+PNLQ
+KV y DT Actividad EA en Jucó
+PS pendientes 
+JV patrullaje/tema sanes y tema cerca de danta
+LV patrullan/informe 
+2 pasantes Ecoturismo del CTP Umberto Melloni
+
+
+
+
+PLE
+YE ea juco con Diana y KV coordina con DT
+GP apoyo turismo pnlq/revisión toma la esperanza 
+
+
+
+
+
+
+	27
+PNTMM 
+FC, ES y YC Reunión de personal BTMM en el PNLQ
+MN atención turismo/Planificación de Voluntariado Noviembre 27- Actividad EA y ecorecreativa
+
+
+PNLQ
+DT, PS, LV, JV Reunión de personal BTMM
+JV sale 
+1 pasante Ecoturismo del CTP Umberto Melloni
+
+
+
+
+PLE
+GP Reunión de personal BTMM en el PNLQ, sale libre
+FC pernocta en LE
+
+
+	28
+PNTMM
+MN atención turismo/Atención al público, seguimiento a informes,planificación de capacitación con OIJ y Camilo, Proyecto RAMSAR
+
+
+
+
+PNLQ
+KV-Reunión CBLS y cita por la tarde
+LV y FC  inspección INCOPESCA
+LV sale a urgencias en San Marcos
+PS informes cita por la tarde
+1 pasante Ecoturismo del CTP Umberto Melloni
+
+
+
+
+PLE
+FC reunión con la miscelánea, sale a apoyar PNLQ, pernocta en LE
+
+
+	29
+PNTMM
+MN atención turismo/Atención al público y planificación de actividad de Herpetos, sale de dias libres
+FC regresa, atención a usuario que se quedó sin bateria
+
+
+
+
+PNLQ
+LV en cita médica PZ regresa por la tarde
+
+
+
+
+
+
+PLE
+MS ingresa va a apoyar PNLQ
+
+
+
+
+	30
+PNTMM
+FC atencion turismo, ingresa Enzo
+
+
+
+
+PNLQ
+LV atencion turismo
+
+
+
+
+PLE
+MS atención atropello de danta
+
+
+
+
+	31
+PNTMM
+ME: Enviar la solicitud de las tarjetas de ruedo del Bloque.
+FC atencion turismo, gestión, ingresa Camille
+
+
+
+
+PNLQ
+LV sale libre, ingresa JV atiende turismo
+
+
+
+
+PLE
+MS mantenimiento
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+
+
+SETIEMBRE 2026
+	DOMINGO
+	LUNES
+	MARTES
+	MIÉRCOLES
+	JUEVES
+	VIERNES
+	SÁBADO
+	
+
+	
+
+	1
+PNTMM
+VB limpieza del BTMM
+ME: Enviar la solicitud de las tarjetas de ruedo del Bloque.
+DS reunión con FC y JC
+YC pendientes 
+
+
+PNLQ
+KV Coordina con alexis la cantidad de personas y sillas necesarias y demás para reunión CME, coordina curso musgos, limpieza carretera
+DS ingresa 
+DT informes de ventas y atención del turismo
+PS informes pendientes
+
+
+PLE
+MS mantenimiento 
+
+
+
+
+	2
+PNTMM
+VB limpieza del BTMM
+ME: Vacaciones
+YC tema covirenas y brigada
+
+
+PNLQ
+KV- atencion de turismo, gestiones varias
+DS, PS y MS patrullaje Villa Mills, La Georgina
+DT mantenimiento de senderos con JV /luego tema de la herramienta y temas sanes
+FC y JV inspeccion postes y patrullaje Mirador Quetzales
+
+
+
+
+PLE
+DS, PS y MS patrullaje Villa Mills, La Georgina
+
+
+
+
+	3
+PNTMM
+FC informes
+YC gestion
+Reunion Brigada Forestal 6pm
+
+
+
+
+PNLQ
+USO DE INSTALACIONES POR PARTE DE LA CME 
+20 PAX con la oficina de los santos
+JV DS  sabanas de indio
+PS visados
+DT y ES mantenimiento caminos LE
+6pm reunion brigada forestal
+
+
+
+
+PLE
+MS y GP patrullaje
+CC mantenimiento
+
+
+
+
+	4
+PNTMM
+YC y MN ES :Patrullaje Pejibaye 
+Práctica Incendios Forestale , se cancela
+FC gestiones varias
+Ingresa covirena
+
+
+PNLQ
+DS, PS y MS inspeccion la georgina
+JV camaras trampa
+DT informes mantenimiento
+KV reunion CB gestion curso musgos
+
+
+PLE
+CC y GP mantenimiento
 
 
 
@@ -556,38 +1059,47 @@ YE mantenimiento y apoya PNLQ
  
 	5
 PNTMM
-51 ESTUDIANTES CON TARIFA DE ESTUDIANTE(COLEGIO CANADIENSE)
-ME turismo/pendientes
-ES patrullaje con KM
-YC valoración de daño con JB
+ME y MN:Dia Internacional mujer Indigena Grana de Oro
+ES mantenimiento senderos 
+Camilla apoya turismo 
+Covirena apoya turismo
 
 
 PNLQ
-JV:Int E,Monitoreo M Orosi
-PG:Int E,MonitoreoM Orosi/apoyo a DT con tema de papelería/turismo 
-JB valoración de daño de paco, informe sobre la georgina para enviar a DJ Minae
-DT 
-KV es en providencia coordina con Mariano 
-PS patrullaje con MS y turismo y cierre después de las 12 
+JV: Monitoreo PNLQ con Enzo 
+
+
+DS patrullaje con JV y cambio de cámaras trampa 
+
+
+
+
 PLE
-YE patrullaje con MS y PS 
- MS patrullaje con YE y PS coordina con KV para traslado a escuela 
+CC apoyo turismo pnlq con GP 
+
+
+
+
+
+
+ 
 	6
 PNTMM
-JV, PG, ES monitoreo de murciélagos
-YC informe giorgina con JB
-ME pendientes/sale
-ES mantenimiento pintura de baños con voluntarios y Luis da  
+ME, ES y MN Gira sobre hongos en LE
+Covirena atiende turismo
+
+
 
 
 PNLQ
-JV, PG monitoreo de murciélagos
-JB turismo/informe de la Georgina 
+JV, KV, DT, DS Gira sobre hongos en LE
+GP y CC apoyo PNLQ
+
+
 
 
 PLE
-MS y YE cerros por la mañana y  patrullaje sector de la esperanza y alrededores por la tarde 
-
+CC y GP apoyo PNLQ atienden turismo
 
 
 
@@ -597,91 +1109,25 @@ MS y YE cerros por la mañana y  patrullaje sector de la esperanza y alrededores
  
 	7
 PNTMM
-ES: mantenimiento 
-JV: monitoreo 
-JPG: monitoreo 
-YC ES y JPG patrullaje
-
-
+ES mantenimiento m/techos 
+MN mantenimiento carro y bodega
+YC informe patrullaje Pejiballe y otros 
+ME turismo, tramita tarjeta de ruedo especial 
 
 
 PNLQ
-JV:Int E,Revion C Trampa Orosi, monitoreo murciélagos
-PG:Int E,Revion C Trampa  Orosi
-JB PPC cerros al amanecer con MS y YE/turismo
+JV: Monitoreo PNLQ Y RBCV/recogen materiales en PZ 
+DS monitoreo con JV y recogen materiales en PZ
+DT informes  de la semana/ pendientes 
+KV informes /pendientes
+ 
 
 
 
 
 PLE
-MS:Patrullaje, cerros Reserva B/Reserva fo
-YE:Patrullaje, cerros Reserva B/Reserva Fo
-
-
-	8
-PNTMM
-ES:Patrullaje 3 de junio
-KM coordina patrullajes y operativos con fuerza pública parte alta y baja y actividades de PPc de julio pasa lista a YC
-YC zooave
-ES 3 de junio patrullaje 
-
-
-PNLQ
-JV:Int E,Revion C Trampa 3 de junio
-PG:Int E,Revion C Trampa 3 de junio 
-JB visados con MS y PS 
-KV turismo/informes 
-DT turismo/ventas/expedientes 
-
-
-PLE
-MS visados con JB y PS 
-
-
-
-
-	9
-PNTMM
-YC capacitación visados
-FC capacitacion visados
-KM capacitación visados 
-
-
-PNLQ
-JB capacitación visados
-PS capacitación visados/informes visados 
-JV sistematiza datos de cámaras y monitoreo de Murcis con JPG 
-KV turismo/expedientes con 
-DT expedientes con pasante 
-
-
-
-
-PLE
-MS capacitación visados
-
-
-
-
-
-
-
-	10
-PNTMM
-ME:Reunión CME
-YC reunión con RH 10 am
-FC reunión con RH 10 am
-KM y YC gira al PNLQ y PZ
-
-
-PNLQ
-JV:Int E,Monitoreo M 3 Junio
-PG:Int E,Monitoreo M 3 junio
-
-
-
-
-PLE
+GP revisan toma de agua/ mantenimiento general del puesto 
+CC revisión de toma/mantenimiento de puesto 
 
 
 
@@ -691,23 +1137,71 @@ PLE
 
 
  
-	11
+	8
 PNTMM
-FC varios atención de turismo
-YC termina tema de adelantos 
-KM programación PPC julio 
-YC y KM regresan del PNLQ
+YC : pendientes 
+ME vacación 
+MN Mantenimiento bodegas
+ES mantenimiento 
+FC reunión RLCVS
+
+
 
 
 PNLQ
-KV- reunión Gregorio Dauphin-Virtual/adelanto de viaticos
-DT turismo/otros/adelanto de viáticos 
-PS adelantos viáticos/recoge tarjeta e inventario parque dota 
-JV ponen cámaras q faltan/adelantos viáticos 
-PS cámaras/adelantos viáticos 
+KV y DT: EA, San Gerardo Dota
+PS informes pendientes 
+JV informes monitoreo/actualización bases de datos  
+LV turismo apoyo a JV 
+DS informas pendientes 
+
+
 
 
 PLE
-MS apoyo traslado IRT/ adelanto de viáticos 
-	12
+
+
+CC mantenimiento 
+GP mantenimiento sierras la 
+
+
+
+
+
+
+ 
+	9
+PNTMM
+Reunión CME
+FC reunión RLCVS
+YC pendientes
+MN informes pendientes/plani actividades de octubre
+ES plani actividades de octubre
+PNLQ
+ME 
+
+
+DS turismo/pendientes/habla con salud d paraiso 
+JV pendientes/baja a Tapanti/reunión covirenas
+LV turismo/baja a tapantí para gira de jueves
+DT vacacion 
+KV LA 
+PS vacación por enfermedad
+
+
+PLE
+CC  marcado de herramientas de manejo del fuego según conversado con YC
+
+
+GP marcado de herramientas de manejo del fuego según conversado con YC
+
+
+
+
+
+
+
+
+ 
+	10
 `;

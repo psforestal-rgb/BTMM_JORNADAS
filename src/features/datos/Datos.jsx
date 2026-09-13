@@ -3,10 +3,13 @@ import Card from "../../ui/Card.jsx";
 import Badge from "../../ui/Badge.jsx";
 import Icon from "../../ui/Icon.jsx";
 import { useApp } from "../../context/AppContext.jsx";
+import { useToast } from "../../context/ToastContext.jsx";
 import { parseSnapshot, SCHEMA_VERSION } from "../../lib/storage.js";
 import { descargarArchivo } from "../../lib/descargas.js";
 import { crearRespaldo as crearRespaldoDe } from "../../lib/respaldo.js";
 import HistorialCambios from "./HistorialCambios.jsx";
+import RespaldosAutomaticos from "./RespaldosAutomaticos.jsx";
+import ExportarBaseDatos from "./ExportarBaseDatos.jsx";
 import { formatBuildTime } from "../../lib/appVersion.js";
 import { useT } from "../../i18n/useT.js";
 import { plural } from "../../i18n/es-CR.js";
@@ -22,6 +25,7 @@ const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
 export default function Datos() {
   const t = useT();
   const ctx = useApp();
+  const toast = useToast();
   const fileInputRef = useRef(null);
   const [importError, setImportError] = useState(null);
   const [importOk, setImportOk] = useState(null);
@@ -34,15 +38,25 @@ export default function Datos() {
   const totalReposiciones = (ctx.reposiciones || []).length;
 
   const crearRespaldo = () => crearRespaldoDe(ctx);
-  const onExport = () => { const backup = crearRespaldo(); descargarArchivo(backup.name, backup.text); };
+  // Ningún botón de descarga de esta vista da por buena una descarga que el
+  // navegador rechazó: `descargarArchivo` devuelve false en vez de lanzar.
+  const onExport = () => {
+    const backup = crearRespaldo();
+    if (descargarArchivo(backup.name, backup.text)) {
+      toast.exito(t("datos.respaldoDescargado", { archivo: backup.name }));
+    } else {
+      toast.error(t("datos.descargaFallo"));
+    }
+  };
   const onShare = async () => {
     const backup = crearRespaldo();
     const file = new File([backup.text], backup.name, { type: "application/json" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
       await navigator.share({ title: "Respaldo BTMM Jornadas", files: [file] });
-    } else {
-      descargarArchivo(backup.name, backup.text);
+    } else if (descargarArchivo(backup.name, backup.text)) {
       setImportOk({ archivo: backup.name, mensaje: "El navegador no permite compartir archivos; se descargó el respaldo." });
+    } else {
+      toast.error(t("datos.descargaFallo"));
     }
   };
 
@@ -76,8 +90,19 @@ export default function Datos() {
   const aplicarImport = () => {
     if (!pendingImport) return;
     const backup = crearRespaldo();
-    descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text);
+    // La copia preventiva es la única vuelta atrás de una restauración: si no
+    // se pudo descargar, NO se restaura. El modal acaba de prometerla.
+    if (!descargarArchivo(`antes-de-restaurar-${toLocalFileTimestamp()}.json`, backup.text)) {
+      toast.error(t("datos.respaldoPrevioFallo"));
+      setPendingImport(null);
+      return;
+    }
     const { parsed, archivo } = pendingImport;
+    // Cada clave que `crearRespaldo()` guarda tiene que restaurarse aquí.
+    // `REPLACE_STATE` parte de `seedState`, así que una clave omitida no
+    // conserva el valor actual: VUELVE A LA SEMILLA. Omitir `puestos` borraba
+    // los puestos editados por la persona usuaria, y omitir `historial` borraba
+    // el rastro de auditoría que el propio archivo traía dentro.
     ctx.replaceState({
       personas: parsed.state.personas ?? ctx.personas,
       actividadesPlan: parsed.state.actividadesPlan ?? ctx.actividadesPlan,
@@ -85,6 +110,8 @@ export default function Datos() {
       roleData: parsed.state.roleData ?? ctx.roleData,
       reglas: parsed.state.reglas ?? ctx.reglas,
       migraciones: parsed.state.migraciones ?? ctx.migraciones,
+      puestos: parsed.state.puestos ?? ctx.puestos,
+      historial: parsed.state.historial ?? ctx.historial,
     });
     setImportOk({ exportadoEn: parsed.exportadoEn, archivo });
     setPendingImport(null);
@@ -226,8 +253,16 @@ export default function Datos() {
 
         <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title={t("datos.reiniciarTitulo")} description={t("datos.reiniciarSub")} size="sm" actions={<><button type="button" onClick={() => setConfirmReset(false)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">{t("acciones.cancelar")}</button><button type="button" onClick={onReset} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">{t("datos.confirmarReiniciar")}</button></>}><div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">{t("datos.reiniciarRec")}</div></Modal>
         <Modal open={Boolean(pendingImport)} onClose={() => setPendingImport(null)} title="Confirmar restauración" description="Se validó el archivo. Revisa qué reemplazará antes de continuar." size="md" actions={<><button type="button" onClick={() => setPendingImport(null)} className="min-h-touch rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold">Cancelar</button><button type="button" onClick={aplicarImport} className="min-h-touch rounded-xl bg-red-700 px-4 text-sm font-semibold text-white">Crear respaldo y restaurar</button></>}>
-          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
+          {pendingImport && <div className="space-y-3 text-sm"><p><strong>Archivo:</strong> {pendingImport.archivo}</p><p><strong>Fecha del respaldo:</strong> {pendingImport.parsed.exportadoEn ? formatBuildTime(pendingImport.parsed.exportadoEn) : "No informada"}</p><dl className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3"><div><dt>Funcionarios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.personas?.length ?? 0}</dd></div><div><dt>Actividades</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.actividadesPlan?.length ?? 0}</dd></div><div><dt>Reposiciones</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.reposiciones?.length ?? 0}</dd></div><div><dt>Celdas de roles</dt><dd className="text-xl font-bold">{Object.keys(pendingImport.parsed.state.roleData || {}).length}</dd></div><div><dt>Puestos</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.puestos?.length ?? 0}</dd></div><div><dt>Rastro de cambios</dt><dd className="text-xl font-bold">{pendingImport.parsed.state.historial?.length ?? 0}</dd></div></dl><p className="text-xs text-slate-600">{pendingImport.parsed.state.reglas ? "Este respaldo incluye reglas de negocio configuradas: también se restaurarán." : "Este respaldo no trae reglas de negocio; se mantienen las reglas actuales."}</p><p className="text-xs text-slate-600">{pendingImport.parsed.state.puestos ? "Los puestos operativos del archivo reemplazarán a los actuales." : "Este respaldo es anterior a los puestos editables; se mantienen los puestos actuales."}</p><p className="rounded-xl border border-red-300 bg-red-50 p-3 text-red-950">Estos datos reemplazarán los actuales. Antes se descargará automáticamente una copia preventiva.</p></div>}
         </Modal>
+      </Card>
+
+      <Card title={t("datos.baseDatos.titulo")} icon="🗄️">
+        <ExportarBaseDatos />
+      </Card>
+
+      <Card title={t("datos.respaldosAuto.titulo")} icon="🧯">
+        <RespaldosAutomaticos />
       </Card>
 
       <Card title={t("historial.titulo")} icon="📜">

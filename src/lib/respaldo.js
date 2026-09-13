@@ -30,3 +30,38 @@ export function crearRespaldo(ctx, prefijo = "pnlq-snapshot") {
     text: JSON.stringify(snapshot, null, 2),
   };
 }
+
+/**
+ * Convierte un respaldo automático de migración (fila del store `respaldos`,
+ * ver db.js) en un archivo descargable con el MISMO formato que acepta
+ * «Datos → Restaurar respaldo».
+ *
+ * La `schemaVersion` que se escribe es la del RESPALDO, no la actual: un
+ * snapshot apartado porque su formato ya no se entiende tiene que presentarse
+ * como lo que es. Así `parseSnapshot()` lo rechaza con un motivo claro en vez
+ * de cargar una estructura incompatible como si fuera buena. Cuando el
+ * respaldo no registró su versión, se escribe `null` y el rechazo dice
+ * «encontrada v?».
+ */
+export function archivoDeRespaldoDeMigracion(fila, prefijo = "pnlq-respaldo-automatico") {
+  if (!fila || fila.payload === null || fila.payload === undefined) return null;
+  const snapshot = {
+    ...exportSnapshot(fila.payload),
+    schemaVersion: fila.schemaVersion ?? null,
+    exportadoEn: fila.savedAt || fila.creadoEn || new Date().toISOString(),
+    respaldoAutomatico: {
+      motivo: fila.motivo ?? null,
+      origen: fila.origen ?? null,
+      apartadoEn: fila.creadoEn ?? null,
+    },
+  };
+  // Una fecha ilegible daría un nombre de archivo con "NaN-NaN-NaN": mejor la
+  // hora actual, que al menos ordena bien en la carpeta de descargas.
+  const creado = fila.creadoEn ? new Date(fila.creadoEn) : null;
+  const marca = toLocalFileTimestamp(creado && !Number.isNaN(creado.getTime()) ? creado : undefined);
+  return {
+    snapshot,
+    name: `${prefijo}-${marca}.json`,
+    text: JSON.stringify(snapshot, null, 2),
+  };
+}

@@ -1,678 +1,7 @@
+// Generado desde la exportación «text/plain» de PLANIFICACION BTMM 2026
+// (Google Docs). NO editar a mano: se regenera entero al sincronizar.
+// Parte 9 de 9.
 export default String.raw`
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	24
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	25
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	26
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	27
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	28
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	29
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-
-
-	30
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-
-
-	31
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-
-
-	
-
-
-
-NOVIEMBRE 2026
-	DOMINGO
-	LUNES
-	MARTES
-	MIÉRCOLES
-	JUEVES
-	VIERNES
-	SÁBADO
-	1
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	2
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	3
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	4
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	5
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	6
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	7
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	8
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	9
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	10
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	11
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	12
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	13
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	14
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	15
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	16
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	17
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
-
-
-PLE
-
-
-
-
-
-
-PVM
-
-
- 
-	18
-PNTMM
-
-
-
-
-
-PNLQ
-
-
-
-
 
 
 PLE
@@ -736,6 +65,8 @@ PVM
 
 
  
+	
+
 	21
 PNTMM
 
@@ -838,7 +169,7 @@ PVM
  
 	25
 PNTMM
-
+FC Comite Tecnico
 
 
 
@@ -911,6 +242,8 @@ PVM
 
 
  
+	
+
 	28
 PNTMM
 
@@ -986,37 +319,9 @@ PVM
 
 
  
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-
-
-
-
-DICIEMBRE 2026
-	DOMINGO
-	LUNES
-	MARTES
-	MIÉRCOLES
-	JUEVES
-	VIERNES
-	SÁBADO
-	
-
-	
-
-	1
+	31
 PNTMM
-VB limpieza del BTMM
+
 
 
 
@@ -1039,16 +344,42 @@ PVM
 
 
  
-	2
-PNTMM
-VB limpieza del BTMM
-Reunión CME
+	
 
+	
+
+	
+
+
+
+
+
+
+
+ENERO 2027
+	DOMINGO
+	LUNES
+	MARTES
+	MIÉRCOLES
+	JUEVES
+	VIERNES
+	SÁBADO
+	
+
+	
+
+	
+
+	
+
+	
+
+	1
+PNTMM
 
 
 
 PNLQ
-KV-Reunión CME
 
 
 
@@ -1060,7 +391,36 @@ PLE
 
 
 
-PVM
+
+
+
+
+
+
+ 
+	2
+PNTMM
+
+
+
+
+
+PNLQ
+
+
+
+
+
+
+PLE
+
+
+
+
+
+
+
+
 
 
  
@@ -1078,6 +438,8 @@ PNLQ
 
 
 
+
+
 PLE
 
 
@@ -1085,7 +447,8 @@ PLE
 
 
 
-PVM
+
+
 
 
  
@@ -1094,11 +457,7 @@ PNTMM
 
 
 
-
-
 PNLQ
-
-
 
 
 
@@ -1110,7 +469,8 @@ PLE
 
 
 
-PVM
+
+
 
 
  
@@ -1119,11 +479,7 @@ PNTMM
 
 
 
-
-
 PNLQ
-
-
 
 
 
@@ -1135,17 +491,13 @@ PLE
 
 
 
-PVM
+
+
 
 
  
 	6
 PNTMM
-
-
-
-
-
 
 
 
@@ -1176,16 +528,20 @@ PNTMM
 
 
 
-
-
-
-
 PNLQ
 
 
 
 
-PLE
+PLE:
+
+
+
+
+
+
+
+
 
 
 
@@ -1201,14 +557,16 @@ PNTMM
 
 
 
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
 
 
 
@@ -1223,15 +581,24 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
+
+
+
+
+
+
 PLE
+
+
+
+
+
+
 
 
 
@@ -1246,15 +613,18 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
+
 
 
 
@@ -1269,15 +639,17 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
 
 
 
@@ -1293,15 +665,24 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1316,9 +697,6 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
@@ -1329,7 +707,8 @@ PLE
 
 
 
- 
+
+
 	14
 PNTMM
 
@@ -1339,15 +718,20 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
+
+
+
 
 
 
@@ -1362,15 +746,22 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1378,10 +769,7 @@ PLE
  
 	16
 PNTMM
-
-
-
-
+ES y KM MIF 
 
 
 
@@ -1394,6 +782,14 @@ PNLQ
 
 
 PLE
+
+
+
+
+
+
+
+
 
 
 
@@ -1401,9 +797,6 @@ PLE
  
 	17
 PNTMM
-Comite Tecnico
-
-
 
 
 
@@ -1417,6 +810,10 @@ PNLQ
 
 
 PLE
+
+
+
+
 
 
 
@@ -1431,15 +828,16 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
 
 
 
@@ -1447,9 +845,6 @@ PLE
  
 	19
 PNTMM
-ES y KM entrenamiento MIF
-
-
 
 
 
@@ -1467,7 +862,8 @@ PLE
 
 
 
- 
+
+
 	20
 PNTMM
 
@@ -1477,15 +873,18 @@ PNTMM
 
 
 
-
-
-
 PNLQ
 
 
 
 
 PLE
+
+
+
+
+
+
 
 
 
@@ -1509,6 +908,15 @@ PNLQ
 
 
 PLE
+
+
+
+
+ 
+
+
+
+
 
 
 

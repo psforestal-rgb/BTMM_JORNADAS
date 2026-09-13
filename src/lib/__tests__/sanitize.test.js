@@ -231,3 +231,142 @@ describe("sanitizeImportedState — límites de tamaño/cantidad", () => {
     expect(out.personas.length).toBeGreaterThan(0);
   });
 });
+
+describe("sanitizeImportedState — puestos", () => {
+  it("conserva un puesto válido tal cual", () => {
+    const out = sanitizeImportedState({
+      puestos: [{ nombre: "Puesto Villa Mills", tag: "VM", color: "bg-violet-100 text-violet-950" }],
+    });
+    expect(out.puestos).toEqual([
+      { nombre: "Puesto Villa Mills", tag: "VM", color: "bg-violet-100 text-violet-950" },
+    ]);
+  });
+
+  it("descarta el puesto sin nombre: el nombre es su identidad, no hay default honesto", () => {
+    const out = sanitizeImportedState({
+      puestos: [{ nombre: "   ", tag: "XX" }, { nombre: "Puesto Orosi", tag: "OR" }],
+    });
+    expect(out.puestos.map((p) => p.nombre)).toEqual(["Puesto Orosi"]);
+  });
+
+  it("un color fuera de la paleta cerrada cae al primero, no se aplica tal cual", () => {
+    const out = sanitizeImportedState({
+      puestos: [{ nombre: "Puesto Raro", tag: "RR", color: "bg-[url(javascript:alert(1))]" }],
+    });
+    expect(out.puestos[0].color).toBe("bg-orange-100 text-orange-950");
+  });
+
+  it("normaliza el código corto y vacía el que no tiene forma de código", () => {
+    const out = sanitizeImportedState({
+      puestos: [
+        { nombre: "Puesto A", tag: " or " },
+        { nombre: "Puesto B", tag: "con espacios y símbolos !!" },
+      ],
+    });
+    expect(out.puestos[0].tag).toBe("OR");
+    expect(out.puestos[1].tag).toBe("");
+  });
+
+  it("elimina nombres duplicados: gana el primero", () => {
+    const out = sanitizeImportedState({
+      puestos: [
+        { nombre: "Puesto Orosi", tag: "OR" },
+        { nombre: "puesto orosi", tag: "O2" },
+      ],
+    });
+    expect(out.puestos).toHaveLength(1);
+    expect(out.puestos[0].tag).toBe("OR");
+  });
+
+  it("limpia el HTML del nombre", () => {
+    const out = sanitizeImportedState({ puestos: [{ nombre: "<b>Orosi</b>", tag: "OR" }] });
+    expect(out.puestos[0].nombre).toBe("Orosi");
+  });
+});
+
+describe("sanitizeImportedState — historial", () => {
+  const entradaBase = {
+    id: "h1",
+    fecha: "2026-09-12T10:00:00.000Z",
+    tipo: "edicion",
+    funcionario: { nombre: "Ana Mora", cedula: "1-1111-1111" },
+    cambios: [{ campo: "estado", antes: "Activo", despues: "Inactivo" }],
+  };
+
+  it("conserva una entrada válida", () => {
+    const out = sanitizeImportedState({ historial: [entradaBase] });
+    expect(out.historial).toEqual([entradaBase]);
+  });
+
+  it("descarta la entrada con un tipo que el dominio no crea", () => {
+    const out = sanitizeImportedState({
+      historial: [{ ...entradaBase, tipo: "inventado" }, entradaBase],
+    });
+    expect(out.historial).toHaveLength(1);
+    expect(out.historial[0].tipo).toBe("edicion");
+  });
+
+  it("vacía la fecha ilegible en vez de descartar la entrada o inventar una", () => {
+    const out = sanitizeImportedState({ historial: [{ ...entradaBase, fecha: "ayer por la tarde" }] });
+    expect(out.historial).toHaveLength(1);
+    expect(out.historial[0].fecha).toBe("");
+  });
+
+  it("completa los ids repetidos o ausentes: la vista los usa como key de React", () => {
+    const out = sanitizeImportedState({
+      historial: [entradaBase, { ...entradaBase }, { ...entradaBase, id: undefined }],
+    });
+    const ids = out.historial.map((e) => e.id);
+    expect(new Set(ids).size).toBe(3);
+  });
+
+  it("deduplica los cambios del mismo campo", () => {
+    const out = sanitizeImportedState({
+      historial: [
+        {
+          ...entradaBase,
+          cambios: [
+            { campo: "estado", antes: "Activo", despues: "Inactivo" },
+            { campo: "estado", antes: "X", despues: "Y" },
+          ],
+        },
+      ],
+    });
+    expect(out.historial[0].cambios).toHaveLength(1);
+  });
+
+  it("conserva booleanos y limpia el HTML dentro de un cambio", () => {
+    const out = sanitizeImportedState({
+      historial: [
+        { ...entradaBase, cambios: [{ campo: "disponibilidad", antes: false, despues: true }] },
+      ],
+    });
+    expect(out.historial[0].cambios[0]).toEqual({ campo: "disponibilidad", antes: false, despues: true });
+
+    const conHtml = sanitizeImportedState({
+      historial: [
+        { ...entradaBase, cambios: [{ campo: "obs", antes: "<script>x</script>ok", despues: "" }] },
+      ],
+    });
+    expect(conHtml.historial[0].cambios[0].antes).toBe("xok");
+  });
+
+  it("recorta un rastro desproporcionado al tope del dominio", () => {
+    const enorme = Array.from({ length: 500 }, (_, i) => ({ ...entradaBase, id: `h${i}` }));
+    const out = sanitizeImportedState({ historial: enorme });
+    expect(out.historial).toHaveLength(200);
+  });
+
+  it("sanea el detalle de una importación", () => {
+    const out = sanitizeImportedState({
+      historial: [
+        {
+          ...entradaBase,
+          tipo: "importacion",
+          detalle: { archivo: "<i>datos.csv</i>", altas: "7", cambios: Infinity },
+        },
+      ],
+    });
+    expect(out.historial[0].detalle).toEqual({ archivo: "datos.csv", altas: 7, cambios: 0 });
+  });
+});
