@@ -193,6 +193,47 @@ describe("Roles — resumen general al pie de la tabla", () => {
   });
 });
 
+describe("Roles — el libro institucional se contradice y la celda lo advierte", () => {
+  it("marca los días en que la otra fila del rol decía otra cosa", () => {
+    // Guillermo Pérez, 27 al 30 de abril de 2026: la fila de La Esperanza lo da
+    // de incapacidad y la de Orosi de turno. Se carga La Esperanza, su puesto
+    // antes y después, y la celda avisa de la otra en vez de elegir en silencio.
+    renderRoles({
+      year: 2026,
+      month: 3,
+      personas: [
+        { id: "f1", nombre: "Guillermo Pérez", puestoOperativo: "Puesto Esperanza", estado: "Activo" },
+      ],
+    });
+
+    const celda = screen
+      .getAllByRole("button", { name: /Guillermo Pérez/ })
+      .find((b) => b.closest("td[data-celda-rol]")?.dataset.iso === "2026-04-27");
+
+    expect(celda).toBeTruthy();
+    expect(celda.getAttribute("aria-label")).toMatch(/se contradice/);
+    expect(celda.getAttribute("aria-label")).toMatch(/T1/);
+    expect(celda.getAttribute("title")).toMatch(/Puesto Orosi/);
+  });
+
+  it("no marca los días en que el libro es claro", () => {
+    renderRoles({
+      year: 2026,
+      month: 3,
+      personas: [
+        { id: "f1", nombre: "Guillermo Pérez", puestoOperativo: "Puesto Esperanza", estado: "Activo" },
+      ],
+    });
+
+    const celda = screen
+      .getAllByRole("button", { name: /Guillermo Pérez/ })
+      .find((b) => b.closest("td[data-celda-rol]")?.dataset.iso === "2026-04-26");
+
+    expect(celda).toBeTruthy();
+    expect(celda.getAttribute("aria-label")).not.toMatch(/se contradice/);
+  });
+});
+
 describe("Roles — el conflicto de teletrabajo llega a la cuadrícula", () => {
   const personasVisit = [
     { id: "f1", nombre: "Ana Pérez", puestoOperativo: "Puesto Orosi", estado: "Activo", modalidad: "10x5" },

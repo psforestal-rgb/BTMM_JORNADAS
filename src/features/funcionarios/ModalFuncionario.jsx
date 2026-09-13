@@ -98,6 +98,14 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
   );
 
 
+  // Traslado: solo si la ficha ya existía y el puesto cambió respecto al que
+  // tenía al abrir el formulario.
+  const hoyIso = new Date().toISOString().slice(0, 10);
+  const hayTraslado =
+    Boolean(valor?.id) &&
+    Boolean(valor?.puestoOperativo) &&
+    (f.puestoOperativo || "") !== valor.puestoOperativo;
+
   const [paso, setPaso] = useState(0);
   // Paso más lejano alcanzado: al crear, el indicador no deja saltar a un paso
   // que aún no se ha visto; al editar se puede ir a cualquiera desde el inicio.
@@ -227,6 +235,22 @@ export default function ModalFuncionario({ valor, cerrar, guardar }) {
                     {opcionesPuestoOperativo.map((x) => <option key={x}>{x}</option>)}
                   </select>
                 </Field>
+                {/* Cambiar el puesto de alguien que ya existe no es corregir un
+                    campo: es un traslado, y hace falta saber desde cuándo vale
+                    para no mover de sitio el rol de los meses ya trabajados. */}
+                {hayTraslado && (
+                  <div>
+                    <Field label={t("modalFuncionario.trasladoDesde")}>
+                      <input
+                        type="date"
+                        className={cls}
+                        value={f.trasladoDesde || hoyIso}
+                        onChange={(e) => set("trasladoDesde", e.target.value)}
+                      />
+                    </Field>
+                    <p className="mt-1 text-xs text-slate-600">{t("modalFuncionario.trasladoAyuda")}</p>
+                  </div>
+                )}
                 <Field label={t("modalFuncionario.condicion")}>
                   <select className={cls} value={f.condicion} onChange={(e) => set("condicion", e.target.value)}>
                     {opcionesCondicion.map((x) => <option key={x}>{x}</option>)}

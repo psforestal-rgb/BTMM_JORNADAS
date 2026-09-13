@@ -69,9 +69,9 @@ describe("Datos — exportación a base de datos", () => {
     for (const tabla of TABLAS) {
       expect(screen.getByText(tabla.nombre)).toBeTruthy();
     }
-    // La semilla trae 18 fichas; el número tiene que verse, no solo el nombre.
+    // La semilla trae 19 fichas; el número tiene que verse, no solo el nombre.
     const filaFuncionarios = screen.getByText("funcionarios").closest("tr");
-    expect(filaFuncionarios.textContent).toContain("18");
+    expect(filaFuncionarios.textContent).toContain("19");
   });
 
   it("el JSON lleva el esquema dentro y las tablas con sus filas", async () => {
@@ -82,7 +82,7 @@ describe("Datos — exportación a base de datos", () => {
     const contenido = JSON.parse(await leerBlobComoTexto(ultimoBlob));
     expect(contenido.formato).toBe("btmm-jornadas/relacional");
     expect(contenido.esquema.map((t) => t.nombre)).toEqual(TABLAS.map((t) => t.nombre));
-    expect(contenido.tablas.funcionarios).toHaveLength(18);
+    expect(contenido.tablas.funcionarios).toHaveLength(19);
     expect(contenido.tablas.rol_dias.length).toBeGreaterThan(5000);
     expect(contenido.meta.fuenteRol).toContain("rol-bloque");
     expect(ultimoNombre).toMatch(/^btmm-jornadas-.*\.json$/);

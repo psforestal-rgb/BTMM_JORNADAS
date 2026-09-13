@@ -10,6 +10,7 @@ import { useToast } from "../../context/ToastContext.jsx";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useAtajoBusqueda } from "../../lib/useAtajoBusqueda.js";
 import { toLocalFileTimestamp } from "../../domain/fechas.js";
+import { puestoEnMes } from "../../domain/historialPuestos.js";
 import { csvDescargable, TIPO_CSV } from "../../lib/csv.js";
 import { descargarArchivo } from "../../lib/descargas.js";
 import { filasDeResumenRoles, filasDeRoles, isoDelPeriodo, nombreArchivo } from "../../lib/exportaciones.js";
@@ -63,21 +64,34 @@ export default function Roles({
   const togglePuestoAbierto = (nombrePuesto) =>
     setPuestosAbiertos((prev) => ({ ...prev, [nombrePuesto]: !prev[nombrePuesto] }));
 
+  /**
+   * Quién va en cada puesto, según el MES que se está mirando.
+   *
+   * El puesto de una persona cambia con un traslado (ver
+   * `domain/historialPuestos.js`), así que agrupar por su `puestoOperativo` de
+   * hoy colocaba su rol pasado bajo el puesto equivocado. Quien no estaba en
+   * ningún puesto ese mes —todavía no había ingresado, o ya salió— no aparece:
+   * lo decide el historial y no el campo `estado`, que habla de hoy y borraría
+   * también los meses en que la persona sí estuvo.
+   */
   const gruposRoles = useMemo(
     () =>
       puestos.map((p) => ({
         ...p,
         funcionarios: personas
-          .filter((f) => (f.puestoOperativo || "Puesto Quetzales") === p.nombre && f.estado !== "Inactivo")
+          .filter((f) => puestoEnMes(f, year, month + 1) === p.nombre)
           .map((f) => f.nombre),
       })),
-    [personas],
+    [personas, year, month],
   );
   const puestosDisponibles = useMemo(() => gruposRoles.map((g) => g.nombre), [gruposRoles]);
   const funcionariosDisponibles = useMemo(() => gruposRoles.flatMap((g) => g.funcionarios), [gruposRoles]);
   const [puestosSeleccionados, setPuestosSeleccionados] = useState(() => puestos.map((p) => p.nombre));
+  // Arranca con todo el mundo marcado; `gruposFiltrados` cruza esta lista con
+  // quién está realmente en cada puesto ese mes, así que basta con que sea un
+  // superconjunto.
   const [funcionariosSeleccionados, setFuncionariosSeleccionados] = useState(() =>
-    personas.filter((f) => f.estado !== "Inactivo").map((f) => f.nombre),
+    personas.map((f) => f.nombre),
   );
   const gruposFiltrados = useMemo(
     () =>

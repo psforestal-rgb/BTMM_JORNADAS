@@ -31,6 +31,7 @@ import {
   textoSaldoCorto,
   HORAS_JORNADA_DEFAULT,
 } from "../../domain/reposicion.js";
+import { normalizarHistorial } from "../../domain/historialPuestos.js";
 import { buildFeriadosSet } from "../../domain/feriados.js";
 import { useFeriadosDelAno } from "../../lib/useFeriadosDelAno.js";
 import { useT } from "../../i18n/useT.js";
@@ -97,6 +98,7 @@ export default function FichaFuncionario({
   const guardarFuncionario = useGuardarFuncionario(personas, setPersonas);
 
   const f = useMemo(() => personas.find((p) => p.nombre === nombre), [personas, nombre]);
+  const tramosPuesto = useMemo(() => normalizarHistorial(f), [f]);
   const hoy = toLocalISODate();
 
   const banco = useMemo(() => bancoDeTiempo(reposiciones, nombre, hj), [reposiciones, nombre, hj]);
@@ -239,6 +241,41 @@ export default function FichaFuncionario({
             </p>
             <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-ink-muted">{f.obs}</p>
           </div>
+        )}
+      </Card>
+
+      {/* Historial de puestos: el rol de cada mes se archiva bajo el puesto
+          donde la persona estaba ESE mes, así que saber por dónde pasó es lo
+          que explica dónde está su rol anterior. */}
+      <Card title={t("ficha.puestosHistorial.titulo")} icon="pin" variant="elevated">
+        <p className="mb-3 text-xs text-ink-muted">{t("ficha.puestosHistorial.ayuda")}</p>
+        <ol className="space-y-2">
+          {tramosPuesto.map((tramo, i) => (
+            <li
+              key={`${tramo.puesto}-${tramo.desde}-${i}`}
+              className="flex flex-wrap items-baseline gap-2 rounded-xl border border-line bg-surface-inset px-3 py-2"
+            >
+              <span className="text-sm font-semibold text-ink">{tramo.puesto}</span>
+              <span className="text-xs text-ink-muted">
+                {tramo.desde
+                  ? t("ficha.puestosHistorial.desde", { fecha: fecha(tramo.desde) })
+                  : t("ficha.puestosHistorial.desdeSiempre")}
+                {" · "}
+                {tramo.hasta
+                  ? t("ficha.puestosHistorial.hasta", { fecha: fecha(tramo.hasta) })
+                  : t("ficha.puestosHistorial.sigue")}
+              </span>
+              {tramo.hasta === null && (
+                <Badge className="border-emerald-200 bg-emerald-50 text-emerald-900">
+                  {t("ficha.puestosHistorial.actual")}
+                </Badge>
+              )}
+              {tramo.motivo && <span className="w-full text-xs text-ink-muted">{tramo.motivo}</span>}
+            </li>
+          ))}
+        </ol>
+        {tramosPuesto.length === 1 && (
+          <p className="mt-2 text-xs text-ink-muted">{t("ficha.puestosHistorial.uno")}</p>
         )}
       </Card>
 

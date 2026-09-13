@@ -21,6 +21,7 @@ import {
 import { REGLAS_DEFAULT, mergeReglas } from "../config/reglas.js";
 import { toLocalISODate } from "../domain/fechas.js";
 import { agregarEntrada } from "../domain/historial.js";
+import { normalizarFuncionario } from "../domain/historialPuestos.js";
 
 const AppContext = createContext(null);
 
@@ -127,9 +128,23 @@ function mergePersistedWithSeed(stored) {
       );
 
   const personas = [
-    ...baseFuncionarios.map((persona) => ({ ...persona, ...(storedByName.get(persona.nombre) || {}) })),
+    ...baseFuncionarios.map((persona) => {
+      const guardada = storedByName.get(persona.nombre) || {};
+      return {
+        ...persona,
+        ...guardada,
+        // El historial de puestos de la semilla manda mientras la ficha
+        // guardada no traiga uno propio: sale del libro institucional y es más
+        // completo que el único `puestoOperativo` que guardaban las versiones
+        // anteriores. En cuanto alguien edita el puesto desde la aplicación, la
+        // ficha guardada ya trae su historial y este deja de tocarse.
+        historialPuestos: guardada.historialPuestos ?? persona.historialPuestos,
+      };
+    }),
     ...storedPersonas.filter((persona) => persona.nombre && !seedNames.has(persona.nombre)),
-  ];
+    // Deja cada ficha coherente: historial ordenado y `puestoOperativo` igual
+    // al puesto de hoy. Una ficha anterior al historial entra sin cambios.
+  ].map((persona) => normalizarFuncionario(persona));
 
   // Defensa adicional a la sanitización de importación (sanitize.js): un
   // snapshot corrupto en storage (no solo uno importado) podría traer

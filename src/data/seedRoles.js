@@ -15,7 +15,15 @@
 // código original se puede recuperar en cuanto la administración lo aclare.
 //
 // Un «·» significa que el libro no dice nada de esa persona ese día.
-import { puestos } from "./puestos.js";
+//
+// El libro reparte a cada persona por bloques de puesto, y varias se trasladan
+// durante el año. Cada fila de aquí ya viene RESUELTA por día: el valor de cada
+// día sale de la fila del puesto donde la persona estaba ese día según
+// `historialPuestos2026.js`. Por eso un traslado a mitad de mes —el de Yolanda
+// Elizondo el 18 de marzo— no parte la fila en dos ni pierde la primera
+// quincena.
+import { baseFuncionarios } from "./seedFuncionarios.js";
+import { puestoDelRol } from "../domain/roles.js";
 
 const FUENTE_ROL = {
   "2025-12": {
@@ -80,7 +88,7 @@ const FUENTE_ROL = {
     "Laura Valverde": "L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11",
     "Diana Tencio": "L2 LA LA LA T4 T5 L1 L2 T1 T2 T3 LA T5 L1 L2 O-G O-G O-G O-G O-G O-G O-G O-G O-G O-G O-G O-G L1 L2 T1 T2",
     "Jetzelly Villalobos": "T12 L1 L2 L3 L4 L5 L6 LA LA V1 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6",
-    "Yolanda Elizondo": "· · · · · · · · · · · · · · · · · IN IN IN IN IN IN IN IN IN IN T1 T2 T3 T4",
+    "Yolanda Elizondo": "L4 L5 V1 V2 V3 V4 V5 V6 V7 V8 V9 V10 L1 L2 L3 L4 L5 IN IN IN IN IN IN IN IN IN IN T1 T2 T3 T4",
     "Mariano Solís": "V16 L1 L2 L3 L4 L5 L6 L7 L8 T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10",
     "Guillermo Pérez": "T11 T12 L1 L2 L3 L4 L5 L6 V1 V2 V3 V4 V5 L1 L2 V1 V2 V3 V4 V5 V6 V7 L1 L2 L3 L4 IN IN IN IN IN",
     "Carlos Cordero": "L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 V1 V2 L1 T1 T2 T3 T4 T5 T6 T7 T8",
@@ -182,6 +190,7 @@ const FUENTE_ROL = {
     "Diana Tencio": "T2 T3 T4 T5 L1 L2 T1 T2 V1 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
     "Jetzelly Villalobos": "T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3",
     "Pablo Sánchez": "T2 T3 T4 T5 L1 L2 T1 T2 V1 V1 V1 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3",
+    "Diego Salazar": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5",
     "Yolanda Elizondo": "L5 IN IN IN IN IN IN T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8",
     "Mariano Solís": "T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1",
     "Guillermo Pérez": "T1 T2 T3 T4 T5 T6 T7 T8 L1 L2 L3 L4 O-FA T1 T2 O-CM T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
@@ -198,6 +207,7 @@ const FUENTE_ROL = {
     "Diana Tencio": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
     "Jetzelly Villalobos": "L4 L5 O-FA O-FA T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2",
     "Pablo Sánchez": "T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1 L2 T1 T2 T3 T4 T5 L1",
+    "Diego Salazar": "T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 L1 L2 L3 L4 L5 L6 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3",
     "Yolanda Elizondo": "T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 O-FA T1 T2 T3 T4 T5 T6 T7 T8",
     "Mariano Solís": "T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2",
     "Guillermo Pérez": "T3 T4 T5 T6 T7 T8 T9 T10 L1 L2 L3 L4 L5 T1 T2 T3 T4 T5 T6 T7 T8 T10 L1 L2 L3 L4 L5 T1 T2 T6 T7",
@@ -237,7 +247,7 @@ const FUENTE_ROL = {
   }
 };
 
-/** Días de cada mes cubierto por la fuente, en el mismo orden que `MESES_FUENTE`. */
+/** Meses que cubre la fuente, con sus días. */
 const MESES_FUENTE = [
   { anio: 2025, mes: 12, dias: 31 },
   { anio: 2026, mes: 1, dias: 31 },
@@ -256,7 +266,7 @@ const MESES_FUENTE = [
 
 export const ROLES_FUENTE_DESDE = "2025-12-01";
 export const ROLES_FUENTE_HASTA = "2026-12-31";
-export const ROLES_FUENTE_VERSION = "2026-09-11-rol-bloque-dic25-dic26";
+export const ROLES_FUENTE_VERSION = "2026-09-13-rol-bloque-historial-puestos";
 
 /**
  * Primer mes que la fuente vuelve a imponer sobre una instalación que ya tiene
@@ -266,17 +276,23 @@ export const ROLES_FUENTE_VERSION = "2026-09-11-rol-bloque-dic25-dic26";
  */
 export const ROLES_REIMPOSICION_DESDE = "2026-09";
 
+/**
+ * Cada día se archiva bajo el puesto donde la persona estaba ESE día, no bajo
+ * el que tiene hoy. Es lo que permite que su rol anterior a un traslado siga
+ * saliendo en la cuadrícula: `puestoDelRol()` resuelve la misma clave al leer.
+ */
 export const baseRoleData = (() => {
   const result = {};
   for (const { anio, mes, dias } of MESES_FUENTE) {
     const fuenteMes = FUENTE_ROL[`${anio}-${mes}`] || {};
-    for (const puesto of puestos) {
-      for (const nombre of puesto.funcionarios) {
-        const tokens = fuenteMes[nombre]?.split(" ") || [];
-        for (let dia = 1; dia <= dias; dia += 1) {
-          const token = tokens[dia - 1];
-          result[`${anio}-${mes}-${puesto.nombre}-${nombre}-${dia}`] = token && token !== "·" ? token : "";
-        }
+    for (const funcionario of baseFuncionarios) {
+      const tokens = fuenteMes[funcionario.nombre]?.split(" ") || [];
+      for (let dia = 1; dia <= dias; dia += 1) {
+        const puesto = puestoDelRol(funcionario, anio, mes - 1, dia);
+        if (!puesto) continue;
+        const token = tokens[dia - 1];
+        result[`${anio}-${mes}-${puesto}-${funcionario.nombre}-${dia}`] =
+          token && token !== "\u00b7" ? token : "";
       }
     }
   }
@@ -293,8 +309,8 @@ export const baseRoleData = (() => {
  *     puede incluir correcciones hechas a mano en el aparato.
  *  2. **Solo las celdas que el libro LLENA.** Una celda vacía en el libro no
  *     borra lo que el aparato tenga: el libro corrige y agrega, nunca vacía.
- *     Sin esta regla, que el libro dejara de traer a una persona (le pasa a
- *     Kenneth Mena de setiembre en adelante) borraría su rol guardado sin que
+ *     Sin esta regla, que el libro dejara de traer a una persona —le pasa a
+ *     Kenneth Mena de setiembre en adelante— borraría su rol guardado sin que
  *     nadie lo hubiera pedido.
  */
 export const roleDataFuenteActualizacion = Object.fromEntries(

@@ -44,6 +44,7 @@ const MAX_REPOSICIONES = 20000;
 const MAX_ROLEDATA_KEYS = 300000;
 const MAX_ROLEDATA_KEY_LEN = 200;
 const MAX_PUESTOS = 200;
+const MAX_TRAMOS_PUESTO = 200;
 const MAX_CAMBIOS_POR_ENTRADA = 60;
 
 // Paleta CERRADA (ver `coloresPuesto` en data/opciones.js): la cuadrícula de
@@ -128,7 +129,37 @@ function sanitizePersona(persona) {
   // `jefe` no se transforma si ya es un string válido (solo se verifica el tipo).
   if ("jefe" in out) out.jefe = typeof out.jefe === "string" ? out.jefe : seed?.jefe ?? "";
 
+  if ("historialPuestos" in out) out.historialPuestos = sanitizeHistorialPuestos(out.historialPuestos);
+
   return out;
+}
+
+/**
+ * Historial de puestos de una ficha (ver `domain/historialPuestos.js`).
+ *
+ * Un tramo sin puesto no es reparable —el puesto es el dato entero del tramo—
+ * así que se descarta. Las fechas que no son ISO se vacían, que es lo que el
+ * dominio entiende como «extremo abierto»; `normalizarHistorial()` termina de
+ * ordenarlo al cargar el estado.
+ */
+function sanitizeHistorialPuestos(historial) {
+  if (!Array.isArray(historial)) return [];
+  return historial
+    .filter(isPlainObject)
+    .map((tramo) => {
+      const puesto = sanitizeFreeText(tramo.puesto, 80, "");
+      if (!puesto) return null;
+      const salida = {
+        puesto,
+        desde: sanitizeFechaIso(tramo.desde, ""),
+        hasta: sanitizeFechaIso(tramo.hasta, "") || null,
+      };
+      const motivo = sanitizeFreeText(tramo.motivo, 200, "");
+      if (motivo) salida.motivo = motivo;
+      return salida;
+    })
+    .filter(Boolean)
+    .slice(0, MAX_TRAMOS_PUESTO);
 }
 
 /**

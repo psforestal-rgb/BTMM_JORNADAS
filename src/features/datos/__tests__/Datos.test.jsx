@@ -122,7 +122,7 @@ describe("Datos — respaldo/restauración round-trip", () => {
       useEffect(() => {
         ctx.setPuestos([
           ...ctx.puestos,
-          { nombre: "Puesto Villa Mills", tag: "VM", color: "bg-violet-100 text-violet-950" },
+          { nombre: "Puesto Cerro Buenavista", tag: "CB", color: "bg-violet-100 text-violet-950" },
         ]);
         ctx.registrarCambio(
           crearEntrada({
@@ -145,7 +145,8 @@ describe("Datos — respaldo/restauración round-trip", () => {
       </AppProvider>,
     );
 
-    const puestosOriginales = 3;
+    // Tres vigentes más Villa Mills, que se conserva como histórico.
+    const puestosOriginales = 4;
     await waitFor(() => {
       expect(ctxRef.puestos).toHaveLength(puestosOriginales + 1);
       expect(ctxRef.historial).toHaveLength(1);
@@ -156,7 +157,7 @@ describe("Datos — respaldo/restauración round-trip", () => {
     await waitFor(() => expect(ultimoBlob).not.toBeNull());
     const texto = await leerBlobComoTexto(ultimoBlob);
     const snapshot = JSON.parse(texto);
-    expect(snapshot.state.puestos.map((p) => p.nombre)).toContain("Puesto Villa Mills");
+    expect(snapshot.state.puestos.map((p) => p.nombre)).toContain("Puesto Cerro Buenavista");
     expect(snapshot.state.historial).toHaveLength(1);
 
     // 2. Perder ambas cosas, como si otra persona hubiera tocado el aparato.
@@ -178,7 +179,7 @@ describe("Datos — respaldo/restauración round-trip", () => {
     //    semilla de tres puestos ni un rastro vacío.
     await waitFor(() => {
       expect(ctxRef.puestos).toHaveLength(puestosOriginales + 1);
-      expect(ctxRef.puestos.map((p) => p.nombre)).toContain("Puesto Villa Mills");
+      expect(ctxRef.puestos.map((p) => p.nombre)).toContain("Puesto Cerro Buenavista");
       expect(ctxRef.historial).toHaveLength(1);
       expect(ctxRef.historial[0].funcionario.nombre).toBe("Persona De Prueba");
     });

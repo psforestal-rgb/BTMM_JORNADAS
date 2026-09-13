@@ -268,6 +268,66 @@ describe("tablasDesdeEstado", () => {
     expect(normal.puestos[0].vigente).toBe(true);
   });
 
+  it("el historial de puestos sale como su propia tabla, un tramo por fila", () => {
+    const conTraslado = tablasDesdeEstado({
+      puestos: [{ nombre: "Puesto Quetzales", tag: "QZ" }],
+      personas: [
+        {
+          id: "f1",
+          nombre: "Laura Valverde",
+          puestoOperativo: "Puesto Orosi",
+          historialPuestos: [
+            { puesto: "Puesto Quetzales", desde: "", hasta: "2026-06-30" },
+            { puesto: "Puesto Orosi", desde: "2026-07-01", hasta: null, motivo: "Traslado" },
+          ],
+        },
+      ],
+    });
+
+    expect(conTraslado.funcionario_puestos).toEqual([
+      {
+        funcionario_id: "f1",
+        orden: 1,
+        funcionario: "Laura Valverde",
+        puesto: "Puesto Quetzales",
+        desde: "",
+        hasta: "2026-06-30",
+        motivo: "",
+      },
+      {
+        funcionario_id: "f1",
+        orden: 2,
+        funcionario: "Laura Valverde",
+        puesto: "Puesto Orosi",
+        desde: "2026-07-01",
+        hasta: "",
+        motivo: "Traslado",
+      },
+    ]);
+    // Y el puesto al que apunta un tramo antiguo tiene su fila padre aunque ya
+    // no esté en la lista viva.
+    expect(conTraslado.puestos.map((p) => p.nombre)).toContain("Puesto Orosi");
+    expect(conTraslado.puestos.find((p) => p.nombre === "Puesto Orosi").vigente).toBe(false);
+  });
+
+  it("una ficha sin historial produce igual su tramo abierto", () => {
+    const simple = tablasDesdeEstado({
+      puestos: [{ nombre: "Puesto Orosi", tag: "OR" }],
+      personas: [{ id: "f1", nombre: "Ana Mora", puestoOperativo: "Puesto Orosi" }],
+    });
+    expect(simple.funcionario_puestos).toEqual([
+      {
+        funcionario_id: "f1",
+        orden: 1,
+        funcionario: "Ana Mora",
+        puesto: "Puesto Orosi",
+        desde: "",
+        hasta: "",
+        motivo: "",
+      },
+    ]);
+  });
+
   it("cuenta las filas de todas las tablas, incluidas las vacías", () => {
     const conteo = conteoDeTablas(tablas);
     expect(Object.keys(conteo)).toHaveLength(TABLAS.length);
