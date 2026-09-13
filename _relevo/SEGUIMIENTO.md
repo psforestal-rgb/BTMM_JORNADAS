@@ -1,6 +1,6 @@
 # SEGUIMIENTO — BTMM JORNADAS (estado de relevo)
 
-> Última actualización: 2026-09-13 00:20 por Claude Code
+> Última actualización: 2026-09-13 02:10 por Claude Code
 > Estado de la sesión: LIMPIO — LISTO PARA CONTINUAR
 
 ## 🚨 ANTES DE NADA: todo está fusionado en `main`; la rama arranca de cero
@@ -35,70 +35,65 @@ GitHub Pages se dispara con cada push a `main`.
 
 ## ▶️ SIGUIENTE ACCIÓN (léeme primero)
 
-**Hay cinco commits en la rama sin PR abierto todavía.** `main` sigue en
-`f2a2c4e` (v1.35.0); la rama va por v1.39.0.
+**El PR #95 está fusionado** (`main` en `a83570e`, v1.39.1, desplegado y
+verificado). Encima hay **cinco commits sin PR**, todos con la misma raíz: la
+administración respondió las cinco preguntas que bloqueaban la carga de datos.
 
 | Commit | Qué lleva |
 |---|---|
-| `56219e1` | `[A2][FIX]` restaurar un respaldo ya no borra los puestos ni el rastro |
-| `1b2837d` | `[A2]` respaldo automático antes de cualquier migración de esquema |
-| `f072230` | `[PLAN]` planificación sincronizada con el documento del 11 de setiembre |
-| `70481f6` | `[ROL]` rol institucional de diciembre 2025 a diciembre 2026 |
-| `e4326a6` | `[BD]` exportación relacional (12 tablas, JSON y SQL) |
+| `23ba46a` | `[FUNC][HIST]` el puesto de un funcionario deja de ser un dato fijo |
+| `ea03786` | `[DATOS]` las respuestas de la administración, aplicadas al rol y a las fichas |
+| `23caf22` | `[ROL][DUDA]` la celda advierte cuando el propio libro se contradice |
+| `68771ec` | `[FUNC][UI]` el historial de puestos se ve y se edita desde el registro |
 
-### 🔴 Lo que está esperando una respuesta de la administración
+### Lo que respondió la administración, y cómo quedó
 
-Son decisiones que NO puede tomar una IA: adivinar corrompería los datos.
+| Pregunta | Respuesta | Qué se hizo |
+|---|---|---|
+| Villa Mills y su gente | Pasó a otra AC; Mauricio y Mariali ya no son del ACC | Villa Mills se conserva `vigente: false` (su rol de dic–mar es real); ellos dos NO entran |
+| Enzo Martini | Es voluntario, no funcionario | Sigue tratado como participante externo |
+| Diego Salazar | Funcionario nuevo, destacado en Los Quetzales | Ficha y rol en Quetzales, desde el 1 de setiembre |
+| Los códigos F, FA, G, LA, LI, IN, L, CM | «Ni idea, agrégalos tal cual» | Se guardan enteros dentro del valor; los que no encajan viajan como `O-{código}` |
+| Las contradicciones del libro | «Agrégalos manteniendo las advertencias» | 19 celdas con aro ámbar y marca «?» que dicen qué decía la otra fila |
+| Kenneth Mena | Salió hacia otra AC | Historial cerrado el 31/08/2026, ficha Inactiva, su rol hasta agosto intacto |
+| El puesto cambia con el tiempo | «Que no sea estático, que haya historial» | `domain/historialPuestos.js` + tramos en cada ficha + tabla `funcionario_puestos` en la exportación |
 
-**1. Cuatro personas y un puesto que el rol tiene y la app no.**
-El libro institucional trae 23 personas y CUATRO puestos; la app tiene 18 y
-tres. Faltan **Diego Salazar, Enzo Martini, Mauricio Hernandez y Mariali
-Salazar**, y el **Puesto Villa Mills**. Ojo con Enzo Martini: la migración
-`limpiezaEnzoYSetDic2026` lo quitó a propósito («una persona que salió del
-puesto») y el libro del 11/09 vuelve a traerlo con rol en julio, agosto y
-media setiembre. Mauricio Hernandez hoy vive en `otrosAlias` de
-`planificacion2026.js` como si fuera alguien externo (`MH: "MH"`), y no lo es.
+### 🔴 Lo que sigue esperando respuesta
 
-**2. Qué significan F, FA, G, LA, LI, IN, la L sola y CM.**
-No bloquea nada —se guardan como `O-F`, `O-FA`, `O-G`, `O-CM` y el código
-original se recupera entero— pero mientras no se aclaren, esos días salen como
-«Otro» en vez de su categoría real.
+**Tres personas desaparecen del libro sin que nadie haya dicho que salieron.**
+A diferencia de Kenneth Mena, aquí no hay confirmación, así que sus tramos se
+dejaron ABIERTOS: siguen apareciendo en la cuadrícula con las celdas en blanco,
+que es lo que el archivo dice.
 
-**3. Dos contradicciones dentro del propio libro.**
-  - **Errol Salazar** aparece en dos puestos a la vez (Orosi y Quetzales) de
-    diciembre de 2025 a abril de 2026, y en **15 días de diciembre las dos
-    filas dicen cosas distintas**. Se tomó la fila de Orosi, que es su puesto
-    en la app.
-  - **Guillermo Pérez**, del 27 al 30 de abril: la fila de La Esperanza dice
-    `IN` (incapacidad) y la de Orosi dice `T1`–`T4` (turno). Se tomó La
-    Esperanza. Hay además una fila suelta «Guillermo Pérez» (con tilde) con
-    solo 5 días en marzo, que parece un duplicado del mismo Guillermo Perez.
+  - **Alexander Alvarado** — última vez, 11 de marzo de 2026.
+  - **Josué Brenes** — última vez, 21 de junio de 2026.
+  - **Juan Pablo Granados** — solo aparece en mayo y junio, y bajo Orosi.
 
-**4. Kenneth Mena desaparece del libro de setiembre en adelante.**
-Tenía rol hasta agosto y el libro del 11/09 ya no lo trae en setiembre,
-octubre, noviembre ni diciembre. La app conserva lo que tuviera guardado (la
-re-imposición nunca vacía una celda), pero **la semilla de una instalación
-nueva lo deja en blanco**, que es lo que dice la fuente.
+¿Salieron, o falta llenarles el rol? La respuesta cambia `historialPuestos2026.js`
+y nada más.
 
-**5. El libro mueve gente de puesto durante el año; la app no.**
-31 persona-mes en que el puesto del libro no coincide con el
-`puestoOperativo` de la ficha. Laura Valverde y Jetzelly Villalobos están en
-Orosi desde julio; Carlos Cordero en Villa Mills de diciembre a marzo. La
-cuadrícula agrupa por el puesto de la ficha, así que se usó ese. **El puesto
-de una persona es hoy un solo valor y en la realidad cambia con el mes.**
+**Diego Salazar está archivado bajo Orosi en el libro** y la administración lo
+sitúa en Quetzales. Se cargó en Quetzales. Conviene que el libro se corrija para
+que las dos fuentes digan lo mismo.
 
 ### Lo que queda de la lista de mejoras
 
 - **C3 · Guías de usuario integradas.** `docs/MANUAL.md` existe (185 líneas)
-  pero vive en el repositorio, no dentro de la aplicación. Quien está en el
-  puesto sin señal no puede leerlo.
+  pero vive en el repositorio, no dentro de la aplicación.
 - **Probar la aplicación con las personas del parque.** Sigue siendo lo más
   valioso y no es código.
-- **Decidir si habrá servidor.** Hasta entonces quedan fuera A3
-  (sincronización), RF10 (autenticación), C4 (API externa) e i18n.
+- **Decidir si habrá servidor.** Hasta entonces quedan fuera A3, RF10, C4 e
+  i18n multi-idioma.
 
-**A2 ya está hecho** (respaldo automático en migraciones), así que de las dos
-mejoras que quedaban abiertas solo sigue C3.
+⚠️ **Si tocas el rol o las fichas, ten presentes estas tres reglas:**
+
+- **La clave de una celda de rol lleva el puesto DE ESE DÍA**, no el de la ficha
+  (`puestoDelRol`). El traslado de Yolanda Elizondo cae el 18 de marzo: resolver
+  por mes perdía diecisiete días de su rol.
+- **Un `desde` vacío es «desde antes de lo que cubre el libro»**, no una fecha
+  desconocida que haya que rellenar. Nadie registró las fechas de ingreso.
+- **Que el libro deje de traer a alguien NO es una salida.** Solo se cierra un
+  tramo cuando la administración lo confirma.
 
 ⚠️ **Si tocas la cuadrícula de Roles, estas tres invariantes no se rompen:**
 
@@ -121,19 +116,21 @@ mejoras que quedaban abiertas solo sigue C3.
 
 ## 📍 Estado del repo al relevar
 
-- Versión: **1.39.0** en la rama; `main` sigue en **1.35.0** (`f2a2c4e`)
-- Rama: **`claude/festive-allen-hl6igv`**, cinco commits por delante de `main`,
+- Versión: **1.43.0** en la rama; `main` en **1.39.1** (`a83570e`), desplegado
+- Rama: **`claude/festive-allen-hl6igv`**, cuatro commits por delante de `main`,
   sin PR abierto
-- Tests: ✅ **822/822** (70 archivos) — Build: ✅ limpio, PWA con 39 entradas
-- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (todavía con
-  la 1.35.0: el despliegue se dispara al fusionar en `main`)
+- Tests: ✅ **877/877** (73 archivos) — Build: ✅ limpio
+- Sitio en vivo: https://psforestal-rgb.github.io/BTMM_JORNADAS/ (con la 1.39.1)
+- Verificado en Chromium sobre el build: diciembre de 2025 pinta el grupo de
+  Villa Mills con Carlos Cordero; abril marca las cuatro celdas contradictorias
+  de Guillermo Pérez; setiembre ya no trae a Kenneth Mena y sí a Diego Salazar
 
 ### Fuentes de datos y de dónde salen
 
 | Fuente | Versión aplicada | Cómo se actualiza |
 |---|---|---|
 | Planificación | `2026-09-11-doc-completo` | Exportar el Google Doc como **text/plain** y regenerar `src/data/planificacion2026Fuente/texto1..9.js`. Ese formato conserva los saltos de línea que `convertirPlanificacion2026()` necesita; la exportación «natural» del conector los pierde y pega las actividades unas con otras. |
-| Rol institucional | `2026-09-11-rol-bloque-dic25-dic26` | Regenerar `src/data/seedRoles.js` desde «Rol Bloque 2026.xlsx». Siete pestañas de dos meses; los días empiezan en la **columna E**, el mes se detecta porque el número de día vuelve a 1, y la etiqueta de la fila 1 está combinada en medio del tramo, no al principio. |
+| Rol institucional | `2026-09-13-rol-bloque-historial-puestos` | Regenerar `seedRoles.js`, `historialPuestos2026.js` y `conflictosRol2026.js` desde «Rol Bloque 2026.xlsx». Siete pestañas de dos meses; los días empiezan en la **columna E**, el mes se detecta porque el número de día vuelve a 1, y la etiqueta de la fila 1 está combinada en medio del tramo, no al principio. |
 
 ## ✅ Hecho en esta sesión
 
