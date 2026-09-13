@@ -1,8 +1,27 @@
 {
   "name": "btmm-jornadas-pnlq",
-  "private": true,
   "version": "1.45.0",
+  "private": false,
+  "description": "PWA offline-first para planificar, visualizar, controlar y alertar sobre jornadas laborales, cobertura operativa y actividades del personal del Parque Nacional Los Quetzales (PNLQ) — Bloque Tapantí · Macizo de la Muerte (BTMM), SINAC · Área de Conservación Central · Costa Rica.",
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/psforestal-rgb/BTMM_JORNADAS.git"
+  },
+  "keywords": [
+    "pwa",
+    "react",
+    "vite",
+    "tailwind",
+    "jornadas-laborales",
+    "sinac",
+    "pnlq",
+    "costa-rica"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
